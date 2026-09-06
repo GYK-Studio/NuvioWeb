@@ -1,9 +1,9 @@
 import { Platform } from "../../platform/index.js";
-import { TizenEngineFsService } from "../../platform/tizen/tizenEngineFsService.js";
 import {
-  isWebOsCompanionServiceAvailable,
-  requestWebOsCompanionService
-} from "../../platform/webos/webosCompanionService.js";
+  browserDeviceService as TizenEngineFsService,
+  isBrowserLocalServiceAvailable as isWebOsCompanionServiceAvailable,
+  requestBrowserLocalService as requestWebOsCompanionService
+} from "../../platform/browserServices.js";
 
 const LOCAL_MEDIA_SERVER_PORT_CANDIDATES = [2710, 2711, 2712, 2713, 2714];
 const REQUEST_TIMEOUT_MS = 4000;

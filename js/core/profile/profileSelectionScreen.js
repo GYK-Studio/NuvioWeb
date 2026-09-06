@@ -12,7 +12,7 @@ import { I18n } from "../../i18n/index.js";
 import { NuvioDialog } from "../../ui/components/nuvioDialog.js";
 import { detailWatchedEnrichmentService } from "../../data/repository/detailWatchedEnrichmentService.js";
 import { resolveExperienceRoute } from "./experienceModeRouting.js";
-import { getTvRuntimePerformanceProfile } from "../../platform/tvRuntimePerformance.js";
+import { getWebRuntimeProfile } from "../../platform/webRuntime.js";
 import { PluginStore } from "../../data/local/pluginStore.js";
 import { PluginCodeStore } from "../../data/local/pluginCodeStore.js";
 import { PluginRuntime } from "../player/pluginRuntime.js";
@@ -1522,7 +1522,7 @@ export const ProfileSelectionScreen = {
     }
 
     if (
-      getTvRuntimePerformanceProfile().isPerformanceConstrained ||
+      getWebRuntimeProfile().isPerformanceConstrained ||
       globalThis.document?.body?.classList?.contains("performance-constrained")
     ) {
       this._bgCurrentColor = targetColor;

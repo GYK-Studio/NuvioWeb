@@ -7,7 +7,6 @@ import {
   createLegacySource,
   normalizePluginState
 } from "../../core/player/pluginModels.js";
-import { TizenCapabilities } from "../../platform/tizen/tizenCapabilities.js";
 
 const PLUGIN_STATE_KEY = "pluginState";
 const LEGACY_SOURCES_KEY = "pluginSources";
@@ -36,10 +35,6 @@ export function getEffectivePluginProfileId(profileId = ProfileManager.getActive
 
 function normalizedPluginProfileId(profileId = ProfileManager.getActiveProfileId()) {
   return String(getEffectivePluginProfileId(profileId) || "1");
-}
-
-function areTizenPluginsSupported() {
-  return TizenCapabilities.canUsePlugins();
 }
 
 function isRemoteSyncActive(profileId) {
@@ -110,13 +105,9 @@ function writeState(profileId, state) {
     effectiveProfileId,
     Number(pluginStateRevisions.get(effectiveProfileId) || 0) + 1
   );
-  if (
-    normalized.syncDirty &&
-    areTizenPluginsSupported() &&
-    !isRemoteSyncActive(effectiveProfileId)
-  ) {
+  if (normalized.syncDirty && !isRemoteSyncActive(effectiveProfileId)) {
     queuePluginCloudSync(effectiveProfileId);
-  } else if (!normalized.syncDirty || !areTizenPluginsSupported()) {
+  } else if (!normalized.syncDirty) {
     cancelPluginCloudSync(effectiveProfileId);
   }
   return normalized;
@@ -124,10 +115,6 @@ function writeState(profileId, state) {
 
 async function runPluginCloudSync(profileId) {
   const normalizedProfileId = normalizedPluginProfileId(profileId);
-  if (!areTizenPluginsSupported()) {
-    cancelPluginCloudSync(normalizedProfileId);
-    return false;
-  }
   if (isRemoteSyncActive(normalizedProfileId)) {
     queuePluginCloudSync(normalizedProfileId, PLUGIN_SYNC_DEBOUNCE_MS);
     return false;
@@ -171,10 +158,6 @@ async function runPluginCloudSync(profileId) {
 
 function queuePluginCloudSync(profileId, delayMs = PLUGIN_SYNC_DEBOUNCE_MS) {
   const normalizedProfileId = normalizedPluginProfileId(profileId);
-  if (!areTizenPluginsSupported()) {
-    cancelPluginCloudSync(normalizedProfileId);
-    return;
-  }
   const previousTimer = pluginSyncTimers.get(normalizedProfileId);
   if (previousTimer) {
     clearTimeout(previousTimer);
@@ -236,10 +219,6 @@ export const PluginStore = {
       return false;
     }
     pluginRemoteSyncDepth.delete(normalizedProfileId);
-    if (!areTizenPluginsSupported()) {
-      cancelPluginCloudSync(normalizedProfileId);
-      return false;
-    }
     if (!readState(normalizedProfileId).syncDirty) return false;
     queuePluginCloudSync(normalizedProfileId);
     return true;
@@ -247,10 +226,6 @@ export const PluginStore = {
 
   async flushCloudSync(profileId = ProfileManager.getActiveProfileId()) {
     const normalizedProfileId = normalizedPluginProfileId(profileId);
-    if (!areTizenPluginsSupported()) {
-      cancelPluginCloudSync(normalizedProfileId);
-      return false;
-    }
     if (isRemoteSyncActive(normalizedProfileId) || !readState(normalizedProfileId).syncDirty) {
       return false;
     }

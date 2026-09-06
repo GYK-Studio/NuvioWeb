@@ -3,10 +3,11 @@ import { constants as fsConstants } from "node:fs";
 import path from "node:path";
 
 export const ENV_PROPERTY_KEYS = [
+  "NUVIO_BACKEND_URL",
   "NUVIO_SUPABASE_URL",
   "NUVIO_SUPABASE_ANON_KEY",
   "NUVIO_SUPABASE_FALLBACK_URL",
-  "TV_LOGIN_WEB_BASE_URL",
+  "NUVIO_LOGIN_WEB_BASE_URL",
   "YOUTUBE_PROXY_URL",
   "INTRODB_API_URL",
   "IMDB_RATINGS_API_BASE_URL",
@@ -25,10 +26,11 @@ export const ENV_PROPERTY_KEYS = [
 ];
 
 const DEFAULT_ENV_VALUES = {
+  NUVIO_BACKEND_URL: "",
   NUVIO_SUPABASE_URL: "",
   NUVIO_SUPABASE_ANON_KEY: "",
   NUVIO_SUPABASE_FALLBACK_URL: "",
-  TV_LOGIN_WEB_BASE_URL: "",
+  NUVIO_LOGIN_WEB_BASE_URL: "",
   YOUTUBE_PROXY_URL: "youtube-proxy.html",
   INTRODB_API_URL: "https://api.introdb.app/",
   IMDB_RATINGS_API_BASE_URL: "",
@@ -101,6 +103,15 @@ export function normalizeEnvProperties(properties = {}) {
   return env;
 }
 
+function readRuntimeOverrides(runtimeEnv = process.env) {
+  return ENV_PROPERTY_KEYS.reduce((overrides, key) => {
+    if (Object.prototype.hasOwnProperty.call(runtimeEnv, key)) {
+      overrides[key] = String(runtimeEnv[key] ?? "");
+    }
+    return overrides;
+  }, {});
+}
+
 export async function resolveLocalPropertiesSource({ rootDir, sourcePath = "" } = {}) {
   const candidates = [];
   if (sourcePath) {
@@ -122,21 +133,17 @@ export async function resolveLocalPropertiesSource({ rootDir, sourcePath = "" } 
 
 export async function readEnvProperties({ rootDir, sourcePath = "" } = {}) {
   const resolvedSourcePath = await resolveLocalPropertiesSource({ rootDir, sourcePath });
-  if (!resolvedSourcePath) {
-    return {
-      sourcePath: "",
-      env: normalizeEnvProperties({})
-    };
-  }
-  if (/\.js$/i.test(resolvedSourcePath)) {
+  if (resolvedSourcePath && /\.js$/i.test(resolvedSourcePath)) {
     throw new Error(
       `Runtime env JavaScript files are no longer supported as config sources. Use local.properties instead: ${resolvedSourcePath}`
     );
   }
-  const properties = parseProperties(await readFile(resolvedSourcePath, "utf8"));
+  const properties = resolvedSourcePath
+    ? parseProperties(await readFile(resolvedSourcePath, "utf8"))
+    : {};
   return {
-    sourcePath: resolvedSourcePath,
-    env: normalizeEnvProperties(properties)
+    sourcePath: resolvedSourcePath || "",
+    env: normalizeEnvProperties({ ...properties, ...readRuntimeOverrides() })
   };
 }
 

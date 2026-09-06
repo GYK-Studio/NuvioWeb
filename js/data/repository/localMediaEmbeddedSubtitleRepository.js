@@ -1,7 +1,9 @@
 import { Platform } from "../../platform/index.js";
-import { TizenCapabilities } from "../../platform/tizen/tizenCapabilities.js";
-import { TizenEngineFsService } from "../../platform/tizen/tizenEngineFsService.js";
-import { requestWebOsCompanionService } from "../../platform/webos/webosCompanionService.js";
+import {
+  browserDeviceCapabilities as TizenCapabilities,
+  browserDeviceService as TizenEngineFsService,
+  requestBrowserLocalService as requestWebOsCompanionService
+} from "../../platform/browserServices.js";
 
 const REQUEST_TIMEOUT_MS = 60000;
 const TIZEN_TX3G_PORT = 2715;

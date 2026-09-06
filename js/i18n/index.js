@@ -514,7 +514,7 @@ function loadXmlFileXhr(url) {
     const xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);
     xhr.onload = () => {
-      // status 0 is returned for successful file:// loads in webOS
+      // status 0 is returned for successful file:// loads in local previews.
       if (xhr.status === 200 || xhr.status === 0) {
         try {
           resolve(parseStringsXml(xhr.responseText));

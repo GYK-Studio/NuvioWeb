@@ -66,20 +66,20 @@ import { orderStreamsByAddonOrder } from "../../../core/streams/streamOrdering.j
 import { metaRepository } from "../../../data/repository/metaRepository.js";
 import { I18n } from "../../../i18n/index.js";
 import { Environment } from "../../../platform/environment.js";
-import { TizenCapabilities } from "../../../platform/tizen/tizenCapabilities.js";
+import {
+  browserDeviceCapabilities as TizenCapabilities,
+  browserDeviceService as TizenEngineFsService,
+  browserStreamResolver as WebOsEngineFsResolver,
+  browserStreamResolver as TizenStreamingServerResolver,
+  browserNativePlayerService as WebOsLunaService,
+  requestBrowserLocalService as requestWebOsCompanionService,
+  subscribeBrowserLocalService as subscribeWebOsCompanionService
+} from "../../../platform/browserServices.js";
 import { Router } from "../../navigation/router.js";
 import { renderLoadingIndicator } from "../../components/loadingIndicator.js";
 import { DirectDebridResolver } from "../../../core/debrid/directDebridResolver.js";
 import { DebridStreamPresentation } from "../../../core/debrid/directDebridStreamPresentation.js";
 import { TrackingScrobbleService } from "../../../data/repository/trackingScrobbleService.js";
-import { WebOsEngineFsResolver } from "../../../core/p2p/webosEngineFsResolver.js";
-import { TizenStreamingServerResolver } from "../../../core/p2p/tizenStreamingServerResolver.js";
-import { TizenEngineFsService } from "../../../platform/tizen/tizenEngineFsService.js";
-import {
-  requestWebOsCompanionService,
-  subscribeWebOsCompanionService
-} from "../../../platform/webos/webosCompanionService.js";
-import { WebOsLunaService } from "../../../platform/webos/webosLunaService.js";
 import { StreamPreferencesStore } from "../../../data/local/streamPreferencesStore.js";
 import { buildStreamResumeIdentity } from "../../../core/streams/streamResumeIdentity.js";
 import { TrackPreferencesStore } from "../../../data/local/trackPreferencesStore.js";

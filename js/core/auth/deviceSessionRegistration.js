@@ -1,12 +1,10 @@
 /* global __NUVIO_APP_VERSION__ */
 
-import { Platform } from "../../platform/index.js";
-import { getTizenCapabilities } from "../../platform/tizen/tizenCapabilities.js";
 import { SupabaseApi } from "../../data/remote/supabase/supabaseApi.js";
 import { AuthManager } from "./authManager.js";
 import { AuthState } from "./authState.js";
 
-const CLIENT_NAME = "Nuvio TV";
+const CLIENT_NAME = "Nuvio Web";
 const INSTALLATION_ID_KEY = "nuvio_web_installation_id";
 const INSTALLATION_ID_PREFIX = "nuvio-web-";
 const INSTALLATION_ID_LENGTH = 32;
@@ -14,8 +12,6 @@ const INSTALLATION_ID_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 const REGISTRATION_INTERVAL_MS = 15 * 60 * 1000;
 const MAX_PLATFORM_LENGTH = 80;
 const MAX_DEVICE_NAME_LENGTH = 160;
-const WEBOS_DEVICE_INFO_TIMEOUT_MS = 1200;
-
 let volatileInstallationId = null;
 
 function normalizedText(value) {
@@ -23,25 +19,7 @@ function normalizedText(value) {
 }
 
 function firstText(...values) {
-  for (const value of values) {
-    const normalized = normalizedText(value);
-    if (normalized) {
-      return normalized;
-    }
-  }
-  return "";
-}
-
-function parseJsonObject(value) {
-  if (value && typeof value === "object") {
-    return value;
-  }
-  try {
-    const parsed = JSON.parse(String(value || ""));
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
-    return {};
-  }
+  return values.map(normalizedText).find(Boolean) || "";
 }
 
 function readAppVersion() {
@@ -55,28 +33,18 @@ export function isValidInstallationId(value) {
 
 export function generateInstallationId(randomValues = null) {
   const bytes = new Uint8Array(INSTALLATION_ID_LENGTH);
-  if (typeof randomValues === "function") {
-    randomValues(bytes);
-  } else if (globalThis.crypto?.getRandomValues) {
-    globalThis.crypto.getRandomValues(bytes);
-  } else {
-    for (let index = 0; index < bytes.length; index += 1) {
-      bytes[index] = Math.floor(Math.random() * 256);
-    }
-  }
+  if (typeof randomValues === "function") randomValues(bytes);
+  else if (globalThis.crypto?.getRandomValues) globalThis.crypto.getRandomValues(bytes);
+  else bytes.forEach((_, index) => (bytes[index] = Math.floor(Math.random() * 256)));
 
   let suffix = "";
-  for (const byte of bytes) {
+  for (const byte of bytes)
     suffix += INSTALLATION_ID_ALPHABET[byte % INSTALLATION_ID_ALPHABET.length];
-  }
   return `${INSTALLATION_ID_PREFIX}${suffix}`;
 }
 
 export function getOrCreateInstallationId(storage = globalThis.localStorage, randomValues = null) {
-  if (volatileInstallationId) {
-    return volatileInstallationId;
-  }
-
+  if (volatileInstallationId) return volatileInstallationId;
   try {
     const stored = storage?.getItem?.(INSTALLATION_ID_KEY);
     if (isValidInstallationId(stored)) {
@@ -86,102 +54,38 @@ export function getOrCreateInstallationId(storage = globalThis.localStorage, ran
   } catch {
     // Continue with an in-memory identity when persistent storage is unavailable.
   }
-
   volatileInstallationId = generateInstallationId(randomValues);
   try {
     storage?.setItem?.(INSTALLATION_ID_KEY, volatileInstallationId);
   } catch {
-    // Registration still works for this app process when storage is unavailable.
+    // Registration continues for this browser session.
   }
   return volatileInstallationId;
 }
 
 export function buildDeviceRegistrationParams({ installationId, clientVersion, metadata }) {
-  const clientName = normalizedText(metadata?.clientName) || CLIENT_NAME;
   return {
     p_installation_id: installationId,
-    p_client_name: clientName,
+    p_client_name: normalizedText(metadata?.clientName) || CLIENT_NAME,
     p_client_version: normalizedText(clientVersion).slice(0, 40),
-    p_platform: firstText(metadata?.platform, "Unknown").slice(0, MAX_PLATFORM_LENGTH),
+    p_platform: firstText(metadata?.platform, "Web Browser").slice(0, MAX_PLATFORM_LENGTH),
     p_device_name: normalizedText(metadata?.deviceName).slice(0, MAX_DEVICE_NAME_LENGTH) || null
   };
 }
 
-function readTizenMetadata(runtime, fallbackDeviceName) {
-  const capabilities = getTizenCapabilities(runtime);
-  let version = capabilities.tizenVersion || "";
-  let model = "";
-  try {
-    model = normalizedText(runtime.webapis?.productinfo?.getModel?.());
-  } catch {
-    // Model access is optional on wrappers and older TVs.
-  }
-  return {
-    clientName: CLIENT_NAME,
-    deviceName: model || fallbackDeviceName || "Tizen TV",
-    platform: version ? `Tizen ${version}` : "Tizen"
-  };
-}
-
-async function readWebOsMetadata(runtime, fallbackDeviceName) {
-  const initial = {
-    ...parseJsonObject(runtime.PalmSystem?.deviceInfo),
-    ...parseJsonObject(runtime.webOSSystem?.deviceInfo)
-  };
-
-  let enriched = {};
-  if (typeof runtime.webOS?.deviceInfo === "function") {
-    enriched = await new Promise((resolve) => {
-      let finished = false;
-      const finish = (value = {}) => {
-        if (finished) return;
-        finished = true;
-        runtime.clearTimeout?.(timeoutId);
-        resolve(value && typeof value === "object" ? value : {});
-      };
-      const timeoutId = runtime.setTimeout?.(() => finish(), WEBOS_DEVICE_INFO_TIMEOUT_MS);
-      try {
-        runtime.webOS.deviceInfo((details) => finish(details));
-      } catch {
-        finish();
-      }
-    });
-  }
-
-  const details = { ...initial, ...enriched };
-  const version = firstText(
-    details.platformVersion,
-    details.sdkVersion,
-    details.version,
-    details.firmwareVersion,
-    details.platformVersionMajor
-  );
-  const model = firstText(details.modelName, details.model);
-  return {
-    clientName: CLIENT_NAME,
-    deviceName: model || fallbackDeviceName || "webOS TV",
-    platform: version ? `webOS ${version}` : "webOS"
-  };
-}
-
-export async function resolveCurrentDeviceMetadata(platform = Platform, runtime = globalThis) {
-  const platformName = normalizedText(platform.getName?.()).toLowerCase();
-  const fallbackDeviceName = normalizedText(platform.getDeviceLabel?.());
-  if (platformName === "tizen") {
-    return readTizenMetadata(runtime, fallbackDeviceName);
-  }
-  if (platformName === "webos") {
-    return readWebOsMetadata(runtime, fallbackDeviceName);
-  }
-
+export async function resolveCurrentDeviceMetadata(_platform = null, runtime = globalThis) {
   const browserPlatform = firstText(
     runtime.navigator?.userAgentData?.platform,
-    runtime.navigator?.platform
+    runtime.navigator?.platform,
+    "Web Browser"
   );
   return {
     clientName: CLIENT_NAME,
-    deviceName: fallbackDeviceName || "Web Browser",
-    platform: browserPlatform ? `Web Browser ${browserPlatform}` : "Web Browser"
+    deviceName: firstText(
+      runtime.navigator?.userAgentData?.brands?.map?.((brand) => brand.brand).join(" "),
+      "Web Browser"
+    ),
+    platform: `Web Browser ${browserPlatform}`
   };
 }
 
@@ -197,29 +101,28 @@ export class DeviceSessionRegistrationService {
     documentRef = globalThis.document,
     windowRef = globalThis
   } = {}) {
-    this.authManager = authManager;
-    this.rpc = rpc;
-    this.storage = storage;
-    this.metadataResolver = metadataResolver;
-    this.clientVersion = clientVersion;
-    this.now = now;
-    this.logger = logger;
-    this.documentRef = documentRef;
-    this.windowRef = windowRef;
-    this.lastRegistrationAtMs = 0;
-    this.registrationPromise = null;
-    this.unsubscribe = null;
-    this.lifecycleStarted = false;
+    Object.assign(this, {
+      authManager,
+      rpc,
+      storage,
+      metadataResolver,
+      clientVersion,
+      now,
+      logger,
+      documentRef,
+      windowRef,
+      lastRegistrationAtMs: 0,
+      registrationPromise: null,
+      unsubscribe: null,
+      lifecycleStarted: false
+    });
   }
 
   start() {
     if (!this.unsubscribe) {
       this.unsubscribe = this.authManager.subscribe((state) => {
-        if (state === AuthState.AUTHENTICATED) {
-          void this.registerIfAuthenticated({ force: true });
-        } else if (state === AuthState.SIGNED_OUT) {
-          this.lastRegistrationAtMs = 0;
-        }
+        if (state === AuthState.AUTHENTICATED) void this.registerIfAuthenticated({ force: true });
+        else if (state === AuthState.SIGNED_OUT) this.lastRegistrationAtMs = 0;
       });
     }
     this.startLifecycleTracking();
@@ -228,17 +131,10 @@ export class DeviceSessionRegistrationService {
   startLifecycleTracking() {
     if (this.lifecycleStarted) return;
     this.lifecycleStarted = true;
-
     const registerWhenVisible = () => {
-      const hidden =
-        this.documentRef?.visibilityState === "hidden" || this.documentRef?.webkitHidden === true;
-      if (!hidden) {
-        void this.requestForegroundRegistration();
-      }
+      if (this.documentRef?.visibilityState !== "hidden") void this.requestForegroundRegistration();
     };
-
     this.documentRef?.addEventListener?.("visibilitychange", registerWhenVisible);
-    this.documentRef?.addEventListener?.("webkitvisibilitychange", registerWhenVisible);
     this.windowRef?.addEventListener?.("pageshow", registerWhenVisible);
     this.windowRef?.addEventListener?.("focus", registerWhenVisible);
   }
@@ -248,29 +144,21 @@ export class DeviceSessionRegistrationService {
   }
 
   registerIfAuthenticated({ force = false } = {}) {
-    if (!this.authManager.isAuthenticated) {
-      return Promise.resolve(false);
-    }
-    if (this.registrationPromise) {
-      return this.registrationPromise;
-    }
-
-    const elapsed = this.now() - this.lastRegistrationAtMs;
-    if (!force && this.lastRegistrationAtMs > 0 && elapsed < REGISTRATION_INTERVAL_MS) {
+    if (!this.authManager.isAuthenticated) return Promise.resolve(false);
+    if (this.registrationPromise) return this.registrationPromise;
+    if (!force && this.now() - this.lastRegistrationAtMs < REGISTRATION_INTERVAL_MS) {
       return Promise.resolve(true);
     }
-
     this.registrationPromise = (async () => {
-      if (!this.authManager.isAuthenticated) {
-        return false;
-      }
       const metadata = await this.metadataResolver();
-      const params = buildDeviceRegistrationParams({
-        installationId: getOrCreateInstallationId(this.storage),
-        clientVersion: this.clientVersion,
-        metadata
-      });
-      await this.rpc("register_current_device", params);
+      await this.rpc(
+        "register_current_device",
+        buildDeviceRegistrationParams({
+          installationId: getOrCreateInstallationId(this.storage),
+          clientVersion: this.clientVersion,
+          metadata
+        })
+      );
       this.lastRegistrationAtMs = this.now();
       return true;
     })()
@@ -281,7 +169,6 @@ export class DeviceSessionRegistrationService {
       .finally(() => {
         this.registrationPromise = null;
       });
-
     return this.registrationPromise;
   }
 }

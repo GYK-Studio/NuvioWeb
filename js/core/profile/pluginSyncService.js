@@ -5,8 +5,6 @@ import { PluginStore, getEffectivePluginProfileId } from "../../data/local/plugi
 import { ProfileManager } from "./profileManager.js";
 import { isSyncBackoffActive } from "../sync/syncBackoffPolicy.js";
 import { getSyncClientId } from "../sync/syncClientIdentity.js";
-import { Platform } from "../../platform/index.js";
-import { TizenCapabilities } from "../../platform/tizen/tizenCapabilities.js";
 import { PluginServiceClient } from "../../platform/pluginServiceClient.js";
 import {
   canonicalizePluginUrl,
@@ -24,10 +22,6 @@ const pullInFlightByProfile = new Map();
 const syncOperationByProfile = new Map();
 let pluginServiceReadyPromise = null;
 
-function areTizenPluginsSupported() {
-  return !Platform.isTizen() || TizenCapabilities.canUsePlugins();
-}
-
 function createPluginServiceNotReadyError(cause) {
   const detail = String(cause?.message || cause || "PluginService health check failed");
   const error = new Error(`PluginService must be ready before plugin sync: ${detail}`);
@@ -37,14 +31,7 @@ function createPluginServiceNotReadyError(cause) {
 }
 
 function ensurePluginServiceReady({ force = true } = {}) {
-  // The readiness barrier belongs to the TV service transports. Browser test
-  // and development runs use the direct transport and must not be rejected by
-  // the absence of a packaged TV service.
-  if (
-    (!Platform.isTizen() && !Platform.isWebOS()) ||
-    !areTizenPluginsSupported() ||
-    !AuthManager.isAuthenticated
-  ) {
+  if (!AuthManager.isAuthenticated) {
     return Promise.resolve({ status: "skipped" });
   }
 
@@ -254,9 +241,6 @@ function runProfileExclusive(profileId, task) {
 }
 
 async function pushProfile(requestedId, targetProfileId, { requireCurrentProfile = false } = {}) {
-  if (!areTizenPluginsSupported()) {
-    return false;
-  }
   const backoffActive = isSyncBackoffActive();
   const authenticated = AuthManager.isAuthenticated;
   logPluginSyncDiagnostic("push requested", {
@@ -390,11 +374,6 @@ export const PluginSyncService = {
   },
 
   async pull(profileId = null) {
-    if (!areTizenPluginsSupported()) {
-      lastPullStatus = "unsupported";
-      lastPullError = null;
-      return PluginManager.listRepositories();
-    }
     const requestedId = requestedProfileId(profileId);
     const targetProfileId = String(getEffectivePluginProfileId(requestedId) || "1");
     const pullKey = `${requestedId}:${targetProfileId}`;
@@ -468,9 +447,8 @@ export const PluginSyncService = {
         return PluginManager.listRepositories();
       }
 
-      // The Tizen Web Service start API only acknowledges that startup was
-      // queued. Require PluginServiceClient to complete its /health probe
-      // before opening the remote-sync transaction or fetching any manifest.
+      // Confirm the browser runtime before opening the remote-sync transaction
+      // or fetching any provider manifest.
       await ensurePluginServiceReady({ force: true });
 
       // Keep local writes from starting a competing push until the complete

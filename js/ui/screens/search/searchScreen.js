@@ -7,7 +7,7 @@ import { watchedTitleStateRepository } from "../../../data/repository/watchedTit
 import { LayoutPreferences } from "../../../data/local/layoutPreferences.js";
 import { I18n } from "../../../i18n/index.js";
 import { Platform } from "../../../platform/index.js";
-import { getTvRuntimePerformanceProfile } from "../../../platform/tvRuntimePerformance.js";
+import { getWebRuntimeProfile } from "../../../platform/webRuntime.js";
 import { MODERN_HOME_CONSTANTS } from "../home/modernHomeLayout.js";
 import { allowDpadRepeat, resetDpadRepeat } from "../../navigation/dpadRepeatThrottle.js";
 import {
@@ -136,7 +136,7 @@ function isSearchableCatalogType(type) {
 
 function isPerformanceConstrainedRuntime() {
   return (
-    getTvRuntimePerformanceProfile().isPerformanceConstrained ||
+    getWebRuntimeProfile().isPerformanceConstrained ||
     Boolean(globalThis.document?.body?.classList?.contains("performance-constrained"))
   );
 }

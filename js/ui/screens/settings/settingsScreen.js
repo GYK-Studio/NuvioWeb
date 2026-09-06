@@ -26,7 +26,6 @@ import {
   normalizeSubtitleTextOpacity
 } from "../../../core/player/subtitleTextOpacity.js";
 import { TorrentSettingsStore } from "../../../data/local/torrentSettingsStore.js";
-import { WebOsAudioCompatibilityStore } from "../../../data/local/webOsAudioCompatibilityStore.js";
 import { LayoutPreferences } from "../../../data/local/layoutPreferences.js";
 import { ExperienceModeStore } from "../../../data/local/experienceModeStore.js";
 import { MdbListSettingsStore } from "../../../data/local/mdbListSettingsStore.js";
@@ -56,7 +55,6 @@ import { ProfileManager } from "../../../core/profile/profileManager.js";
 import { AuthManager } from "../../../core/auth/authManager.js";
 import { SupabaseApi } from "../../../data/remote/supabase/supabaseApi.js";
 import { Platform } from "../../../platform/index.js";
-import { TizenCapabilities } from "../../../platform/tizen/tizenCapabilities.js";
 import { isFastHorizontalNavigationEnabled } from "../../../platform/sharedKeys.js";
 import { CW_DISPLAY_SNAPSHOT_KEY, CW_ENRICHMENT_CACHE_KEY } from "../home/homeConstants.js";
 import { I18n } from "../../../i18n/index.js";
@@ -89,8 +87,6 @@ import {
   setLegacySidebarExpanded
 } from "../../components/sidebarNavigation.js";
 import { renderLoadingIndicator } from "../../components/loadingIndicator.js";
-import { getLatestAppUpdate } from "../../../core/update/appUpdateService.js";
-import { showAppUpdatePrompt } from "../../components/appUpdatePrompt.js";
 
 const SETTINGS_UI_STATE_KEY = "settingsScreenUiState";
 const SETTINGS_RAIL_SCROLL_TARGET_RATIO = 0.42;
@@ -788,7 +784,7 @@ function t(key, params = {}, fallback = key) {
 }
 
 function arePluginsSupported() {
-  return TizenCapabilities.canUsePlugins();
+  return typeof Worker === "function" && typeof WebAssembly === "object";
 }
 
 function escapeHtml(value) {
@@ -2111,7 +2107,6 @@ function createDefaultExpandedState(sectionId) {
       general: false,
       stream: false,
       audio: false,
-      audioCompatibility: false,
       subtitles: false,
       p2p: false
     };
@@ -2390,11 +2385,6 @@ export const SettingsScreen = {
       },
       memberAccess,
       player: PlayerSettingsStore.get(),
-      webOsAudioCompatibility: Platform.isWebOS()
-        ? WebOsAudioCompatibilityStore.get({
-            legacyForceAll: Boolean(PlayerSettingsStore.get().forceDtsTrueHdAudio)
-          })
-        : null,
       torrent: TorrentSettingsStore.get(),
       layout: LayoutPreferences.get(),
       homeCatalog: HomeCatalogStore.get(),
@@ -5746,19 +5736,14 @@ export const SettingsScreen = {
     this.ensureExpandedState("playback");
     const expanded = this.expandedSections.playback;
     const torrentSettings = model.torrent || TorrentSettingsStore.get();
-    const tizenP2pUnsupported = TizenCapabilities.isP2pUnsupported();
-    const p2pUnavailableSubtitle = tizenP2pUnsupported
-      ? t("settings_p2p_unsupported_subtitle", {}, "Not supported on this TV.")
-      : t("settings_p2p_subtitle");
+    const tizenP2pUnsupported = false;
+    const p2pUnavailableSubtitle = t("settings_p2p_subtitle");
 
     this.actionMap.set("playback:toggle:general", () => {
       this.toggleExpandedSection("playback", "general");
     });
     this.actionMap.set("playback:toggle:audio", () => {
       this.toggleExpandedSection("playback", "audio");
-    });
-    this.actionMap.set("playback:toggle:audioCompatibility", () => {
-      this.toggleExpandedSection("playback", "audioCompatibility");
     });
     this.actionMap.set("playback:toggle:subtitles", () => {
       this.toggleExpandedSection("playback", "subtitles");
@@ -5862,18 +5847,6 @@ export const SettingsScreen = {
     this.actionMap.set("playback:osdClock", () => {
       PlayerSettingsStore.set({
         osdClockEnabled: !PlayerSettingsStore.get().osdClockEnabled
-      });
-    });
-    this.actionMap.set("playback:forceDts", () => {
-      const current = WebOsAudioCompatibilityStore.get();
-      WebOsAudioCompatibilityStore.set({
-        forceDtsAudio: !current.forceDtsAudio
-      });
-    });
-    this.actionMap.set("playback:forceTrueHd", () => {
-      const current = WebOsAudioCompatibilityStore.get();
-      WebOsAudioCompatibilityStore.set({
-        forceTrueHdAudio: !current.forceTrueHdAudio
       });
     });
     this.actionMap.set("playback:nextEpisodeThresholdMode", () => {
@@ -6237,9 +6210,6 @@ export const SettingsScreen = {
       });
     });
     this.actionMap.set("playback:p2pEnabled", () => {
-      if (TizenCapabilities.isP2pUnsupported()) {
-        return;
-      }
       const current = TorrentSettingsStore.get();
       if (current.p2pEnabled) {
         TorrentSettingsStore.setP2pEnabled(false);
@@ -6264,9 +6234,6 @@ export const SettingsScreen = {
       });
     });
     this.actionMap.set("playback:hideTorrentStats", () => {
-      if (TizenCapabilities.isP2pUnsupported()) {
-        return;
-      }
       TorrentSettingsStore.setHideTorrentStats(!TorrentSettingsStore.get().hideTorrentStats);
     });
 
@@ -6685,31 +6652,6 @@ export const SettingsScreen = {
       </div>
     `;
 
-    const audioCompatibilityBody = `
-      <div class="settings-stack">
-        ${this.renderToggleRow({
-          focusKey: "playback:forceDts",
-          title: t("settings.playback.forceDts.title", {}, "Force DTS audio"),
-          subtitle: t(
-            "settings.playback.forceDts.subtitle",
-            {},
-            "Keep DTS tracks selectable when automatic detection cannot see a working DTS restoration."
-          ),
-          checked: Boolean(model.webOsAudioCompatibility?.forceDtsAudio)
-        })}
-        ${this.renderToggleRow({
-          focusKey: "playback:forceTrueHd",
-          title: t("settings.playback.forceTrueHd.title", {}, "Force TrueHD audio"),
-          subtitle: t(
-            "settings.playback.forceTrueHd.subtitle",
-            {},
-            "Keep TrueHD tracks selectable only when this TV can actually decode or pass through TrueHD."
-          ),
-          checked: Boolean(model.webOsAudioCompatibility?.forceTrueHdAudio)
-        })}
-      </div>
-    `;
-
     const subtitleBody = `
       <div class="settings-stack">
         ${this.renderActionRow({
@@ -6877,25 +6819,6 @@ export const SettingsScreen = {
             expanded: Boolean(expanded.audio),
             bodyHtml: audioBody
           })}
-          ${
-            Platform.isWebOS()
-              ? this.renderCollapsibleRow({
-                  focusKey: "playback:toggle:audioCompatibility",
-                  title: t(
-                    "settings.playback.groups.audioCompatibility.title",
-                    {},
-                    "Advanced audio compatibility"
-                  ),
-                  subtitle: t(
-                    "settings.playback.groups.audioCompatibility.subtitle",
-                    {},
-                    "Automatic detection is used first. Override only when a rooted TV has a working decoder."
-                  ),
-                  expanded: Boolean(expanded.audioCompatibility),
-                  bodyHtml: audioCompatibilityBody
-                })
-              : ""
-          }
           ${this.renderCollapsibleRow({
             focusKey: "playback:toggle:subtitles",
             title: t("settings.playback.groups.subtitles.title"),
@@ -7343,20 +7266,6 @@ export const SettingsScreen = {
     });
     this.actionMap.set("about:supporters", () => Router.navigate("supportersContributors"));
     this.actionMap.set("about:licenses", () => Router.navigate("licensesAttributions"));
-    this.actionMap.set("about:checkUpdates", async () => {
-      this.aboutUpdateStatus = t("update_checking", {}, "Checking for updates…");
-      await this.render({ refreshModel: false });
-      try {
-        const update = await getLatestAppUpdate({ currentVersion: CURRENT_APP_VERSION });
-        this.aboutUpdateStatus = update
-          ? String(update.tag || "")
-          : t("update_latest_version", {}, "You’re using the latest version.");
-        if (update) showAppUpdatePrompt(update);
-      } catch (_) {
-        this.aboutUpdateStatus = t("update_error_check_failed", {}, "Update check failed");
-      }
-      await this.render({ refreshModel: false });
-    });
     this.actionMap.set("about:debugConsole", () => Router.navigate("debugConsole"));
 
     return `
@@ -7373,17 +7282,6 @@ export const SettingsScreen = {
           <p class="settings-about-copy">${t("settings.about.portedBy")}</p>
         </div>
         <div class="settings-stack">
-          ${this.renderActionRow({
-            focusKey: "about:checkUpdates",
-            title: t("about_check_updates", {}, "Check for updates"),
-            subtitle:
-              this.aboutUpdateStatus ||
-              t(
-                "about_check_updates_subtitle",
-                {},
-                "Check the latest release for manual installation"
-              )
-          })}
           ${this.renderActionRow({
             focusKey: "about:privacy",
             title: t("settings.about.privacyPolicy.title"),

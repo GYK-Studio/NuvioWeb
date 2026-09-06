@@ -7,8 +7,16 @@ import {
   cloudPlaybackFileForSession
 } from "../../data/local/cloudLibraryPlaybackStore.js";
 import { Platform } from "../../platform/index.js";
-import { TizenPlaybackProxy } from "../../platform/tizen/tizenPlaybackProxy.js";
-import { WebOsPlaybackProxy } from "../../platform/webos/webosPlaybackProxy.js";
+import {
+  browserPlaybackProxy as TizenPlaybackProxy,
+  browserPlaybackProxy as WebOsPlaybackProxy,
+  browserNativePlayerService as WebOsLunaService,
+  browserPlayerExtensions as WebOSPlayerExtensions,
+  requestBrowserLocalService as requestWebOsCompanionService,
+  subscribeBrowserLocalService as subscribeWebOsCompanionService,
+  applyBrowserAudioCodecOverrides as applyWebOsAudioCodecOverrides,
+  detectBrowserAudioCapabilities as detectWebOsAudioCapabilities
+} from "../../platform/browserServices.js";
 import { WatchProgressSyncService } from "../profile/watchProgressSyncService.js";
 import { nativeVideoEngine } from "./engines/nativeVideoEngine.js";
 import { hlsJsEngine } from "./engines/hlsJsEngine.js";
@@ -16,16 +24,6 @@ import { dashJsEngine } from "./engines/dashJsEngine.js";
 import { resolvePlatformAvplayEngine } from "./engines/platformAvplayEngine.js";
 import { isTerminalHlsHttpStatus } from "./hlsNetworkErrorPolicy.js";
 import { isShortPlaceholderDuration } from "./naturalPlaybackCompletion.js";
-import {
-  applyWebOsAudioCodecOverrides,
-  detectWebOsAudioCapabilities
-} from "../../platform/webos/webosAudioCapabilities.js";
-import { WebOsLunaService } from "../../platform/webos/webosLunaService.js";
-import {
-  requestWebOsCompanionService,
-  subscribeWebOsCompanionService
-} from "../../platform/webos/webosCompanionService.js";
-import { WebOSPlayerExtensions } from "../../platform/webos/webosPlayerExtensions.js";
 import { loadStreamingLibs } from "../../runtime/loadStreamingLibs.js";
 import { WATCH_PROGRESS_UNKNOWN_DURATION_PERCENT } from "../../domain/model/watchProgress.js";
 import { parseAspectRatio } from "./playerAspect.js";

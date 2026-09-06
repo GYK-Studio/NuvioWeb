@@ -1,4 +1,4 @@
-import { requestWebOsCompanionService } from "../../platform/webos/webosCompanionService.js";
+import { requestBrowserLocalService as requestWebOsCompanionService } from "../../platform/browserServices.js";
 
 const REQUEST_TIMEOUT_MS = 30000;
 const WINDOW_REQUEST_TIMEOUT_MS = 60000;

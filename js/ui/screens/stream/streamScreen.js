@@ -27,8 +27,11 @@ import {
   directDebridPreparationKey
 } from "../../../core/debrid/directDebridStreamPreparer.js";
 import { DebridStreamPresentation } from "../../../core/debrid/directDebridStreamPresentation.js";
-import { WebOsEngineFsResolver } from "../../../core/p2p/webosEngineFsResolver.js";
-import { TizenStreamingServerResolver } from "../../../core/p2p/tizenStreamingServerResolver.js";
+import {
+  browserStreamResolver as WebOsEngineFsResolver,
+  browserStreamResolver as TizenStreamingServerResolver,
+  browserNativePlayerService as WebOsLunaService
+} from "../../../platform/browserServices.js";
 import { DebridSettingsStore } from "../../../data/local/debridSettingsStore.js";
 import { StreamBadgeSettingsStore } from "../../../data/local/streamBadgeSettingsStore.js";
 import {
@@ -49,8 +52,7 @@ import {
   resolveAddonLogo
 } from "../../../core/media/addonLogoCache.js";
 import { Environment } from "../../../platform/environment.js";
-import { getTvRuntimePerformanceProfile } from "../../../platform/tvRuntimePerformance.js";
-import { WebOsLunaService } from "../../../platform/webos/webosLunaService.js";
+import { getWebRuntimeProfile } from "../../../platform/webRuntime.js";
 import { I18n } from "../../../i18n/index.js";
 import { localizedGenreText } from "../../../i18n/genreLabels.js";
 import {
@@ -96,7 +98,7 @@ function clamp(value, min, max) {
 
 function isPerformanceConstrainedRuntime() {
   return Boolean(
-    getTvRuntimePerformanceProfile().isPerformanceConstrained ||
+    getWebRuntimeProfile().isPerformanceConstrained ||
     globalThis.document?.body?.classList?.contains("performance-constrained")
   );
 }

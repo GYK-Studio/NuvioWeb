@@ -1,33 +1,4 @@
-function getAvplayApi() {
-  const webapis = globalThis.webapis;
-  const avplay =
-    webapis?.avplay ||
-    webapis?.avPlay ||
-    globalThis.avplay ||
-    globalThis.document?.getElementById?.("avPlayerObject") ||
-    null;
-  if (!avplay || typeof avplay.open !== "function") {
-    return null;
-  }
-  return avplay;
-}
-
-function createEngine(name) {
-  return {
-    name,
-
-    isSupported() {
-      return Boolean(getAvplayApi());
-    },
-
-    getApi() {
-      return getAvplayApi();
-    }
-  };
-}
-
-export const tizenAvplayEngine = createEngine("tizen-avplay");
-export const disabledAvplayEngine = {
+export const browserMediaEngine = {
   name: "none",
 
   isSupported() {
@@ -40,8 +11,5 @@ export const disabledAvplayEngine = {
 };
 
 export function resolvePlatformAvplayEngine(platformName) {
-  if (platformName === "tizen") {
-    return tizenAvplayEngine;
-  }
-  return disabledAvplayEngine;
+  return browserMediaEngine;
 }

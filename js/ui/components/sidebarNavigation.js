@@ -3,7 +3,6 @@ import { ProfileManager } from "../../core/profile/profileManager.js";
 import { AvatarRepository } from "../../data/remote/supabase/avatarRepository.js";
 import { MemberAccessRepository } from "../../data/remote/supabase/memberAccessRepository.js";
 import { I18n } from "../../i18n/index.js";
-import { getTvRuntimePerformanceProfile } from "../../platform/tvRuntimePerformance.js";
 
 const ROOT_SIDEBAR_ITEMS = [
   {
@@ -199,7 +198,7 @@ function fitRootSidebarText(container) {
       return;
     }
     if (node.matches(".modern-sidebar-profile-name")) {
-      // Android TV AutoResizeText uses a 9sp floor; the Web TV canvas is 2x.
+      // Keep profile labels legible in the browser sidebar.
       fitSidebarLabel(node, 18);
       return;
     }
@@ -314,8 +313,7 @@ export function activateLegacySidebarAction(action, currentRoute = "") {
     return;
   }
   if (target.route === currentRoute) {
-    // Re-selecting the tab you are already on. Let the screen react, e.g. Home
-    // scrolls back to the top, matching the Android TV app.
+    // Re-selecting the active tab lets the screen react, e.g. Home returns to the top.
     Router.getCurrentScreen()?.onSidebarReselect?.();
     return;
   }
@@ -339,7 +337,7 @@ export function renderLegacySidebar({
     profileState.showProfileSelector && profileState.activeProfileName
   );
   const collapsible = Boolean(layout?.collapseSidebar);
-  const performanceConstrained = getTvRuntimePerformanceProfile().isPerformanceConstrained;
+  const performanceConstrained = false;
 
   return `
     <aside class="home-sidebar root-sidebar root-sidebar-legacy${expanded ? " expanded content-expanded" : ""}${performanceConstrained ? " performance-constrained" : ""}"
@@ -402,7 +400,7 @@ export function renderModernSidebar({
   const { keepPillExpanded } = getModernSidebarPresentation(selectedRoute);
   const showPill = selectedItem.route !== "search";
   const selectedLabel = itemLabel(selectedItem);
-  const performanceConstrained = getTvRuntimePerformanceProfile().isPerformanceConstrained;
+  const performanceConstrained = false;
 
   return `
     <div class="modern-sidebar-shell${expanded ? " expanded panel-visible" : ""}${blurEnabled ? " blur-enabled" : ""}${keepPillExpanded ? " keep-pill-expanded" : ""}${performanceConstrained ? " performance-constrained" : ""}" data-selected-route="${selectedRoute}">

@@ -38,10 +38,7 @@ import { ProfileManager } from "../../../core/profile/profileManager.js";
 import { StartupSyncService } from "../../../core/profile/startupSyncService.js";
 import { Platform } from "../../../platform/index.js";
 import { WatchProgressSource } from "../../../data/local/traktSettingsStore.js";
-import {
-  getTvHeroTransitionMode,
-  getTvRuntimePerformanceProfile
-} from "../../../platform/tvRuntimePerformance.js";
+import { getHeroTransitionMode, getWebRuntimeProfile } from "../../../platform/webRuntime.js";
 import { isFastHorizontalNavigationEnabled } from "../../../platform/sharedKeys.js";
 import { LocalStore } from "../../../core/storage/localStore.js";
 import { TMDB_API_KEY, YOUTUBE_PROXY_URL } from "../../../config.js";
@@ -1167,7 +1164,7 @@ async function resolveTrailerMetaWithTmdbFallback(meta = {}, itemType = "movie")
 
 function getContinueWatchingMetaTimeout(timeoutMs) {
   const requestedTimeout = Math.max(500, Number(timeoutMs || 0) || CW_META_TIMEOUT_MS);
-  if (getTvRuntimePerformanceProfile().isPerformanceConstrained) {
+  if (getWebRuntimeProfile().isPerformanceConstrained) {
     return Math.max(requestedTimeout, CW_META_TIMEOUT_TV_MS);
   }
   return requestedTimeout;
@@ -1988,7 +1985,7 @@ function saveContinueWatchingEnrichment(item = {}) {
     episodeDescription: normalized.episodeDescription,
     continueWatchingMetaResolved: true
   };
-  const enrichmentCacheLimit = getTvRuntimePerformanceProfile().isPerformanceConstrained ? 50 : 200;
+  const enrichmentCacheLimit = getWebRuntimeProfile().isPerformanceConstrained ? 50 : 200;
   const entries = Object.entries(cache)
     .sort(([, left], [, right]) => Number(right?.cachedAt || 0) - Number(left?.cachedAt || 0))
     .slice(0, enrichmentCacheLimit);
@@ -2451,7 +2448,7 @@ function renderContinueWatchingCard(item, index, options = {}) {
   const uniqueCardImageSources = uniqueNonEmptyValues(cardImageSources);
   const cardImage = uniqueCardImageSources[0] || "";
   const fallbackQueue = encodeHeroBackdropFallbacks(uniqueCardImageSources.slice(1));
-  const deferContinueImage = getTvRuntimePerformanceProfile().isPerformanceConstrained;
+  const deferContinueImage = getWebRuntimeProfile().isPerformanceConstrained;
   const continueImageAttrs = cardImage
     ? buildLazyImageAttributes(cardImage, { defer: deferContinueImage })
     : "";
@@ -2866,14 +2863,14 @@ function shouldDeferHomeRowImages(rowIndex = 0, rowKey = "", focusedRowKey = "")
   if (focused && String(rowKey || "") === focused) {
     return false;
   }
-  const eagerRows = getTvRuntimePerformanceProfile().isPerformanceConstrained ? 3 : 5;
+  const eagerRows = getWebRuntimeProfile().isPerformanceConstrained ? 3 : 5;
   return safeRowIndex >= eagerRows;
 }
 
 function buildLazyImageAttributes(src = "", { defer = false, highPriority = false } = {}) {
   const safeSrc = escapeAttribute(src);
   const priority = highPriority ? ' fetchpriority="high"' : "";
-  const loadingMode = getTvRuntimePerformanceProfile().isPerformanceConstrained ? "eager" : "lazy";
+  const loadingMode = getWebRuntimeProfile().isPerformanceConstrained ? "eager" : "lazy";
   if (defer) {
     return `data-src="${safeSrc}" loading="${loadingMode}" decoding="async"${priority}`;
   }
@@ -3952,7 +3949,7 @@ export const HomeScreen = {
   },
 
   isLegacyTvRuntime() {
-    return Boolean(getTvRuntimePerformanceProfile().isLegacyTvRuntime);
+    return Boolean(getWebRuntimeProfile().isLegacyRuntime);
   },
 
   shouldSuppressAutomaticTrailerPlayback() {
@@ -3981,7 +3978,7 @@ export const HomeScreen = {
 
   isPerformanceConstrained() {
     return Boolean(
-      getTvRuntimePerformanceProfile().isPerformanceConstrained ||
+      getWebRuntimeProfile().isPerformanceConstrained ||
       globalThis.document?.body?.classList?.contains("performance-constrained")
     );
   },
@@ -3996,7 +3993,7 @@ export const HomeScreen = {
   shouldUseImmediateFocusScroll() {
     return Boolean(
       this.isPerformanceConstrained() ||
-      getTvRuntimePerformanceProfile().isTvRuntime ||
+      getWebRuntimeProfile().isTvRuntime ||
       globalThis.document?.body?.classList?.contains("smart-tv-motion-reduced")
     );
   },
@@ -4470,7 +4467,7 @@ export const HomeScreen = {
       this.layoutMode === "modern"
         ? HOME_MODERN_HERO_BACKDROP_CROSSFADE_MS
         : HOME_LEGACY_HERO_BACKDROP_CROSSFADE_MS;
-    const heroTransitionMode = getTvHeroTransitionMode();
+    const heroTransitionMode = getHeroTransitionMode();
 
     const backdrop = heroNode.querySelector(
       ".home-hero-backdrop:not(.home-hero-backdrop-transition-ghost)"

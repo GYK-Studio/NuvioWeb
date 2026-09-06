@@ -25,9 +25,7 @@ import { CatalogSeeAllScreen } from "../screens/catalog/catalogSeeAllScreen.js";
 import { TmdbEntityBrowseScreen } from "../screens/tmdb/tmdbEntityBrowseScreen.js";
 import { FolderDetailScreen } from "../screens/collection/folderDetailScreen.js";
 import { Platform } from "../../platform/index.js";
-import { TizenCapabilities } from "../../platform/tizen/tizenCapabilities.js";
 import { RouteStateStore } from "./routeStateStore.js";
-import { LocalStore } from "../../core/storage/localStore.js";
 
 const ROUTER_PERF_DEBUG = Boolean(
   globalThis.__NUVIO_DEBUG_ROUTER_PERF__ || globalThis.__NUVIO_DEBUG_HOME_PERF__
@@ -56,19 +54,6 @@ const NON_BACKSTACK_ROUTES = new Set([
   "experienceModeSelection",
   "essentialAddonSetup"
 ]);
-const WEBOS_RESUME_ROUTE_KEY = "webos_last_resume_route";
-const WEBOS_RESUME_ROUTE_TTL_MS = 20 * 60 * 1000;
-const TIZEN_ROUTE_RETURN_BACK_GUARD_MS = 700;
-const WEBOS_NON_RESTORABLE_ROUTES = new Set([
-  ...NON_BACKSTACK_ROUTES,
-  "debugConsole",
-  "plugin",
-  "plugins",
-  "catalogOrder",
-  "detail",
-  "player",
-  "stream"
-]);
 
 function getStackEntryRoute(entry) {
   return typeof entry === "string" ? entry : String(entry?.route || "");
@@ -83,7 +68,6 @@ export const Router = {
   currentParams: {},
   stack: [],
   historyInitialized: false,
-  webOsHomeBackGuardInitialized: false,
   popstateBound: false,
   suppressPopstateUntil: 0,
   skipConsumeNextPopstate: false,
@@ -288,18 +272,7 @@ export const Router = {
         return;
       }
       if (this.consumeRouteReturnBackGuard()) {
-        // A physical Tizen Back can also move browser history after its key
-        // event has already completed an in-app route return. Keep that late
-        // popstate on the restored screen instead of letting Home consume it
-        // as a second Back and open the sidebar.
         this.restoreCurrentHistoryState(state);
-        return;
-      }
-      if (Platform.isTizen() && this.current === "home" && state?.route === "home") {
-        // A native history event can arrive after the timed route-return guard
-        // has expired. Home is already restored, so forwarding this redundant
-        // transition would make Home consume it as another Back and open the
-        // sidebar.
         return;
       }
       const shouldSkipConsume = Boolean(this.skipConsumeNextPopstate);
@@ -464,7 +437,7 @@ export const Router = {
   beginRouteReturnBackGuard(isBackNavigation = false) {
     this.routeReturnBackGuardNavigationId += 1;
     const navigationId = this.routeReturnBackGuardNavigationId;
-    const shouldGuard = Platform.isTizen() && Boolean(isBackNavigation);
+    const shouldGuard = false;
     this.routeReturnBackGuardActive = shouldGuard;
     this.routeReturnBackGuardUntil = shouldGuard ? Number.POSITIVE_INFINITY : 0;
     return navigationId;
@@ -495,60 +468,7 @@ export const Router = {
     return true;
   },
 
-  isWebOsResumeRouteRestorable(routeName = this.current) {
-    const route = String(routeName || "").trim();
-    return Boolean(route && this.routes[route] && !WEBOS_NON_RESTORABLE_ROUTES.has(route));
-  },
-
-  persistWebOsResumeRoute(routeName = this.current, params = this.currentParams) {
-    if (!Platform.isWebOS()) {
-      return;
-    }
-    const route = String(routeName || "").trim();
-    if (!this.isWebOsResumeRouteRestorable(route)) {
-      LocalStore.remove(WEBOS_RESUME_ROUTE_KEY);
-      return;
-    }
-    try {
-      LocalStore.set(WEBOS_RESUME_ROUTE_KEY, {
-        route,
-        params: params || {},
-        savedAt: Date.now()
-      });
-    } catch (error) {
-      console.warn("Failed to persist webOS resume route", error);
-    }
-  },
-
-  consumeWebOsResumeRoute() {
-    if (!Platform.isWebOS()) {
-      return null;
-    }
-    const snapshot = LocalStore.get(WEBOS_RESUME_ROUTE_KEY, null);
-    if (!snapshot || typeof snapshot !== "object") {
-      return null;
-    }
-    const route = String(snapshot.route || "").trim();
-    const savedAt = Number(snapshot.savedAt || 0);
-    if (
-      !route ||
-      !this.isWebOsResumeRouteRestorable(route) ||
-      !Number.isFinite(savedAt) ||
-      Date.now() - savedAt > WEBOS_RESUME_ROUTE_TTL_MS
-    ) {
-      LocalStore.remove(WEBOS_RESUME_ROUTE_KEY);
-      return null;
-    }
-    return {
-      route,
-      params: snapshot.params && typeof snapshot.params === "object" ? snapshot.params : {}
-    };
-  },
-
   async navigate(routeName, params = {}, options = {}) {
-    if (routeName === "plugins" && Platform.isTizen() && !TizenCapabilities.canUsePlugins()) {
-      return;
-    }
     const navigationStart = ROUTER_PERF_DEBUG ? routerPerfNow() : 0;
 
     const fromHistory = Boolean(options?.fromHistory);
@@ -632,19 +552,7 @@ export const Router = {
           window.history.pushState(state, "");
         }
       }
-      // webOS handles the remote Back button through the History API by
-      // default. Keep one Home entry available so overlays can consume Back
-      // before the platform treats it as a request to exit the app.
-      if (
-        Platform.isWebOS() &&
-        (this.current === "home" || this.current === "profileSelection") &&
-        !this.webOsHomeBackGuardInitialized
-      ) {
-        window.history.pushState(state, "");
-        this.webOsHomeBackGuardInitialized = true;
-      }
     }
-    this.persistWebOsResumeRoute(this.current, this.currentParams);
   },
 
   navigateFromPostPlayRecommendation(routeName, params = {}, options = {}) {
@@ -803,7 +711,6 @@ export const Router = {
             previousRoute
           }
         );
-        this.persistWebOsResumeRoute("home", {});
         return;
       }
 
@@ -830,7 +737,6 @@ export const Router = {
     });
 
     await this.routes[previousRoute].mount(previousParams, navigationContext);
-    this.persistWebOsResumeRoute(this.current, this.currentParams);
   },
 
   getCurrent() {

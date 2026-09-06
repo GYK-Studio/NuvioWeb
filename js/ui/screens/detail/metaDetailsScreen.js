@@ -41,7 +41,7 @@ import { toTraktImageUrl } from "../../../core/trakt/traktImageUrl.js";
 import { supportsMembershipFor } from "../../../core/tracking/trackingLibraryMembership.js";
 import { Environment } from "../../../platform/environment.js";
 import { Platform } from "../../../platform/index.js";
-import { getTvRuntimePerformanceProfile } from "../../../platform/tvRuntimePerformance.js";
+import { getWebRuntimeProfile } from "../../../platform/webRuntime.js";
 import {
   TMDB_API_KEY,
   TRAKT_API_URL,
@@ -104,7 +104,7 @@ function isRtlDetailLocale(locale = I18n.getLocale()) {
 }
 
 function detailImageLoadingMode() {
-  return getTvRuntimePerformanceProfile().isPerformanceConstrained ? "eager" : "lazy";
+  return getWebRuntimeProfile().isPerformanceConstrained ? "eager" : "lazy";
 }
 
 function resolveDetailBackdropUrl(meta = {}) {
@@ -6285,13 +6285,13 @@ export const MetaDetailsScreen = {
 
   isPerformanceConstrained() {
     return Boolean(
-      getTvRuntimePerformanceProfile().isPerformanceConstrained ||
+      getWebRuntimeProfile().isPerformanceConstrained ||
       globalThis.document?.body?.classList?.contains("performance-constrained")
     );
   },
 
   isLegacyTvRuntime() {
-    return Boolean(getTvRuntimePerformanceProfile().isLegacyTvRuntime);
+    return Boolean(getWebRuntimeProfile().isLegacyRuntime);
   },
 
   shouldSuppressTrailerAutoplay() {

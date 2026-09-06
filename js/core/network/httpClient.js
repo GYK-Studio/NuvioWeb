@@ -1,6 +1,5 @@
 import { SessionStore } from "../storage/sessionStore.js";
 import { AuthManager } from "../auth/authManager.js";
-import { fetchViaWebOsSupabaseProxy } from "../../platform/webos/webosSupabaseProxy.js";
 
 const DEFAULT_HTTP_REQUEST_TIMEOUT_MS = 60_000;
 const BACKEND_RETRY_MAX_DELAY_MS = 30_000;
@@ -75,8 +74,7 @@ async function waitForBackendCooldown() {
 async function fetchWithBackendRetry(url, fetchInit, method) {
   const safeRetry = isSafeBackendRetryRequest(url, method);
   await waitForBackendCooldown();
-  let response =
-    (await fetchViaWebOsSupabaseProxy(url, fetchInit)) || (await fetch(url, fetchInit));
+  let response = await fetch(url, fetchInit);
   recordBackendCooldown(response);
 
   if (safeRetry && [429, 503].includes(Number(response?.status || 0))) {
@@ -90,7 +88,7 @@ async function fetchWithBackendRetry(url, fetchInit, method) {
       await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
     await waitForBackendCooldown();
-    response = (await fetchViaWebOsSupabaseProxy(url, fetchInit)) || (await fetch(url, fetchInit));
+    response = await fetch(url, fetchInit);
     recordBackendCooldown(response);
   }
   return response;

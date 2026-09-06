@@ -1,7 +1,7 @@
 import { Router } from "../../navigation/router.js";
 import { ScreenUtils } from "../../navigation/screen.js";
 import { Environment } from "../../../platform/environment.js";
-import { getTvRuntimePerformanceProfile } from "../../../platform/tvRuntimePerformance.js";
+import { getWebRuntimeProfile } from "../../../platform/webRuntime.js";
 import { addonRepository } from "../../../data/repository/addonRepository.js";
 import { catalogRepository } from "../../../data/repository/catalogRepository.js";
 import { watchedItemsRepository } from "../../../data/repository/watchedItemsRepository.js";
@@ -99,7 +99,7 @@ function bestTraktImage(images = {}, ...kinds) {
 }
 
 function folderPosterLoadingMode() {
-  return getTvRuntimePerformanceProfile().isPerformanceConstrained ? "eager" : "lazy";
+  return getWebRuntimeProfile().isPerformanceConstrained ? "eager" : "lazy";
 }
 
 function toImageUrl(path, kind = "poster") {
