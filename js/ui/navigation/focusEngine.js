@@ -57,6 +57,15 @@ export const FocusEngine = {
     this.boundHandleKeyUp = this.handleKeyUp.bind(this);
     document.addEventListener("keydown", this.boundHandleKey, true);
     document.addEventListener("keyup", this.boundHandleKeyUp, true);
+    document.addEventListener("focusin", (event) => {
+      const target = event.target.closest?.(".focusable");
+      if (!target) return;
+      const screen = target.closest(".screen");
+      screen?.querySelectorAll(".focusable.focused").forEach((node) => {
+        if (node !== target) node.classList.remove("focused");
+      });
+      target.classList.add("focused");
+    });
   },
 
   handleBack(event, normalizedEvent = buildNormalizedEvent(event)) {
@@ -98,6 +107,11 @@ export const FocusEngine = {
   },
 
   handleKey(event) {
+    // Native editing, browser shortcuts and Tab belong to the browser.
+    if (event.ctrlKey || event.metaKey || event.altKey || event.key === "Tab") return;
+    if (event.target?.closest?.("input, textarea, select, [contenteditable=true], form")) return;
+    if (Router.getCurrent() !== "player" && event.key.startsWith("Arrow")) return;
+    if (event.target?.closest?.("button, a[href]") && ["Enter", " "].includes(event.key)) return;
     if (event?.target && !document.contains(event.target)) {
       return;
     }
@@ -150,6 +164,10 @@ export const FocusEngine = {
   },
 
   handleKeyUp(event) {
+    if (event.ctrlKey || event.metaKey || event.altKey || event.key === "Tab") return;
+    if (event.target?.closest?.("input, textarea, select, [contenteditable=true], form")) return;
+    if (Router.getCurrent() !== "player" && event.key.startsWith("Arrow")) return;
+    if (event.target?.closest?.("button, a[href]") && ["Enter", " "].includes(event.key)) return;
     const normalizedEvent = buildNormalizedEvent(event);
     const keyIdentity = this.getKeyIdentity(normalizedEvent);
     if (

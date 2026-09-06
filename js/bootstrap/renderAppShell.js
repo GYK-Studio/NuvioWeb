@@ -1,3 +1,5 @@
+import { installWebPlayerControls } from "./webPlayerControls.js";
+
 const APP_SHELL = `
   <div id="app">
     <div id="account" class="screen"></div>
@@ -33,4 +35,5 @@ export function renderAppShell() {
     return;
   }
   document.body.insertAdjacentHTML("afterbegin", APP_SHELL);
+  installWebPlayerControls();
 }

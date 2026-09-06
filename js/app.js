@@ -194,7 +194,7 @@ function subscribeToAuthentication() {
       }
 
       const hasSeenQr = LocalStore.get("hasSeenAuthQrOnFirstLaunch");
-      void Router.navigate("authQrSignIn", { onboardingMode: !hasSeenQr });
+      void Router.navigate("authSignIn", { onboardingMode: !hasSeenQr });
       return;
     }
 

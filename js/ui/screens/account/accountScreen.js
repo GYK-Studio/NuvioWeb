@@ -80,6 +80,12 @@ export const AccountScreen = {
     const focusables = this.container.querySelectorAll(".focusable");
     focusables.forEach((el, index) => {
       el.dataset.index = String(index);
+      el.tabIndex = 0;
+      el.setAttribute("role", "button");
+      el.onclick = () => {
+        if (el.dataset.action === "signin") void Router.navigate("authSignIn");
+        if (el.dataset.action === "logout") void this.signOut();
+      };
     });
     focusables[0]?.classList.add("focused");
   },

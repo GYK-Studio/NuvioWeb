@@ -1,0 +1,414 @@
+/* Browser page geometry. Keep independently scrollable virtualized lists. */
+.stream-route-content {
+  grid-template-columns: minmax(180px, 0.3fr) minmax(0, 0.7fr);
+  padding: 24px;
+  gap: 24px;
+}
+.stream-route-title {
+  font-size: clamp(28px, 3vw, 46px);
+}
+.stream-route-episode-code {
+  font-size: 18px;
+}
+.stream-route-chip {
+  min-height: 44px;
+  padding: 0 18px;
+}
+.stream-route-chip-wrap {
+  height: 56px;
+  margin-bottom: 12px;
+}
+.stream-route-panel-shell {
+  padding: 12px;
+}
+.search-content {
+  height: auto;
+  min-height: 100dvh;
+  padding: 24px;
+}
+.search-header,
+.search-header.no-discover,
+.search-header.no-voice {
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 0;
+  gap: 12px;
+}
+.search-discover-btn,
+.search-voice-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+.search-action-icon {
+  font-size: 24px;
+}
+.search-results-title {
+  font-size: 24px;
+}
+.search-result-name {
+  font-size: 15px;
+}
+@media (max-width: 820px) {
+  .stream-route-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+  .stream-route-left {
+    flex: 0 0 auto;
+    padding: 0;
+    justify-content: flex-start;
+  }
+  .stream-route-left-inner {
+    width: 100%;
+    text-align: left;
+    align-items: flex-start;
+  }
+  .stream-route-logo {
+    width: auto;
+    max-width: 180px;
+    max-height: 56px;
+    margin-bottom: 8px;
+  }
+  .stream-route-right {
+    flex: 1;
+    min-height: 0;
+  }
+  .search-content {
+    padding: 16px;
+  }
+}
+.web-player-toolbar {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  left: 12px;
+  z-index: 100;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  pointer-events: none;
+}
+.web-player-toolbar[hidden] {
+  display: none;
+}
+.web-player-toolbar button {
+  pointer-events: auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #ffffff40;
+  border-radius: 8px;
+  background: #101014dc;
+  color: white;
+  font-size: 14px;
+}
+.web-player-toolbar [role="status"] {
+  color: white;
+  background: #101014dc;
+}
+.web-player-toolbar [role="status"]:empty {
+  display: none;
+}
+.experience-mode-screen {
+  width: 100%;
+  min-height: 100dvh;
+  height: auto;
+  padding: 40px 24px;
+}
+.experience-mode-options {
+  width: min(900px, 100%);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 20px;
+}
+.experience-mode-card {
+  width: 100%;
+  min-height: 140px;
+  padding: 24px;
+}
+.web-login {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.web-login-form {
+  width: min(100%, 440px);
+  display: grid;
+  gap: 14px;
+  padding: clamp(24px, 5vw, 40px);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+}
+.web-login-brand {
+  letter-spacing: 0.22em;
+  font-weight: 800;
+}
+.web-login h1 {
+  font-size: clamp(28px, 4vw, 38px);
+  margin: 0;
+  line-height: 1.15;
+}
+.web-login p {
+  margin: 0 0 8px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.web-login label {
+  font-size: 14px;
+  margin-top: 8px;
+}
+.web-login input {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+.web-login button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--secondary-color);
+  color: var(--on-secondary);
+  font-weight: 700;
+}
+.web-login button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.web-login .web-login-error {
+  color: var(--error-color);
+  font-size: 14px;
+}
+.web-login-error:empty {
+  display: none;
+}
+.web-account-link {
+  color: var(--text-secondary);
+  text-align: center;
+  font-size: 14px;
+  padding: 10px 0;
+}
+
+.settings-shell .settings-workspace,
+.settings-shell.has-collapsible-sidebar .settings-workspace,
+.settings-shell:has(.home-sidebar) .settings-workspace,
+.settings-shell:has(.modern-sidebar-shell) .settings-workspace {
+  grid-column: 2;
+  width: auto;
+  height: auto;
+  min-height: calc(100dvh - 48px);
+  margin: 24px;
+  padding: 20px;
+  border-radius: 16px;
+  grid-template-columns: minmax(170px, 220px) minmax(0, 1fr);
+  gap: 20px;
+}
+.settings-root-sidebar-slot {
+  grid-column: 1;
+  grid-row: 1;
+}
+.settings-content,
+.settings-sidebar {
+  height: auto;
+  max-height: none;
+  padding: 12px;
+}
+.settings-row-title,
+.settings-nav-item {
+  font-size: 16px;
+}
+.settings-row-subtitle {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.settings-layout-grid,
+.settings-theme-grid {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+.settings-dialog,
+.profile-dialog,
+.profile-editor-panel {
+  width: min(720px, calc(100vw - 32px)) !important;
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 24px;
+  border-radius: 16px;
+}
+.settings-dialog-title,
+.profile-dialog-title {
+  font-size: 24px;
+}
+.settings-text-dialog-input {
+  font-size: 16px;
+  min-height: 44px;
+}
+.profile-screen {
+  min-height: 100dvh;
+  height: auto;
+  padding: 40px 20px;
+  overflow: auto;
+}
+.profile-title {
+  font-size: clamp(28px, 4vw, 44px);
+}
+.profile-grid {
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+}
+.profile-card {
+  width: clamp(110px, 15vw, 180px);
+}
+.profile-avatar-ring {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+.profile-name {
+  font-size: 16px;
+}
+.profile-hint,
+.profile-pin-back-hint {
+  display: none;
+}
+
+.series-detail-shell {
+  width: 100%;
+  height: 100dvh;
+  overflow-y: auto;
+  --detail-safe-x: clamp(20px, 4vw, 64px);
+  --detail-episode-safe-x: var(--detail-safe-x);
+  --detail-action-gap: 12px;
+  --detail-button-height: 46px;
+  --detail-control-size: 46px;
+  --detail-title-size: clamp(30px, 5vw, 64px);
+  --detail-section-title-size: 26px;
+  --detail-label-size: 16px;
+  --detail-body-size: 17px;
+  --detail-caption-size: 14px;
+}
+.detail-hero-section {
+  min-height: min(680px, 85dvh);
+  height: auto;
+  padding: 80px var(--detail-safe-x) 32px;
+}
+.detail-hero-brand {
+  min-height: 100px;
+}
+.series-detail-actions {
+  flex-wrap: wrap;
+}
+.series-detail-logo {
+  max-width: min(420px, 70vw);
+  max-height: 130px;
+}
+.series-detail-description {
+  max-width: 70ch;
+  font-size: 16px;
+  line-height: 1.65;
+}
+.series-episode-track,
+.search-results-track,
+.home-track {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  touch-action: pan-x pan-y;
+}
+.stream-route-shell {
+  width: 100%;
+  height: 100dvh;
+}
+.stream-route-list {
+  scrollbar-width: thin;
+}
+.stream-route-autoplay-card {
+  min-width: 0;
+  width: min(520px, calc(100vw - 32px));
+  max-width: 100%;
+}
+#player {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  overflow: hidden;
+  z-index: 60;
+}
+.focusable {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+input,
+textarea {
+  user-select: text;
+}
+
+@media (max-width: 1100px) {
+  .settings-shell .settings-workspace,
+  .settings-shell:has(.home-sidebar) .settings-workspace,
+  .settings-shell:has(.modern-sidebar-shell) .settings-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .settings-sidebar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+  }
+  .settings-nav-item {
+    flex: 0 0 auto;
+    min-height: 44px;
+  }
+}
+@media (max-width: 820px) {
+  .settings-shell .settings-workspace,
+  .settings-shell:has(.home-sidebar) .settings-workspace,
+  .settings-shell:has(.modern-sidebar-shell) .settings-workspace {
+    margin: 12px;
+    padding: 10px;
+  }
+  .home-nav-list,
+  .modern-sidebar-nav-list {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(56px, 1fr);
+    overflow-x: auto;
+  }
+  .settings-text-dialog-actions,
+  .profile-dialog-actions {
+    flex-wrap: wrap;
+  }
+  .profile-editor-body {
+    display: block;
+  }
+  .series-detail-content {
+    width: 100%;
+  }
+  .series-detail-actions {
+    gap: 8px;
+  }
+  .detail-hero-section {
+    padding-top: 64px;
+    min-height: 65dvh;
+  }
+  .search-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .search-input {
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,5 +1,16 @@
 /* Nuvio Web: responsive browser shell layered over the shared media views. */
 :root {
+  --tv-safe-gutter: 24px;
+  --tv-safe-gutter-wide: 32px;
+  --tv-button-height: 44px;
+  --tv-control-size: 44px;
+  --tv-control-icon-size: 24px;
+  --tv-button-padding-x: 18px;
+  --tv-caption-text: 13px;
+  --tv-secondary-text: 14px;
+  --tv-body-text: 16px;
+  --tv-subtitle-text: 22px;
+  --tv-title-text: clamp(28px, 4vw, 48px);
   --web-nav-width: 248px;
   --web-page-gutter: clamp(18px, 3.5vw, 64px);
   --web-surface: rgb(255 255 255 / 0.055);

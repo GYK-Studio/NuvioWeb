@@ -36,7 +36,6 @@ export const ExperienceModeSelectionScreen = {
     this.render();
     this.onKeyDownBound = this.onKeyDown.bind(this);
     this.onClickBound = this.onClick.bind(this);
-    document.addEventListener("keydown", this.onKeyDownBound);
     this.container.addEventListener("click", this.onClickBound);
     ScreenUtils.setInitialFocus(this.container);
   },
@@ -106,6 +105,7 @@ export const ExperienceModeSelectionScreen = {
   },
 
   async onKeyDown(event) {
+    if (event.target?.closest?.("button")) return;
     const key = event.key;
     if (["ArrowLeft", "ArrowRight"].includes(key)) {
       event.preventDefault();

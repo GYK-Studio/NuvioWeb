@@ -25,6 +25,9 @@ export const ScreenUtils = {
   },
 
   setInitialFocus(container, selector = ".focusable") {
+    // Keep focus where the browser/user placed it; mounting a catalog must not
+    // steal focus from navigation, forms or the page's scroll position.
+    if (!container?.closest("[role=dialog], [aria-modal=true]")) return;
     const modalOpen = Boolean(globalThis?.document?.body?.classList?.contains("nuvio-modal-open"));
     if (modalOpen) {
       const existingFocused = container?.querySelector?.(".focusable.focused") || null;

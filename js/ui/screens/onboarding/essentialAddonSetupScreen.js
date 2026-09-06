@@ -34,7 +34,6 @@ export const EssentialAddonSetupScreen = {
       </main>`;
     this.onKeyDownBound = this.onKeyDown.bind(this);
     this.onClickBound = this.onClick.bind(this);
-    document.addEventListener("keydown", this.onKeyDownBound);
     this.container.addEventListener("click", this.onClickBound);
     ScreenUtils.setInitialFocus(this.container);
   },
@@ -61,6 +60,7 @@ export const EssentialAddonSetupScreen = {
   },
 
   onKeyDown(event) {
+    if (event.target?.closest?.("button, input, a")) return;
     if (["ArrowLeft", "ArrowRight"].includes(event.key)) {
       event.preventDefault();
       ScreenUtils.moveFocus(this.container, event.key === "ArrowLeft" ? -1 : 1);
