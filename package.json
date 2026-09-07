@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node ./scripts/build.mjs",
     "test": "npm run test:plugins",
+    "test:web": "node tests/test-web-controls.mjs",
     "test:plugins": "npm run build && node ./tests/test-plugin-system.mjs && node ./tests/test-plugin-localization.mjs",
     "prepare": "husky || true",
     "lint": "eslint \"js/**/*.js\" \"eslint.config.mjs\"",

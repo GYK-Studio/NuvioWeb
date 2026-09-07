@@ -57,6 +57,48 @@ export const FocusEngine = {
     this.boundHandleKeyUp = this.handleKeyUp.bind(this);
     document.addEventListener("keydown", this.boundHandleKey, true);
     document.addEventListener("keyup", this.boundHandleKeyUp, true);
+    // These legacy views expose actions but do not bind click handlers. Keep
+    // the bridge explicit to avoid double activation in forms/settings/home.
+    document.addEventListener("click", (event) => {
+      const routes = new Set([
+        "detail",
+        "stream",
+        "castDetail",
+        "catalogSeeAll",
+        "folderDetail",
+        "tmdbEntityBrowse",
+        "player"
+      ]);
+      if (!routes.has(Router.current) || event.defaultPrevented || hasActiveModal()) return;
+      const target = this.getPointerFocusable(event);
+      const screen = Router.getCurrentScreen();
+      if (
+        !target ||
+        !screen?.container?.contains(target) ||
+        target.matches("input,textarea,select")
+      )
+        return;
+      this.focusPointerTarget(target, event);
+      void (async () => {
+        if (screen.activateControl) {
+          await screen.activateControl(target);
+          return;
+        }
+        if (await screen.onPointerActivate?.(target, event)) return;
+        const activation = {
+          key: "Enter",
+          keyCode: 13,
+          which: 13,
+          target,
+          repeat: false,
+          preventDefault() {},
+          stopPropagation() {},
+          stopImmediatePropagation() {}
+        };
+        await screen.onKeyDown?.(activation);
+        await screen.onKeyUp?.(activation);
+      })().catch((error) => console.error("Web control activation failed", error));
+    });
     document.addEventListener("focusin", (event) => {
       const target = event.target.closest?.(".focusable");
       if (!target) return;

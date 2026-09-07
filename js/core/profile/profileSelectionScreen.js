@@ -565,7 +565,7 @@ export const ProfileSelectionScreen = {
     this.container.innerHTML = `
       <div class="profile-screen${pinScreenPhaseClass}${compactGridScreenClass}">
         <div class="profile-screen-background" data-role="profile-screen-background" aria-hidden="true"></div>
-        <div class="profile-main-layer"${isPinActive ? ' aria-hidden="true"' : ""}>
+        <div class="profile-main-layer"${isPinActive || this.editorState ? ' inert aria-hidden="true"' : ""}>
           ${renderMemberBrandWordmark({
             access: this.memberAccess,
             imageClass: "profile-logo",
@@ -605,6 +605,7 @@ export const ProfileSelectionScreen = {
     );
     return `
       <div class="profile-card profile-focusable focusable"
+           role="button" aria-label="${escapeHtml(profile.name)}"
            data-profile-id="${escapeHtml(profile.id)}"
            data-focus-key="profile:${escapeHtml(profile.id)}"
            tabindex="0">
@@ -627,6 +628,7 @@ export const ProfileSelectionScreen = {
   renderAddProfileCard() {
     return `
       <div class="profile-card profile-card-add profile-focusable focusable"
+           role="button" aria-label="${escapeHtml(t("profile_add_new", {}, "Add Profile"))}"
            data-profile-id="add"
            data-focus-key="profile:add"
            tabindex="0">
@@ -709,7 +711,7 @@ export const ProfileSelectionScreen = {
 
     return `
       <div class="profile-editor-backdrop" data-action="dismiss-overlay">
-        <div class="profile-editor-panel" data-overlay-root="editor">
+        <div class="profile-editor-panel" data-overlay-root="editor" role="dialog" aria-modal="true" aria-label="${escapeHtml(editorTitle)}">
           <div class="profile-editor-header">
             ${overlayHeading}
             <button class="profile-overlay-button profile-overlay-button-primary profile-overlay-focusable${this.isEditorSubmitDisabled() ? " is-disabled" : ""}"
@@ -1055,6 +1057,28 @@ export const ProfileSelectionScreen = {
 
     const editorBackdrop = this.container.querySelector(".profile-editor-backdrop");
     if (editorBackdrop) {
+      editorBackdrop.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          this.closeEditor();
+          return;
+        }
+        if (event.key !== "Tab") return;
+        const controls = [
+          ...editorBackdrop.querySelectorAll(
+            "button:not(:disabled),input:not(:disabled),[tabindex='0']"
+          )
+        ].filter((node) => node.getClientRects().length);
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      });
       editorBackdrop.addEventListener("click", (event) => {
         if (event.target === editorBackdrop) {
           this.closeEditor();

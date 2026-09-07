@@ -181,11 +181,13 @@ export const CatalogOrderScreen = {
           </div>
           <div class="catalog-order-card-actions">
             <button type="button"
+                    aria-label="Move ${escapeHtml(item.catalogName)} up"
                     class="catalog-order-action ${item.canMoveUp ? "catalog-order-focusable" : "is-disabled"}"
                     ${item.canMoveUp ? `data-row="${index}" data-col="0" data-action="up" data-key="${escapeHtml(item.key)}" tabindex="-1"` : 'tabindex="-1" aria-disabled="true"'}>
               <span class="material-icons" aria-hidden="true">arrow_upward</span>
             </button>
             <button type="button"
+                    aria-label="Move ${escapeHtml(item.catalogName)} down"
                     class="catalog-order-action ${item.canMoveDown ? "catalog-order-focusable" : "is-disabled"}"
                     ${item.canMoveDown ? `data-row="${index}" data-col="1" data-action="down" data-key="${escapeHtml(item.key)}" tabindex="-1"` : 'tabindex="-1" aria-disabled="true"'}>
               <span class="material-icons" aria-hidden="true">arrow_downward</span>
@@ -216,6 +218,7 @@ export const CatalogOrderScreen = {
     `;
 
     this.container.querySelectorAll(".catalog-order-focusable[data-action]").forEach((node) => {
+      node.tabIndex = 0;
       node.addEventListener("click", async () => {
         this.focusRow = Number(node.dataset.row || 0);
         this.focusCol = Number(node.dataset.col || 0);

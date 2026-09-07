@@ -9180,6 +9180,11 @@ export const MetaDetailsScreen = {
       return;
     }
 
+    return this.activateControl(current);
+  },
+
+  async activateControl(current) {
+    if (!current || !this.container?.contains(current)) return;
     const action = current.dataset.action;
     if (action === "goBack") {
       if (this.navigateBackFromDetail()) {

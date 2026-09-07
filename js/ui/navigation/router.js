@@ -531,6 +531,12 @@ export const Router = {
       return;
     }
 
+    // Browser pages share the document scroller; a new route must not inherit
+    // the previous page's offset. History traversal retains native restoration.
+    if (!fromHistory && !options?.isBackNavigation) {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }
+
     if (bootGuard && typeof bootGuard.ready === "function") {
       bootGuard.ready();
     }

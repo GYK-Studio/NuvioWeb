@@ -256,21 +256,85 @@
 .profile-title {
   font-size: clamp(28px, 4vw, 44px);
 }
-.profile-grid {
-  flex-wrap: wrap;
-  gap: 24px;
+#profileSelection .profile-main-layer {
+  height: auto;
+  min-height: calc(100dvh - 80px);
+  padding: clamp(16px, 4vw, 56px) 0;
   justify-content: center;
 }
-.profile-card {
-  width: clamp(110px, 15vw, 180px);
+#profileSelection .profile-logo {
+  width: min(240px, 60vw);
+  height: auto;
 }
-.profile-avatar-ring {
+#profileSelection .profile-subtitle {
+  margin-top: 16px;
+  font-size: clamp(16px, 2vw, 20px);
+}
+#profileSelection .profile-grid {
+  flex-wrap: wrap;
+  gap: clamp(16px, 3vw, 32px);
+  justify-content: center;
+  min-height: 0;
+  margin-top: 32px;
+  width: 100%;
+}
+#profileSelection .profile-card {
+  flex: 0 0 auto;
+  width: clamp(120px, 18vw, 168px);
+  padding: 8px;
+  transform: none;
+}
+#profileSelection .profile-card .profile-avatar-ring {
   width: 100%;
   height: auto;
   aspect-ratio: 1;
+  margin: 0;
+  padding: 8px;
+  border: 2px solid var(--border-color);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
 }
-.profile-name {
+#profileSelection .profile-card .profile-avatar {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  font-size: clamp(36px, 5vw, 56px);
+  transition: background-color 160ms ease;
+}
+#profileSelection .profile-card:hover .profile-avatar-ring,
+#profileSelection .profile-card:focus-visible .profile-avatar-ring {
+  border-color: var(--focus-color);
+}
+#profileSelection .profile-primary-dot {
+  right: 0;
+  bottom: 0;
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+  font-size: 14px;
+}
+#profileSelection .profile-card .profile-name {
   font-size: 16px;
+  margin-top: 14px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+#profileSelection .profile-badge,
+#profileSelection .profile-badge-slot {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  min-height: 20px;
+  margin-top: 6px;
+}
+#profileSelection .profile-avatar-add::before {
+  width: 32px;
+  height: 3px;
+}
+#profileSelection .profile-avatar-add::after {
+  width: 3px;
+  height: 32px;
 }
 .profile-hint,
 .profile-pin-back-hint {

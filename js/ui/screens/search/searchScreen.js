@@ -945,7 +945,7 @@ export const SearchScreen = {
             ${
               this.layoutPrefs?.discoverLocation === "in_search"
                 ? `
-              <button class="search-discover-btn focusable" data-action="openDiscover">
+              <button class="search-discover-btn focusable" data-action="openDiscover" aria-label="Discover">
                 <span class="search-action-icon material-icons" aria-hidden="true">explore</span>
               </button>
             `
@@ -964,6 +964,7 @@ export const SearchScreen = {
             }
             <input
               id="searchInput"
+              aria-label="${escapeHtml(t("search_placeholder", {}, "Search movies & series"))}"
               class="search-input-field focusable"
               type="text"
               data-action="searchInput"

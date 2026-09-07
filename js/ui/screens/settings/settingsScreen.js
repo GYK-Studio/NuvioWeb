@@ -3474,16 +3474,6 @@ export const SettingsScreen = {
       <div class="settings-group-card">
         <div class="settings-stack">
           ${this.renderToggleRow({
-            focusKey: "advanced:fastHorizontalNavigation",
-            title: t("advanced_fast_horizontal_navigation", {}, "Fast Horizontal Navigation"),
-            subtitle: t(
-              "advanced_fast_horizontal_navigation_subtitle",
-              {},
-              "Increase D-pad repeat speed in rows while keeping repeat throttling enabled."
-            ),
-            checked: Boolean(model.fastHorizontalNavigation)
-          })}
-          ${this.renderToggleRow({
             focusKey: "advanced:rememberLastProfile",
             title: t("advanced_remember_last_profile", {}, "Remember Last Profile"),
             subtitle: t(

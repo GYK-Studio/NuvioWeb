@@ -338,6 +338,9 @@ export const PluginScreen = {
     `;
     this.pluginRouteEnterPending = false;
     this.bindContentEvents();
+    this.container.querySelectorAll(".addons-focusable").forEach((node) => {
+      node.tabIndex = 0;
+    });
     this.normalizeFocus();
     this.applyFocus();
     this.renderQrCode();

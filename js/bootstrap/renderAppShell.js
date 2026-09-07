@@ -1,4 +1,5 @@
 import { installWebPlayerControls } from "./webPlayerControls.js";
+import { installWebNavigation } from "./webNavigation.js";
 
 const APP_SHELL = `
   <div id="app">
@@ -36,4 +37,5 @@ export function renderAppShell() {
   }
   document.body.insertAdjacentHTML("afterbegin", APP_SHELL);
   installWebPlayerControls();
+  installWebNavigation();
 }

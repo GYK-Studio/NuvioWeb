@@ -1,0 +1,994 @@
+/* Browser layout contract. Loaded last so TV-era component variants cannot
+   reintroduce fixed viewport geometry. Carousels and virtual lists scroll locally. */
+:root {
+  --web-page-gutter: clamp(16px, 3vw, 40px);
+  --web-nav-width: 224px;
+}
+.web-back-navigation {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 30;
+  padding: 8px 16px;
+  background: var(--bg-color);
+}
+#app.web-has-back-navigation {
+  padding-top: 60px;
+}
+#app.web-has-back-navigation :is(.stream-route-shell, .series-detail-shell) {
+  height: calc(100dvh - 60px);
+}
+.web-back-navigation[hidden] {
+  display: none;
+}
+.web-back-navigation button {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-color);
+  background: var(--card-bg);
+}
+#app .discover-shell:not(.discover-root-route) {
+  display: block;
+}
+#app .settings-tracking-card-subtitle {
+  font-size: 14px;
+  line-height: 1.5;
+}
+#app .settings-trakt-card {
+  padding: 16px;
+  border-radius: 12px;
+}
+#app .settings-trakt-scroll-area {
+  height: auto;
+  gap: 16px;
+}
+
+#app :is(.home-shell, .discover-shell, .search-screen-shell, .settings-shell) {
+  display: grid;
+  grid-template-columns: var(--web-nav-width) minmax(0, 1fr);
+  width: 100%;
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+}
+#app :is(.home-main, .discover-main, .search-content, .library-main) {
+  grid-column: 2;
+  min-width: 0;
+  width: auto;
+  margin: 0;
+  padding: 24px var(--web-page-gutter) 48px;
+  min-height: 100dvh;
+  height: auto;
+  overflow: visible;
+}
+#app .home-screen-shell {
+  --home-content-start: 0px;
+  --home-track-end: 0px;
+  --home-continue-track-end: 0px;
+}
+#app :is(.home-hero, .home-modern-hero-card, .home-modern-stage, .home-modern-rows-viewport) {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+#app :is(.home-hero-card, .home-modern-hero-card) {
+  min-height: 340px;
+  padding: clamp(20px, 4vw, 48px);
+  border-radius: 16px;
+  overflow: hidden;
+}
+#app :is(.home-hero-copy, .home-modern-hero-copy) {
+  position: relative;
+  inset: auto;
+  width: min(100%, 580px);
+  max-width: 100%;
+  min-height: 260px;
+  justify-content: flex-end;
+  visibility: visible;
+}
+#app .home-modern-hero-media {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+#app .home-hero-logo {
+  width: auto;
+  max-width: min(320px, 100%);
+  height: auto;
+  max-height: 110px;
+}
+#app :is(.home-hero-title-text) {
+  font-size: clamp(28px, 4vw, 48px);
+  line-height: 1.15;
+}
+#app :is(.home-modern-hero-meta-line, .home-modern-hero-secondary, .home-hero-description) {
+  font-size: 16px;
+  line-height: 1.5;
+  opacity: 1;
+}
+#app .home-modern-rows-viewport {
+  opacity: 1;
+}
+#app .home-modern-rows-scroll {
+  padding: 0;
+}
+#app .home-track {
+  margin: 0;
+  padding: 6px 3px 16px;
+  gap: 16px;
+  scrollbar-width: thin;
+}
+#app .home-track::-webkit-scrollbar {
+  display: block;
+  height: 6px;
+}
+#app .home-row-head {
+  padding: 0;
+}
+#app .home-content-card {
+  flex: 0 0 clamp(132px, 16vw, 220px);
+  min-width: 0;
+  max-width: none;
+  width: clamp(132px, 16vw, 220px);
+}
+#app .home-poster-frame {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+}
+#app .home-content-card.is-landscape {
+  flex-basis: clamp(220px, 25vw, 360px);
+}
+#app .home-content-card.is-landscape .home-poster-frame {
+  aspect-ratio: 16 / 9;
+}
+#app .home-nav-list {
+  transform: none;
+}
+#app .home-sidebar {
+  max-width: none;
+}
+#app
+  :is(
+    .addons-route-shell,
+    .plugins-route-shell,
+    .trakt-route-shell,
+    .catalog-order-shell,
+    .seeall-shell,
+    .cast-detail-shell,
+    .account-shell,
+    .licenses-screen,
+    .tmdb-entity-shell
+  ) {
+  display: block;
+  width: 100%;
+  min-height: 100dvh;
+  height: auto;
+  padding: 24px var(--web-page-gutter) 48px;
+  overflow: visible;
+}
+#app
+  :is(
+    .addons-route-content,
+    .plugins-route-content,
+    .trakt-route-content,
+    .addons-main,
+    .plugins-main,
+    .catalog-order-main
+  ) {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+#app .discover-seeall-shell {
+  min-height: 0;
+  padding: 0;
+}
+#app :is(.seeall-grid, .discover-grid) {
+  grid-template-columns: repeat(auto-fill, minmax(min(144px, 100%), 1fr));
+  gap: 20px 16px;
+}
+#app :is(.seeall-card, .discover-card, .discover-action-card) {
+  width: 100%;
+  min-width: 0;
+}
+#app :is(.seeall-card-title, .discover-card-title) {
+  font-size: 15px;
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+#app :is(.seeall-card-year, .discover-card-meta) {
+  font-size: 13px;
+  line-height: 1.4;
+}
+#app :is(.seeall-card-poster-wrap, .discover-card-poster) {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+}
+#app
+  :is(
+    .seeall-title,
+    .discover-title,
+    .library-page-title,
+    .cast-detail-name,
+    .addons-title,
+    .plugins-title,
+    .catalog-order-title,
+    .account-title,
+    .tmdb-entity-title,
+    .experience-mode-screen h1,
+    .licenses-screen h1
+  ) {
+  font-size: clamp(28px, 3.5vw, 44px);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+#app
+  :is(
+    .seeall-subtitle,
+    .discover-subtitle,
+    .addons-lede,
+    .addons-meta,
+    .plugins-subtitle,
+    .catalog-order-subtitle,
+    .catalog-order-card-subtitle,
+    .account-subtitle,
+    .cast-detail-bio,
+    .tmdb-entity-description
+  ) {
+  font-size: 16px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+#app
+  :is(
+    .discover-hero,
+    .discover-results-head,
+    .library-actions-row,
+    .folder-detail-header,
+    .folder-detail-tabs,
+    .addons-installed-actions,
+    .catalog-order-card-actions,
+    .plugins-repository-actions
+  ) {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+#app :is(.library-picker-anchor, .library-picker-option) {
+  min-height: 48px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 16px;
+  gap: 12px;
+}
+#app .library-picker-title {
+  font-size: 13px;
+  line-height: 1.4;
+}
+#app .library-picker-value {
+  font-size: 16px;
+  line-height: 1.5;
+}
+#app :is(.library-picker-icon, .library-picker-chevron) {
+  width: 24px;
+  height: 24px;
+}
+#app .library-picker-menu {
+  max-height: min(360px, 50dvh);
+  padding: 6px;
+  border-radius: 12px;
+  scrollbar-width: thin;
+}
+#app
+  :is(
+    .library-action-button,
+    .addons-install-btn,
+    .addons-action-btn,
+    .catalog-order-action,
+    .profile-overlay-button,
+    .settings-trakt-button,
+    .settings-trakt-small-button
+  ) {
+  min-width: 44px;
+  min-height: 44px;
+  height: auto;
+  padding: 10px 16px;
+  font-size: 16px;
+  line-height: 1.4;
+  border-radius: 10px;
+}
+#app :is(.catalog-order-action, .addons-action-btn) .material-icons {
+  font-size: 24px;
+}
+#app :is(.addons-install-card, .addons-installed-card, .catalog-order-card) {
+  padding: 20px;
+  border-radius: 16px;
+}
+#app
+  :is(
+    .addons-install-heading,
+    .catalog-order-card-copy h2,
+    .addons-installed-head h3,
+    .cast-detail-section-title,
+    .discover-results-title
+  ) {
+  font-size: 22px;
+  line-height: 1.3;
+}
+#app .addons-install-surface {
+  min-height: 48px;
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+#app .addons-install-input {
+  min-width: 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+#app .addons-large-row {
+  min-height: 60px;
+  padding: 16px;
+  gap: 12px;
+}
+#app .addons-large-row-copy {
+  min-width: 0;
+}
+#app .addons-large-row-copy strong {
+  font-size: 18px;
+  line-height: 1.4;
+}
+#app .addons-large-row-copy small {
+  font-size: 14px;
+  line-height: 1.5;
+}
+#app .addons-large-row-icon {
+  font-size: 28px;
+}
+#app
+  :is(
+    .addons-qr-dialog,
+    .plugins-confirm-dialog,
+    .settings-dialog,
+    .profile-dialog,
+    .profile-editor-panel
+  ) {
+  width: min(720px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 20px;
+  overscroll-behavior: contain;
+}
+#app .addons-qr-canvas {
+  width: min(280px, 100%);
+  height: auto;
+}
+#app :is(.addons-qr-url, .account-info, .settings-row-subtitle) {
+  overflow-wrap: anywhere;
+}
+#app .settings-workspace {
+  align-content: start;
+  width: auto;
+  min-width: 0;
+  height: auto;
+  margin: 16px;
+  padding: 16px;
+  grid-template-columns: minmax(160px, 200px) minmax(0, 1fr);
+}
+#app .settings-group-card-fill {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+#app .settings-group-card {
+  padding: 16px;
+  border-radius: 16px;
+}
+#app .settings-title {
+  font-size: 30px;
+  line-height: 1.2;
+}
+#app .settings-subtitle {
+  font-size: 16px;
+  line-height: 1.5;
+}
+#app .settings-group-title {
+  font-size: 20px;
+  line-height: 1.4;
+}
+#app :is(.settings-account-status-card, .settings-account-sync-row) {
+  flex-wrap: wrap;
+  padding: 12px;
+  gap: 12px;
+}
+#app
+  :is(
+    .settings-account-status-label,
+    .settings-account-status-value,
+    .settings-account-profile-name
+  ) {
+  font-size: 16px;
+  line-height: 1.4;
+}
+#app .settings-account-inline-note {
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+#app .settings-account-sync-overview {
+  padding: 8px;
+}
+#app .settings-account-sync-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+  width: 100%;
+  flex: 1 0 100%;
+  gap: 12px;
+}
+#app .settings-account-stat {
+  min-width: 0;
+}
+#app .search-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+#app .search-input-field {
+  min-width: 0;
+  flex: 1 1 180px;
+  height: 48px;
+  padding: 10px 14px;
+  font-size: 16px;
+  border-radius: 10px;
+}
+#app :is(.search-empty-state, .library-empty-state) {
+  min-height: 280px;
+  padding: 32px 12px;
+}
+#app :is(.search-empty-state h2, .library-empty-state h3) {
+  font-size: 26px;
+  line-height: 1.3;
+}
+#app :is(.search-empty-state p, .library-empty-state p) {
+  font-size: 16px;
+  line-height: 1.5;
+}
+#app .search-empty-icon {
+  font-size: 48px;
+}
+#app .search-action-icon {
+  font-size: 24px;
+}
+#app .search-discover-btn,
+#app .search-voice-btn {
+  flex: 0 0 44px;
+}
+#app :is(.settings-sidebar-frame, .settings-content-frame, .settings-content) {
+  overflow: visible;
+  min-width: 0;
+  height: auto;
+}
+#app .settings-sidebar {
+  gap: 6px;
+}
+#app .settings-nav-item {
+  min-height: 48px;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+#app .settings-nav-label {
+  font-size: 16px;
+  line-height: 1.5;
+}
+#app .settings-nav-badge {
+  font-size: 11px;
+  padding: 4px 6px;
+}
+#app :is(.settings-nav-icon-material, .settings-nav-icon-svg, .settings-nav-icon-image) {
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+}
+#app .settings-action-row {
+  min-height: 60px;
+  padding: 14px;
+  gap: 12px;
+}
+#app .settings-row-title {
+  font-size: 16px;
+  line-height: 1.45;
+}
+#app .settings-row-subtitle {
+  font-size: 14px;
+  line-height: 1.5;
+}
+#app .settings-action-row {
+  border-radius: 12px;
+}
+#app .settings-row-tail {
+  gap: 8px;
+  max-width: 45%;
+}
+#app .settings-row-value {
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+#app .settings-row-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+#app .settings-row-leading-icon {
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+}
+#app .settings-group-subtitle {
+  font-size: 14px;
+  line-height: 1.5;
+}
+#app .settings-toggle-pill {
+  width: 48px;
+  height: 28px;
+  padding: 3px;
+}
+#app .settings-toggle-thumb {
+  width: 22px;
+  height: 22px;
+}
+#app
+  :is(
+    .settings-theme-grid-card,
+    .settings-theme-grid-card .settings-group-heading,
+    .settings-theme-grid-card .settings-horizontal-scroll-frame
+  ) {
+  min-height: 0;
+}
+#app .settings-theme-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  min-height: 0;
+  gap: 12px;
+}
+#app .settings-theme-card {
+  width: 100%;
+  min-height: 110px;
+  height: auto;
+  padding: 12px;
+  border-radius: 12px;
+}
+#app .settings-theme-swatch {
+  width: 40px;
+  height: 40px;
+}
+#app .settings-theme-check {
+  width: 24px;
+  height: 24px;
+}
+#app .settings-theme-name {
+  font-size: 14px;
+  line-height: 1.4;
+}
+#app .settings-scroll-indicator {
+  display: none;
+}
+#app .settings-trakt-panel {
+  height: auto;
+  min-height: 0;
+}
+#app .settings-trakt-scroll-area {
+  max-height: none;
+  overflow: visible;
+}
+#app .settings-trakt-title {
+  font-size: 28px;
+  line-height: 1.2;
+}
+#app .settings-trakt-card-title {
+  font-size: 20px;
+  line-height: 1.3;
+}
+#app :is(.settings-trakt-description, .settings-trakt-body-copy, .settings-trakt-meta-copy) {
+  font-size: 16px;
+  line-height: 1.5;
+}
+#app .cast-detail-hero-content {
+  grid-template-columns: minmax(100px, 180px) minmax(0, 1fr);
+}
+#app .cast-detail-avatar {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+}
+#app .cast-detail-bio {
+  display: block;
+}
+#app .tmdb-entity-shell {
+  --tmdb-entity-safe-x: 0px;
+}
+#app :is(.tmdb-entity-hero, .tmdb-entity-hero-copy) {
+  min-height: 300px;
+}
+#app .tmdb-entity-meta {
+  font-size: 16px;
+}
+#app .tmdb-entity-logo {
+  max-width: 100%;
+}
+#app .experience-mode-options.is-layout {
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+}
+#app .experience-mode-logo {
+  width: min(240px, 65vw);
+}
+#app .profile-editor-header {
+  padding: 0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+#app :is(.profile-editor-heading-title, .profile-editor-heading-name) {
+  font-size: 26px;
+}
+#app .profile-editor-heading-kicker {
+  font-size: 14px;
+}
+#app .profile-editor-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+#app .profile-editor-preview {
+  width: 100%;
+  padding: 16px;
+}
+#app .profile-editor-preview-avatar {
+  width: 96px;
+  height: 96px;
+}
+#app .profile-editor-preview-name {
+  font-size: 22px;
+}
+#app .profile-editor-name-input {
+  font-size: 16px;
+  min-height: 44px;
+}
+#app .profile-editor-field-shell {
+  padding: 8px 12px;
+}
+#app :is(.profile-editor-avatar-pane, .profile-editor-picker-pane) {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+}
+#app :is(.profile-editor-tab, .profile-avatar-category) {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+#app .profile-editor-avatar-grid {
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  max-height: 260px;
+  gap: 12px;
+  padding: 8px;
+}
+#app .profile-avatar-tile {
+  width: 64px;
+  height: 64px;
+}
+#app :is(.profile-editor-avatar-title, .profile-editor-background-note) {
+  font-size: 16px;
+}
+#app .profile-editor-divider {
+  display: none;
+}
+#app .series-primary-btn {
+  height: auto;
+  min-height: 48px;
+  padding: 12px 22px;
+  font-size: 16px;
+}
+#app .series-primary-btn svg {
+  width: 24px;
+  height: 24px;
+}
+#app :is(.series-insight-tabs, .series-season-row) {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  gap: 12px;
+}
+#app .series-insight-tab {
+  min-height: 44px;
+  font-size: 16px;
+  white-space: nowrap;
+}
+#app :is(.movie-cast-card, .series-cast-card) {
+  width: 132px;
+  flex: 0 0 132px;
+}
+#app .movie-cast-avatar {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 12px;
+}
+#app .movie-cast-name {
+  font-size: 16px;
+  line-height: 1.4;
+}
+#app .movie-cast-role {
+  font-size: 14px;
+  line-height: 1.4;
+}
+#app .series-episode-card {
+  width: min(300px, 78vw);
+  flex: 0 0 min(300px, 78vw);
+}
+#app .series-episode-thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+#app .series-episode-title {
+  font-size: 18px;
+  line-height: 1.4;
+}
+#app .series-episode-overview {
+  font-size: 14px;
+  line-height: 1.5;
+}
+#app .detail-morelike-card {
+  width: min(300px, 78vw);
+  flex-basis: min(300px, 78vw);
+}
+#app .detail-morelike-poster-wrap {
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+#app .detail-morelike-name {
+  font-size: 16px;
+}
+#app .detail-morelike-type {
+  font-size: 14px;
+}
+#app .supporters-route-shell {
+  width: 100%;
+  height: auto;
+  min-height: 100dvh;
+  padding: 24px var(--web-page-gutter);
+  overflow: visible;
+}
+#app .supporters-route-content {
+  height: auto;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: 24px;
+}
+#app .supporters-brand-card {
+  min-height: 360px;
+  border-radius: 16px;
+}
+#app .supporters-brand-face {
+  padding: 24px;
+  gap: 16px;
+}
+#app .supporters-content-card {
+  padding: 16px;
+  border-radius: 16px;
+  gap: 16px;
+}
+#app :is(.supporters-title, .supporters-qr-copy h2, .supporters-error-state h2) {
+  font-size: 24px;
+  line-height: 1.3;
+}
+#app
+  :is(
+    .supporters-secondary-copy,
+    .supporters-error-state,
+    .supporters-membership-error,
+    .supporters-card-copy p
+  ) {
+  font-size: 16px;
+  line-height: 1.5;
+}
+#app
+  :is(
+    .supporters-tab,
+    .supporters-retry-button,
+    .supporters-membership-refresh-button,
+    .supporters-donate-button
+  ) {
+  min-height: 44px;
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 8px;
+}
+#app .supporters-tabs {
+  gap: 8px;
+}
+#app .supporters-error-state {
+  min-height: 240px;
+  padding: 20px;
+  gap: 16px;
+}
+#app .supporters-list {
+  height: auto;
+  max-height: 60dvh;
+  padding: 12px;
+  gap: 12px;
+  scrollbar-width: thin;
+}
+#app .supporters-person-card {
+  min-height: 80px;
+  padding: 12px;
+  border-radius: 12px;
+  gap: 12px;
+}
+#app .supporters-card-copy h3 {
+  font-size: 18px;
+  line-height: 1.4;
+}
+#app .supporters-dialog {
+  width: min(640px, calc(100vw - 32px));
+  padding: 20px;
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+}
+#app .debug-console-shell {
+  height: auto;
+  min-height: 100dvh;
+  padding: 24px var(--web-page-gutter);
+  overflow: visible;
+}
+#app .debug-console-header {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+}
+#app .debug-console-back {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 16px;
+}
+#app .debug-console-heading h1 {
+  font-size: 26px;
+  line-height: 1.2;
+}
+#app .debug-console-heading p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+#app .debug-console-count {
+  min-height: 36px;
+  font-size: 14px;
+  grid-column: 1 / -1;
+}
+#app .debug-console-log-list {
+  height: 65dvh;
+  min-height: 240px;
+  padding: 12px;
+  scrollbar-width: thin;
+}
+#app .debug-console-message {
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 12px;
+}
+#app .debug-console-event-header {
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+}
+#app :is(.debug-console-time, .debug-console-level, .debug-console-sequence) {
+  font-size: 12px;
+}
+
+@media (max-width: 1100px) {
+  #app .settings-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #app .settings-sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 6px;
+    scrollbar-width: thin;
+  }
+  #app .settings-nav-item {
+    width: auto;
+    flex: 0 0 auto;
+  }
+}
+@media (max-width: 820px) {
+  #app :is(.home-shell, .discover-shell, .search-screen-shell, .settings-shell) {
+    display: block;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+  #app :is(.home-sidebar, .modern-sidebar-shell) {
+    position: fixed;
+    inset: auto 0 0;
+    min-height: 64px;
+    height: auto;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  }
+  #app :is(.home-nav-item, .modern-sidebar-nav-item) {
+    flex-direction: column;
+    gap: 5px;
+  }
+  #app :is(.home-nav-label, .modern-sidebar-nav-label) {
+    display: block;
+    font-size: 11px;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  #app :is(.home-nav-list, .modern-sidebar-nav-list) {
+    padding: 0;
+  }
+  #app .settings-workspace {
+    margin: 0;
+    padding: 16px;
+    border: 0;
+  }
+  #app :is(.library-picker-row, .addons-install-row, .discover-filters) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  #app :is(.library-picker, .library-picker-wide) {
+    width: 100%;
+    max-width: none;
+  }
+  #app .catalog-order-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  #app .search-input-wrap {
+    min-width: 0;
+    flex: 1 1 180px;
+  }
+  #app .cast-detail-hero-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #app .cast-detail-avatar {
+    width: 140px;
+  }
+  #app .stream-route-card {
+    padding: 12px;
+  }
+}
+@media (max-width: 480px) {
+  #app .plugins-add-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  #app .plugins-repository-input {
+    width: 100%;
+    min-height: 48px;
+    font-size: 16px;
+    padding: 12px;
+  }
+  #app .plugins-setting-row {
+    gap: 12px;
+  }
+  #app .plugins-setting-row strong {
+    font-size: 16px;
+  }
+  #app .plugins-setting-row span {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  #app :is(.seeall-grid, .discover-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 12px;
+  }
+  #app :is(.plugins-content-header, .plugins-section-heading, .plugins-repository-header) {
+    flex-direction: column;
+  }
+}
