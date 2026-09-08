@@ -2643,6 +2643,7 @@ function uniqueNonEmptyValues(values = []) {
 
 export const PlayerScreen = {
   async mount(params = {}) {
+    this.webControlsInteraction = false;
     streamRepository.setLocalPluginSearchPaused(false);
     this.container = document.getElementById("player");
     this.container.style.display = "block";
@@ -12172,6 +12173,7 @@ export const PlayerScreen = {
   setControlsVisible(visible, { focus = false } = {}) {
     const wasControlsVisible = this.controlsVisible;
     this.controlsVisible = Boolean(visible);
+    document.dispatchEvent(new Event("nuvio:player-controls"));
     if (this.isExternalFrameMode()) {
       return;
     }
@@ -12590,10 +12592,17 @@ export const PlayerScreen = {
 
   resetControlsAutoHide() {
     this.clearControlsAutoHide();
-    if (!this.controlsVisible || this.paused || this.isDialogOpen() || this.seekOverlayVisible) {
+    if (
+      !this.controlsVisible ||
+      this.paused ||
+      this.isDialogOpen() ||
+      this.seekOverlayVisible ||
+      this.webControlsInteraction
+    ) {
       return;
     }
     this.controlsHideTimer = setTimeout(() => {
+      if (this.webControlsInteraction || this.paused || this.isDialogOpen()) return;
       this.setControlsVisible(false);
     }, 4200);
   },

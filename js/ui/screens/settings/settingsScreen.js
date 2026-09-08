@@ -7701,7 +7701,7 @@ export const SettingsScreen = {
     }
 
     const content = themeGrid.closest(".settings-content");
-    if (!content) {
+    if (!content || content.scrollHeight <= content.clientHeight) {
       return;
     }
 

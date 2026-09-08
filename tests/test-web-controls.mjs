@@ -97,3 +97,92 @@ assert.deepEqual(
   "legacy short activation must release hold handlers"
 );
 console.log("Web controls: all activation regression tests passed.");
+
+// Exercise the browser toolbar independently of external streaming providers.
+function surface() {
+  return {
+    listeners: new Map(),
+    addEventListener(type, fn) {
+      this.listeners.set(type, fn);
+    },
+    classList: { toggle() {} },
+    style: { display: "block" }
+  };
+}
+const playerSurface = surface();
+const toolbar = surface();
+const toolbarNodes = new Map();
+toolbar.querySelector = (selector) => {
+  if (!toolbarNodes.has(selector)) toolbarNodes.set(selector, {});
+  return toolbarNodes.get(selector);
+};
+const documentSurface = surface();
+globalThis.document = Object.assign(documentSurface, {
+  getElementById: () => playerSurface,
+  createElement: () => toolbar,
+  body: { append() {} },
+  pictureInPictureEnabled: true
+});
+toolbar.setAttribute = () => {};
+globalThis.MutationObserver = class {
+  observe() {}
+};
+let resets = 0;
+const playback = {
+  controlsVisible: false,
+  setControlsVisible(value) {
+    this.controlsVisible = value;
+  },
+  resetControlsAutoHide() {
+    resets++;
+  },
+  isDialogOpen: () => false
+};
+globalThis.__webTestRouter = { getCurrent: () => "player", getCurrentScreen: () => playback };
+const toolbarBundle = await build({
+  entryPoints: ["js/bootstrap/webPlayerControls.js"],
+  bundle: true,
+  write: false,
+  format: "esm",
+  platform: "node",
+  plugins: [
+    {
+      name: "toolbar-router",
+      setup(builder) {
+        builder.onResolve({ filter: /router\.js$/ }, () => ({
+          path: "router",
+          namespace: "toolbar-test"
+        }));
+        builder.onLoad({ filter: /.*/, namespace: "toolbar-test" }, () => ({
+          contents: "export const Router = globalThis.__webTestRouter;"
+        }));
+      }
+    }
+  ]
+});
+const { installWebPlayerControls } = await import(
+  `data:text/javascript;base64,${Buffer.from(toolbarBundle.outputFiles[0].text).toString("base64")}`
+);
+installWebPlayerControls();
+assert.equal(toolbar.hidden, true, "window buttons hide with playback controls");
+playerSurface.listeners.get("pointermove")({
+  type: "pointermove",
+  pointerType: "mouse",
+  target: { closest: () => null }
+});
+assert.equal(playback.controlsVisible, true, "mouse movement reveals controls without arrows");
+documentSurface.listeners.get("nuvio:player-controls")();
+assert.equal(toolbar.hidden, false);
+playerSurface.listeners.get("pointerdown")({
+  type: "pointerdown",
+  pointerType: "touch",
+  target: { closest: () => toolbar }
+});
+assert.equal(playback.webControlsInteraction, true, "interaction with controls holds auto-hide");
+playerSurface.listeners.get("pointerleave")();
+assert.equal(playback.webControlsInteraction, false);
+assert.ok(resets > 0);
+playback.controlsVisible = false;
+documentSurface.listeners.get("keydown")({ key: "Tab" });
+assert.equal(playback.controlsVisible, true, "Tab restores access to hidden controls");
+console.log("Player toolbar: mouse, touch, keyboard and visibility tests passed.");

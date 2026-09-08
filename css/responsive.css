@@ -992,3 +992,44 @@
     flex-direction: column;
   }
 }
+#player.web-player-idle {
+  cursor: none;
+}
+
+html,
+#app * {
+  scrollbar-width: thin;
+  scrollbar-color: #73737e #18181d;
+}
+
+#app ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+#app ::-webkit-scrollbar-thumb {
+  background: #73737e;
+  border: 2px solid #18181d;
+  border-radius: 8px;
+}
+
+#app ::-webkit-scrollbar-track {
+  background: #18181d;
+}
+
+#player .player-control-buttons {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+#player .player-control-buttons > * {
+  flex-shrink: 0;
+}
+
+@media (forced-colors: active) {
+  html,
+  #app * {
+    scrollbar-color: auto;
+  }
+}

@@ -8882,11 +8882,6 @@ export const HomeScreen = {
         // LG Magic Remote wheel events scroll the hovered element natively.
         // Consume them while the sidebar owns navigation so the background
         // remains fixed, matching Android TV's blocked content input.
-        if (this.sidebarExpanded || this.isSidebarFocusActive()) {
-          event.preventDefault?.();
-          event.stopPropagation?.();
-          return;
-        }
         this.cancelPendingHeroFocus();
         this.cancelFocusedPosterFlow();
         this.scheduleHomeViewportFocusSync();
