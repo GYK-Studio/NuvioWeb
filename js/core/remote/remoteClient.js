@@ -55,7 +55,7 @@ export class RemoteClient extends EventTarget {
         this.emit({ type: "revoked" });
         return;
       }
-      this.send({ type: "state", state: this.snapshot() });
+      this.publishState();
     }, 1000);
     return grant;
   }
@@ -105,7 +105,10 @@ export class RemoteClient extends EventTarget {
       } catch {
         return;
       }
-      if (message.type === "command") {
+      if (message.type === "state.request" || message.type === "connected") {
+        this.publishState();
+        this.emit(message);
+      } else if (message.type === "command") {
         this.queue = this.queue.then(async () => {
           const c = message.command;
           if (this.closed || socket !== this.socket) return;
@@ -129,7 +132,7 @@ export class RemoteClient extends EventTarget {
           this.seen.set(c.commandId, result);
           if (this.seen.size > 6000) this.seen.delete(this.seen.keys().next().value);
           this.send(result);
-          this.send({ type: "state", state: this.snapshot() });
+          this.publishState();
         });
       } else this.emit(message);
     };
@@ -150,8 +153,22 @@ export class RemoteClient extends EventTarget {
   snapshot() {
     const v = document.getElementById("videoPlayer");
     const available = Router.getCurrent() === "player" && Boolean(v?.currentSrc);
+    let content;
+    try {
+      content = this.content.snapshot();
+    } catch {
+      // A catalog/track error must not prevent the entire remote from synchronizing.
+      content = {
+        title: "No se pudo cargar este apartado. Puedes volver a Inicio.",
+        route: Router.getCurrent(),
+        items: [],
+        tracks: [],
+        page: 0,
+        pageCount: 1
+      };
+    }
     return {
-      content: this.content.snapshot(),
+      content,
       available,
       paused: v?.paused ?? true,
       playing: available && !v.paused && !v.ended && v.readyState >= 3,
@@ -160,6 +177,9 @@ export class RemoteClient extends EventTarget {
       volume: v?.volume ?? 1,
       muted: v?.muted ?? false
     };
+  }
+  publishState() {
+    if (!this.closed) this.send({ type: "state", state: this.snapshot() });
   }
   async execute(c) {
     if (

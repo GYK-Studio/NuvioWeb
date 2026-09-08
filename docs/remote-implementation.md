@@ -4,6 +4,24 @@ Fecha: 2026-09-08. Esta entrega implementa una primera ruta de control y deja ex
 
 ## Componentes
 
+### Corrección 0.1.1 — teléfono aprobado retenido en Conectar
+
+La app separa ahora vínculo, aprobación, conexión, control activo y estado del reproductor. Antes, `state === null` mostraba el formulario incluso después de aprobar el teléfono. Ahora la aprobación abre el mando sin esperar un vídeo; la pérdida de conexión conserva el mando y desactiva las órdenes. La solicitud pendiente tiene su propia pantalla, sin reclamar otra vez el código de un solo uso.
+
+El servicio comunica aprobación/control/conectividad al autenticar, solicita estado al navegador al conectar o aprobar y admite actualización manual. La web publica inmediatamente y aísla errores de catálogo/pistas para que no cancelen la sincronización completa. La app distingue confirmación de orden y conexión, limita órdenes pendientes y avisa si no se confirman en diez segundos.
+
+Actualizar **ambos servicios en Coolify (web y remoto)** y descargar el nuevo APK **0.1.1 / versionCode 2** del workflow. Después recargar la web y crear un vínculo nuevo, porque reiniciar el servicio revoca sus sesiones en memoria. Las pruebas cubren aprobación con snapshot nulo, desconexión, transferencia de control, compatibilidad con mensajes anteriores y sincronización por WebSocket real de loopback. No se ha ejecutado esta revisión en un teléfono físico; el usuario probó la revisión anterior. La duración de vínculos sigue siendo quince minutos y los pendientes del SRS de abajo siguen vigentes.
+
+#### Revisión de UI y accesibilidad de esta corrección
+
+| Severidad | Ubicación           | Antes                                                   | Después                                       | Motivo                                       |
+| --------- | ------------------- | ------------------------------------------------------- | --------------------------------------------- | -------------------------------------------- |
+| Alta      | apps/remote/App.tsx | Aprobación sin snapshot retenía el formulario           | Pantallas independientes de solicitud y mando | No bloquear navegación por ausencia de vídeo |
+| Media     | apps/remote/App.tsx | Órdenes parecían disponibles sin control activo         | Estado disabled visible y accesible           | Explicar acciones no disponibles             |
+| Media     | apps/remote/App.tsx | Actualización periódica borraba el resultado de órdenes | Mensaje separado y persistente                | Mantener errores y confirmaciones legibles   |
+
+Aplicadas las skills better-accessibility y better-layout: botones táctiles de 48, filas flexibles, etiquetas y estados explícitos. **No verificado**: lector de pantalla nativo, aumento de texto al 200%, RTL y renderizado en teléfono real. **Block** para aprobación integral de UI nativa y SRS hasta completar esas comprobaciones; las pruebas de estado no sustituyen la revisión visual.
+
 - `services/remote`: servicio Node + ws, independiente del proxy de proveedores, con Dockerfile y lockfile.
 - `js/core/remote`: cliente web y panel en Ajustes → About → Control desde móvil.
 - `apps/remote`: app Expo/React Native con TypeScript, entrada manual o escáner QR y credenciales locales en SecureStore.

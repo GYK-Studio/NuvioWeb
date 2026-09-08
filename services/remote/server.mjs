@@ -171,21 +171,29 @@ wss.on("connection", (socket, req) => {
           s.web = socket;
           identity = { s, role: "web" };
           send(socket, devices(s));
+          send(socket, { type: "state.request" });
         } else {
           const { s, d } = core.device(m.webSessionId, m.deviceId, m.token, false);
           d.socket?.close(4001, "Replaced");
           d.socket = socket;
           identity = { s, d, role: "device" };
+          send(socket, {
+            type: "connected",
+            approved: d.approved,
+            controlActive: s.active === d.id,
+            webOnline: s.web?.readyState === 1
+          });
           if (d.approved)
             send(socket, {
               type: "session.snapshot",
               state: s.state,
               stateVersion: s.version,
+              webOnline: s.web?.readyState === 1,
               controlActive: s.active === d.id
             });
         }
         clearTimeout(authTimer);
-        send(socket, { type: "connected" });
+        if (identity.role === "web") send(socket, { type: "connected" });
         return;
       }
       const { s, d, role } = identity;
@@ -197,12 +205,15 @@ wss.on("connection", (socket, req) => {
           send(socket, core.pairing(s));
         } else if (m.type === "approve") {
           const approved = core.approve(s, m.deviceId);
-          send(approved.socket, { type: "approved" });
+          send(approved.socket, { type: "approved", controlActive: true, webOnline: true });
           send(approved.socket, {
             type: "session.snapshot",
             state: s.state,
-            stateVersion: s.version
+            stateVersion: s.version,
+            webOnline: true,
+            controlActive: true
           });
+          send(socket, { type: "state.request" });
           send(socket, devices(s));
           broadcast(s, { type: "control.changed" });
         } else if (m.type === "revoke") {
@@ -223,7 +234,12 @@ wss.on("connection", (socket, req) => {
             available: Boolean(p.available)
           };
           s.version++;
-          broadcast(s, { type: "session.snapshot", state: s.state, stateVersion: s.version });
+          broadcast(s, {
+            type: "session.snapshot",
+            state: s.state,
+            stateVersion: s.version,
+            webOnline: true
+          });
         } else if (m.type === "command.result") {
           for (const device of s.devices.values()) {
             const item = device.commands.get(m.commandId);
@@ -247,6 +263,18 @@ wss.on("connection", (socket, req) => {
         if (m.type === "revoke.self") {
           core.revoke(s, d.id);
           send(s.web, devices(s));
+          return;
+        }
+        if (m.type === "state.request") {
+          if (!d.approved) throw new Error("UNAUTHORIZED");
+          send(s.web, { type: "state.request" });
+          send(socket, {
+            type: "session.snapshot",
+            state: s.state,
+            stateVersion: s.version,
+            controlActive: s.active === d.id,
+            webOnline: s.web?.readyState === 1
+          });
           return;
         }
         if (m.type !== "command") throw new Error("INVALID_PAYLOAD");

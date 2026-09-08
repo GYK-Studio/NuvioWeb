@@ -1,6 +1,41 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { build } from "../../node_modules/esbuild/lib/main.js";
+test("web publishes usable state even if catalog snapshot throws", async () => {
+  const output = await build({
+    entryPoints: ["js/core/remote/remoteClient.js"],
+    absWorkingDir: new URL("../../", import.meta.url).pathname,
+    bundle: true,
+    write: false,
+    format: "esm",
+    platform: "node",
+    plugins: [{ name: "remote-dependencies", setup(b) {
+      b.onResolve({ filter: /(sessionStore|profileManager|router|remoteContent)\.js$/ }, args => ({ path: args.path, namespace: "mock" }));
+      b.onLoad({ filter: /.*/, namespace: "mock" }, ({ path }) => ({ contents:
+        path.includes("sessionStore") ? "export const SessionStore={accessToken:'test'}" :
+        path.includes("profileManager") ? "export const ProfileManager={getActiveProfileId:()=>1}" :
+        path.includes("router") ? "export const Router={getCurrent:()=> 'home'}" :
+        "export class RemoteContent {snapshot(){throw Error('broken catalog')} reset(){}}"
+      }));
+    }}]
+  });
+  const { RemoteClient } = await import(`data:text/javascript;base64,${Buffer.from(output.outputFiles[0].text).toString("base64")}`);
+  const previousDocument = globalThis.document;
+  globalThis.document = { getElementById: () => null };
+  try {
+    const client = new RemoteClient();
+    const state = client.snapshot();
+    assert.equal(state.available, false);
+    assert.equal(state.content.route, "home");
+    assert.deepEqual(state.content.items, []);
+    let published;
+    client.closed = false;
+    client.send = message => { published = message; };
+    client.publishState();
+    assert.equal(published.type, "state");
+    assert.equal(published.state.volume, 1);
+  } finally { globalThis.document = previousDocument; }
+});
 test("content actions are opaque, paginated and invalidated on navigation", async () => {
   let route = "search",
     opened = null;

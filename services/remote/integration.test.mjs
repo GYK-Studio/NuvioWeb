@@ -62,7 +62,22 @@ test("real WebSocket channel: approval, routing, result and revocation", async (
     mobile.send(JSON.stringify({ type: "command", command }));
     assert.equal((await wait).error, "UNAUTHORIZED");
     wait = received(mobile, "approved");
+    const firstSnapshot = received(mobile, "session.snapshot");
+    const stateRequest = received(web, "state.request");
     web.send(JSON.stringify({ type: "approve", deviceId: claim.deviceId }));
+    await wait;
+    assert.equal((await firstSnapshot).state, null);
+    await stateRequest;
+    wait = received(mobile, "session.snapshot");
+    web.send(
+      JSON.stringify({ type: "state", state: { available: false, content: { title: "Inicio" } } })
+    );
+    const snapshot = await wait;
+    assert.equal(snapshot.state.content.title, "Inicio");
+    assert.equal(snapshot.controlActive, true);
+    assert.equal(snapshot.webOnline, true);
+    wait = received(web, "state.request");
+    mobile.send(JSON.stringify({ type: "state.request" }));
     await wait;
     wait = received(web, "command");
     mobile.send(JSON.stringify({ type: "command", command }));

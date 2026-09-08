@@ -46,6 +46,7 @@ jobs:
       - name: Check TypeScript and remote protocol
         run: |
           pnpm --dir apps/remote typecheck
+          pnpm --dir apps/remote test
           pnpm --dir services/remote test
       - name: Generate Android project
         working-directory: apps/remote

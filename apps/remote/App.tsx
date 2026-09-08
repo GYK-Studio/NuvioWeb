@@ -2,6 +2,21 @@ import React, { useEffect, useRef, useState } from "react";
 import { AppState, ScrollView, View, Text, TextInput, Pressable, StyleSheet } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Connection } from "./connection";
+import { emptySession, sessionEvent } from "./session";
+
+const clock = (seconds: number) => {
+  const n = Math.max(0, Math.floor(seconds || 0));
+  return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+};
+const commandError: Record<string, string> = {
+  TIMEOUT: "La web no confirmó la orden. Comprueba el resultado antes de repetirla.",
+  LOCAL_INTERACTION_REQUIRED: "Pulsa una vez el reproductor en la web para permitir esta acción.",
+  NO_SOURCE: "Elige primero una fuente de vídeo.",
+  STALE_STATE: "La pantalla cambió. Actualiza el estado y selecciona de nuevo.",
+  UNAUTHORIZED: "No tienes el control. Autoriza este teléfono desde la web.",
+  SESSION_OFFLINE: "La web está desconectada.",
+  UNSUPPORTED_CAPABILITY: "Esta fuente o navegador no permite esa acción."
+};
 
 export default function App() {
   const [status, setStatus] = useState("Empareja tu navegador"),
@@ -10,17 +25,34 @@ export default function App() {
     [query, setQuery] = useState(""),
     [scan, setScan] = useState(false),
     [busy, setBusy] = useState(false);
-  const [state, setState] = useState<any>(null),
-    [permission, requestPermission] = useCameraPermissions();
+  const [session, setSession] = useState(emptySession);
+  const [feedback, setFeedback] = useState("");
+  const state = session.snapshot || {
+    available: false,
+    position: 0,
+    duration: 0,
+    volume: 1,
+    muted: false
+  };
+  const canControl = session.approved && session.online && session.active;
+  const [permission, requestPermission] = useCameraPermissions();
   const connection = useRef<Connection | null>(null);
   if (!connection.current)
     connection.current = new Connection((m) => {
+      setSession((previous) => sessionEvent(previous, m));
       if (m.type === "session.snapshot") {
-        setState(m.state);
         setStatus(
-          m.controlActive === false ? "Conectado · otro móvil tiene el control" : "Conectado"
+          m.webOnline === false
+            ? "La web está desconectada"
+            : m.controlActive === false
+              ? "Conectado · otro móvil tiene el control"
+              : m.state
+                ? "Conectado"
+                : "Aprobado · esperando el estado de la web"
         );
-      } else if (m.type === "connected") setStatus("Esperando autorización y estado de la web");
+      } else if (m.type === "paired")
+        setStatus("Solicitud enviada. Aprueba este teléfono en la web.");
+      else if (m.type === "connected" && !m.approved) setStatus("Esperando aprobación en la web");
       else if (m.type === "approved") setStatus("Autorizado. Sincronizando…");
       else if (m.type === "control.changed")
         setStatus(
@@ -29,18 +61,16 @@ export default function App() {
             : "Otro móvil tiene el control. Puedes recuperarlo desde la web."
         );
       else if (m.type === "offline") {
-        setState(null);
         setStatus("Sin conexión. Reconectando…");
       } else if (m.type === "revoked") {
-        setState(null);
         setStatus("Vínculo caducado o revocado");
       } else if (m.type === "command.result")
-        setStatus(
+        setFeedback(
           m.status === "completed"
             ? "Acción completada"
             : m.status === "accepted"
               ? "Orden enviada"
-              : `No se pudo ejecutar: ${m.error}`
+              : commandError[m.error] || `No se pudo ejecutar: ${m.error}`
         );
       else if (m.type === "error") setStatus(`Error: ${m.error}`);
     });
@@ -48,7 +78,7 @@ export default function App() {
   useEffect(() => {
     void c.restore().catch(() => setStatus("No se pudo recuperar la sesión"));
     const sub = AppState.addEventListener("change", (s) => {
-      if (s === "active") void c.restore();
+      if (s === "active") void c.restore().catch(() => setStatus("No se pudo recuperar la sesión"));
       else c.disconnect();
     });
     return () => {
@@ -59,16 +89,17 @@ export default function App() {
   const action = (type: string, payload: Record<string, unknown> = {}) => {
     try {
       c.command(type, payload);
+      setFeedback("Orden enviada…");
     } catch (e) {
-      setStatus((e as Error).message);
+      setFeedback((e as Error).message);
     }
   };
-  const button = (label: string, onPress: () => void, disabled = false) => (
+  const button = (label: string, onPress: () => void, disabled = false, command = false) => (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      style={[styles.button, disabled && styles.disabled]}
+      accessibilityState={{ disabled: disabled || (command && !canControl) }}
+      disabled={disabled || (command && !canControl)}
+      style={[styles.button, (disabled || (command && !canControl)) && styles.disabled]}
       onPress={onPress}
     >
       <Text style={styles.buttonText}>{label}</Text>
@@ -87,7 +118,12 @@ export default function App() {
       <Text accessibilityLiveRegion="polite" style={styles.status}>
         {status}
       </Text>
-      {!state ? (
+      {!!feedback && (
+        <Text accessibilityLiveRegion="polite" style={styles.copy}>
+          {feedback}
+        </Text>
+      )}
+      {!session.paired ? (
         <View style={styles.card}>
           <Text style={styles.label}>URL del servicio de control</Text>
           <TextInput
@@ -146,25 +182,50 @@ export default function App() {
             vínculo de esta versión dura hasta 15 minutos.
           </Text>
         </View>
+      ) : !session.approved ? (
+        <View style={styles.card}>
+          <Text accessibilityRole="header" style={styles.title}>
+            Confirma en tu web
+          </Text>
+          <Text style={styles.copy}>
+            La solicitud ya se envió. En Ajustes → Control desde móvil, pulsa Aprobar junto a este
+            teléfono. No necesitas introducir otro código.
+          </Text>
+          {button("Comprobar conexión", () => c.sync())}
+        </View>
       ) : (
         <>
           <View style={styles.card}>
             <Text style={styles.label}>{c.grant?.sessionName}</Text>
+            {!session.online && (
+              <Text style={styles.copy}>
+                Abre de nuevo la web. El mando se reconectará sin reenviar órdenes antiguas.
+              </Text>
+            )}
+            {!session.snapshot && (
+              <Text style={styles.copy}>
+                El teléfono ya está aprobado. Esperando catálogo y reproductor; puedes usar Inicio o
+                Buscar.
+              </Text>
+            )}
+            {button("Actualizar estado", () => c.sync())}
             <Text style={styles.title}>
-              {state.playing ? "Reproduciendo" : state.paused ? "En pausa" : "Cargando"}
+              {!state.available ? "Sin vídeo activo" : state.playing ? "Reproduciendo" : "En pausa"}
             </Text>
             <Text style={styles.copy}>
-              {Math.floor(state.position || 0)} / {Math.floor(state.duration || 0)} segundos
+              {clock(state.position)} / {clock(state.duration)} · Volumen{" "}
+              {Math.round((state.volume ?? 1) * 100)} %
             </Text>
             <View style={styles.row}>
-              {button("Reproducir", () => action("player.play"), !state.available)}
-              {button("Pausar", () => action("player.pause"), !state.available)}
+              {button("Reproducir", () => action("player.play"), !state.available, true)}
+              {button("Pausar", () => action("player.pause"), !state.available, true)}
             </View>
             <View style={styles.row}>
               {button(
                 "−10 s",
                 () => action("player.seek", { positionSeconds: Math.max(0, state.position - 10) }),
-                !state.available
+                !state.available,
+                true
               )}
               {button(
                 "+10 s",
@@ -172,31 +233,35 @@ export default function App() {
                   action("player.seek", {
                     positionSeconds: Math.min(state.duration, state.position + 10)
                   }),
-                !state.available
+                !state.available,
+                true
               )}
             </View>
             <View style={styles.row}>
               {button(
                 "Volumen −",
                 () => action("player.setVolume", { volume: Math.max(0, state.volume - 0.1) }),
-                !state.available
+                !state.available,
+                true
               )}
               {button(
                 "Volumen +",
                 () => action("player.setVolume", { volume: Math.min(1, state.volume + 0.1) }),
-                !state.available
+                !state.available,
+                true
               )}
             </View>
             {button(
               state.muted ? "Activar sonido" : "Silenciar",
               () => action("player.setMuted", { muted: !state.muted }),
-              !state.available
+              !state.available,
+              true
             )}
           </View>
           <View style={styles.card}>
             <View style={styles.row}>
-              {button("Inicio", () => action("navigation.home"))}
-              {button("Volver", () => action("navigation.back"))}
+              {button("Inicio", () => action("navigation.home"), false, true)}
+              {button("Volver", () => action("navigation.back"), false, true)}
             </View>
             <Text style={styles.label}>Buscar en la web</Text>
             <TextInput
@@ -205,19 +270,33 @@ export default function App() {
               value={query}
               onChangeText={setQuery}
             />
-            {button("Buscar", () => action("catalog.search", { query }))}
+            {button(
+              "Buscar",
+              () =>
+                query.trim().length < 2
+                  ? setStatus("Escribe al menos dos caracteres para buscar.")
+                  : action("catalog.search", { query: query.trim() }),
+              false,
+              true
+            )}
             <Text style={styles.copy}>Elige un resultado o una fuente para abrirlo en la web.</Text>
           </View>
         </>
       )}
-      {state?.content && (
+      {session.approved && state?.content && (
         <View style={styles.card}>
           <Text accessibilityRole="header" style={styles.label}>
             {state.content.title}
           </Text>
+          {!state.content.items?.length && !state.content.tracks?.length && (
+            <Text style={styles.copy}>
+              No hay opciones en esta pantalla. Usa Buscar para elegir un título; si acabas de
+              buscar, espera a que la web cargue los resultados.
+            </Text>
+          )}
           {(state.content.items || []).map((item: any) => (
             <View key={item.key} style={{ gap: 8 }}>
-              {button(item.label, () => action("catalog.activate", { key: item.key }))}
+              {button(item.label, () => action("catalog.activate", { key: item.key }), false, true)}
               {!!item.detail && <Text style={styles.copy}>{item.detail}</Text>}
             </View>
           ))}
@@ -226,7 +305,8 @@ export default function App() {
               {button(
                 "Anterior",
                 () => action("catalog.page", { page: state.content.page - 1 }),
-                state.content.page === 0
+                state.content.page === 0,
+                true
               )}
               <Text style={styles.copy}>
                 {state.content.page + 1} / {state.content.pageCount}
@@ -234,7 +314,8 @@ export default function App() {
               {button(
                 "Siguiente",
                 () => action("catalog.page", { page: state.content.page + 1 }),
-                state.content.page + 1 >= state.content.pageCount
+                state.content.page + 1 >= state.content.pageCount,
+                true
               )}
             </View>
           )}
@@ -242,17 +323,23 @@ export default function App() {
             <View key={track.key}>
               {button(
                 `${track.kind === "audio" ? "Audio" : "Subtítulos"}: ${track.label}${track.selected ? " · seleccionado" : ""}`,
-                () => action("player.selectTrack", { key: track.key })
+                () => action("player.selectTrack", { key: track.key }),
+                false,
+                true
               )}
             </View>
           ))}
         </View>
       )}
-      {button("Olvidar vínculo local", () => {
-        void c.forget();
-        setState(null);
-        setStatus("Vínculo eliminado del teléfono. Puedes revocarlo también en la web.");
-      })}
+      {session.paired &&
+        button("Desvincular esta web", () => {
+          void c
+            .forget()
+            .then(() =>
+              setStatus("Vínculo eliminado. Si la web estaba desconectada, revócalo también allí.")
+            )
+            .catch(() => setStatus("No se pudo borrar el vínculo guardado. Inténtalo de nuevo."));
+        })}
     </ScrollView>
   );
 }
