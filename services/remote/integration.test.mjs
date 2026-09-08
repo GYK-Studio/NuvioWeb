@@ -7,6 +7,7 @@ test("real WebSocket channel: approval, routing, result and revocation", async (
   process.env.PORT = "0";
   process.env.HOST = "127.0.0.1";
   process.env.REMOTE_ALLOWED_ORIGINS = "http://127.0.0.1";
+  process.env.REMOTE_DEVICE_ORIGINS = "https://remote.gykstudio.tech";
   process.env.NUVIO_SUPABASE_URL = "https://unused.invalid";
   process.env.NUVIO_SUPABASE_ANON_KEY = "test-public-key";
   const { core, server, wss } = await import("./server.mjs");
@@ -44,7 +45,9 @@ test("real WebSocket channel: approval, routing, result and revocation", async (
     );
     await wait;
     const claim = core.claim(grant.code, "Test phone");
-    mobile = new WebSocket(`ws://127.0.0.1:${port}/remote/channel`);
+    mobile = new WebSocket(`ws://127.0.0.1:${port}/remote/channel`, {
+      origin: "https://remote.gykstudio.tech"
+    });
     await once(mobile, "open");
     wait = received(mobile, "connected");
     mobile.send(JSON.stringify({ type: "authenticate", role: "device", ...claim }));
@@ -91,6 +94,27 @@ test("real WebSocket channel: approval, routing, result and revocation", async (
     web.send(JSON.stringify({ type: "revoke", deviceId: claim.deviceId }));
     const [code] = await wait;
     assert.equal(code, 4001);
+    const nativeOwner = new WebSocket(`ws://127.0.0.1:${port}/remote/channel`, {
+      origin: "https://remote.gykstudio.tech"
+    });
+    await once(nativeOwner, "open");
+    wait = received(nativeOwner, "error");
+    nativeOwner.send(
+      JSON.stringify({
+        type: "authenticate",
+        role: "web",
+        webSessionId: grant.webSessionId,
+        token: grant.token
+      })
+    );
+    assert.equal((await wait).error, "UNAUTHORIZED");
+    nativeOwner.terminate();
+    const untrusted = new WebSocket(`ws://127.0.0.1:${port}/remote/channel`, {
+      origin: "https://untrusted.invalid"
+    });
+    await once(untrusted, "error");
+    assert.notEqual(untrusted.readyState, WebSocket.OPEN);
+    untrusted.terminate();
   } finally {
     web?.terminate();
     mobile?.terminate();

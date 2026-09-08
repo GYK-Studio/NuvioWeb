@@ -66,6 +66,7 @@ Variables del servicio remoto:
 HOST=0.0.0.0
 PORT=3001
 REMOTE_ALLOWED_ORIGINS=https://movies.gykstudio.tech
+REMOTE_DEVICE_ORIGINS=https://remote.gykstudio.tech
 NUVIO_SUPABASE_URL=https://nuvio.gykstudio.tech
 NUVIO_SUPABASE_ANON_KEY=CLAVE_PUBLICA_DE_TU_BACKEND
 ```

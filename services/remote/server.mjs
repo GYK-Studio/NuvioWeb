@@ -3,6 +3,14 @@ import { WebSocketServer } from "ws";
 import { RemoteCore } from "./core.mjs";
 
 const origins = new Set((process.env.REMOTE_ALLOWED_ORIGINS || "").split(",").filter(Boolean));
+// Android supplies the WSS endpoint origin. Devices still need pairing tokens.
+// This allowlist never permits authentication as a web owner.
+const deviceOrigins = new Set(
+  (process.env.REMOTE_DEVICE_ORIGINS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)
+);
 const backend = process.env.NUVIO_SUPABASE_URL;
 const apiKey = process.env.NUVIO_SUPABASE_ANON_KEY;
 if (!backend?.startsWith("https://") || !apiKey || !origins.size)
@@ -142,7 +150,12 @@ const wss = new WebSocketServer({ noServer: true, maxPayload: 16384, perMessageD
 server.on("upgrade", (req, socket, head) => {
   try {
     rate(`upgrade:${req.socket.remoteAddress}`, 20);
-    if (req.url !== "/remote/channel" || (req.headers.origin && !origins.has(req.headers.origin)))
+    if (
+      req.url !== "/remote/channel" ||
+      (req.headers.origin &&
+        !origins.has(req.headers.origin) &&
+        !deviceOrigins.has(req.headers.origin))
+    )
       throw new Error();
     wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, req));
   } catch {
