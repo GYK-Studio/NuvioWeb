@@ -4,6 +4,10 @@ build
 assets
 res
 services/**/runtime
+self-host
+apps/remote/android
+apps/remote/ios
+apps/remote/.expo
 *.ipk
 *.wgt
 

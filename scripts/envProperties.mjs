@@ -4,6 +4,7 @@ import path from "node:path";
 
 export const ENV_PROPERTY_KEYS = [
   "NUVIO_BACKEND_URL",
+  "NUVIO_REMOTE_URL",
   "NUVIO_SUPABASE_URL",
   "NUVIO_SUPABASE_ANON_KEY",
   "NUVIO_SUPABASE_FALLBACK_URL",

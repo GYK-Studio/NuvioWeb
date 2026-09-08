@@ -7256,6 +7256,7 @@ export const SettingsScreen = {
     });
     this.actionMap.set("about:supporters", () => Router.navigate("supportersContributors"));
     this.actionMap.set("about:licenses", () => Router.navigate("licensesAttributions"));
+    this.actionMap.set("about:remote", () => openRemotePanel());
     this.actionMap.set("about:debugConsole", () => Router.navigate("debugConsole"));
 
     return `
@@ -7287,6 +7288,12 @@ export const SettingsScreen = {
             focusKey: "about:licenses",
             title: t("about_licenses_attributions", {}, "Licenses & Attribution"),
             subtitle: t("licenses_attributions_section_data", {}, "Data & services")
+          })}
+          ${this.renderActionRow({
+            focusKey: "about:remote",
+            title: "Control desde móvil",
+            subtitle: "Emparejar Nuvio Remote y administrar dispositivos",
+            leadingIcon: "smartphone"
           })}
           ${this.renderActionRow({
             focusKey: "about:debugConsole",
@@ -8162,3 +8169,4 @@ export const SettingsScreen = {
     ScreenUtils.hide(this.container);
   }
 };
+import { openRemotePanel } from "../../../core/remote/remotePanel.js";

@@ -1033,3 +1033,67 @@ html,
     scrollbar-color: auto;
   }
 }
+.remote-panel {
+  box-sizing: border-box;
+  width: min(36rem, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 24px;
+  border: 1px solid #73737e;
+  border-radius: 16px;
+  background: #18181d;
+  color: #fff;
+  font:
+    1rem/1.5 system-ui,
+    sans-serif;
+}
+.remote-panel::backdrop {
+  background: #000b;
+}
+.remote-panel header,
+.remote-actions,
+.remote-device {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.remote-panel header {
+  justify-content: space-between;
+}
+.remote-panel h2 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+.remote-panel button {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid #73737e;
+  border-radius: 8px;
+  background: #292934;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.remote-panel canvas {
+  display: block;
+  width: min(100%, 256px);
+  height: auto;
+  margin: 24px auto;
+}
+.remote-panel canvas[hidden] {
+  display: none;
+}
+.remote-code {
+  overflow-wrap: anywhere;
+  font-family: monospace;
+  user-select: all;
+}
+.remote-device {
+  padding-block: 12px;
+}
+.remote-device span {
+  flex: 1 1 100%;
+  overflow-wrap: anywhere;
+}

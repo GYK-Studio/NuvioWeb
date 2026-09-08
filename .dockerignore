@@ -3,6 +3,11 @@
 .agents
 .codex
 node_modules
+**/node_modules
+**/.expo
+apps
+services/remote
+self-host
 dist
 local.properties
 .env
