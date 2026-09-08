@@ -3,6 +3,7 @@ import path from "node:path";
 import { readFile, stat } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { buildRuntimeEnvScript, readEnvProperties } from "./envProperties.mjs";
+import { handleProviderProxy } from "./providerProxy.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
@@ -96,6 +97,10 @@ async function resolveBackendDiscovery(env = {}) {
 const server = http.createServer(async (request, response) => {
   try {
     const requestUrl = new URL(request.url || "/", `http://${request.headers.host || host}`);
+    if (requestUrl.pathname === "/api/providers/fetch") {
+      await handleProviderProxy(request, response);
+      return;
+    }
     if (requestUrl.pathname === "/health") {
       response.writeHead(200, { "Cache-Control": "no-store", "Content-Type": "application/json" });
       response.end(JSON.stringify({ status: "ok" }));

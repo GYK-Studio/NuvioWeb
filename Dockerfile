@@ -18,6 +18,7 @@ ENV NODE_ENV=production \
 
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/scripts/serve.mjs ./scripts/serve.mjs
+COPY --from=build /app/scripts/providerProxy.mjs ./scripts/providerProxy.mjs
 COPY --from=build /app/scripts/envProperties.mjs ./scripts/envProperties.mjs
 COPY --from=build /app/local.example.properties ./local.example.properties
 

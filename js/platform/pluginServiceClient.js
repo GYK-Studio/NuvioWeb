@@ -96,6 +96,21 @@ async function directBrowserFetch(request = {}) {
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
+    if (String(globalThis.__NUVIO_ENV__?.NUVIO_PROVIDER_PROXY_ENABLED) === "true") {
+      const proxyResponse = await fetch("/api/providers/fetch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: validation.url,
+          method: validation.method,
+          headers: validation.headers,
+          body: validation.body
+        }),
+        signal: controller.signal
+      });
+      if (!proxyResponse.ok) throw new Error(`Provider proxy HTTP ${proxyResponse.status}`);
+      return await proxyResponse.json();
+    }
     const response = await fetch(validation.url, {
       method: validation.method,
       headers: normalizePluginHeaders(validation.headers),

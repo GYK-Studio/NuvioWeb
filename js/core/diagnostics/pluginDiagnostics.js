@@ -91,7 +91,8 @@ function log(level, prefix, event, details) {
   const logger = level === "error" ? console.error : console.warn;
   if (typeof logger !== "function") return false;
   const safeDetails = sanitize(details || {});
-  logger.call(console, `${prefix} ${event}`, safeDetails);
+  // Preserve redacted details in browser consoles that flatten objects to "Object".
+  logger.call(console, `${prefix} ${event}`, JSON.stringify(safeDetails));
   return true;
 }
 
