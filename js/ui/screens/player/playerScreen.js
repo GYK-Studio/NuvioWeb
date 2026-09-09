@@ -11508,6 +11508,33 @@ export const PlayerScreen = {
         }
 
         this.markPlaybackSourceFailed(this.activePlaybackUrl);
+        const fallbackCandidate = this.getNextPlaybackFallbackCandidate(currentSourceCandidate);
+        if (fallbackCandidate) {
+          const fallbackIndex = this.streamCandidates.findIndex(
+            (candidate) => candidate.id === fallbackCandidate.id
+          );
+          if (fallbackIndex >= 0) {
+            this.currentStreamIndex = fallbackIndex;
+          }
+          this.lastPlaybackErrorAt = 0;
+          this.loadingVisible = true;
+          this.paused = false;
+          this.sourcesError = null;
+          this.updateLoadingVisibility();
+          console.warn("Playback source failed during startup; trying next source", {
+            failedUrl: this.activePlaybackUrl,
+            fallbackUrl: fallbackCandidate.url,
+            mediaErrorCode,
+            responseCode: eventDetail.hlsResponseCode || null
+          });
+          void this.playStreamByUrl(fallbackCandidate.url, {
+            preservePanel: true,
+            resetSilentAudioState: false,
+            preservePendingRestore: Boolean(this.pendingPlaybackRestore),
+            sourceCandidate: fallbackCandidate
+          });
+          return;
+        }
         const targetEngine =
           !terminalHlsHttpFailure &&
           typeof PlayerController.getAlternativePlaybackEngine === "function"
@@ -13994,6 +14021,23 @@ export const PlayerScreen = {
     if (currentId) {
       (this.failedPlaybackStreamIds || (this.failedPlaybackStreamIds = new Set())).add(currentId);
     }
+  },
+
+  getNextPlaybackFallbackCandidate(currentCandidate = this.getCurrentStreamCandidate()) {
+    const currentId = String(currentCandidate?.id || "").trim();
+    const failedUrls = this.failedPlaybackUrls || new Set();
+    const failedIds = this.failedPlaybackStreamIds || new Set();
+    return (this.streamCandidates || []).find((candidate) => {
+      const id = String(candidate?.id || "").trim();
+      const url = String(candidate?.url || "").trim();
+      return (
+        Boolean(url) &&
+        id !== currentId &&
+        !failedUrls.has(url) &&
+        !failedIds.has(id) &&
+        !candidate?.isDisabled
+      );
+    });
   },
 
   mediaErrorMessage(

@@ -1,14 +1,17 @@
 /* Shared web design layer. Native scrolling/virtualized player lists stay intact. */
 :root {
   --web-nav-width: 0px;
-  --web-page-gutter: clamp(16px, 4vw, 64px);
-  --web-surface: #17171d;
-  --web-border: rgb(255 255 255 / 0.09);
+  --web-page-gutter: clamp(20px, 3vw, 48px);
+  --web-surface: #171b23;
+  --web-surface-raised: #202631;
+  --web-border: rgb(255 255 255 / 0.1);
+  --web-muted: #a9b1bd;
+  --web-accent: #f6c453;
   --web-header-height: 80px;
 }
 html,
 body {
-  background: #0d0d11;
+  background: #0d1117;
 }
 .web-header {
   position: sticky;
@@ -16,10 +19,11 @@ body {
   z-index: 70;
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: clamp(16px, 3vw, 44px);
   min-height: var(--web-header-height);
   padding: 12px var(--web-page-gutter);
-  background: #101014;
+  background: rgb(13 15 21 / 0.88);
+  backdrop-filter: blur(18px) saturate(1.2);
   border-bottom: 1px solid var(--web-border);
 }
 .web-header[hidden] {
@@ -33,6 +37,7 @@ body {
 }
 .web-header nav {
   flex: 1;
+  justify-content: center;
 }
 .web-header button {
   background: transparent;
@@ -40,27 +45,64 @@ body {
   color: #b6b4c1;
   min-height: 44px;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   white-space: nowrap;
   font-size: 14px;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
 }
 .web-header button[aria-current],
 .web-header button:hover {
   color: #fff;
-  background: #26232f;
+  background: rgb(255 255 255 / 0.08);
+}
+.web-header button:hover {
+  transform: translateY(-1px);
 }
 .web-header .web-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   color: #fff;
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 800;
-  letter-spacing: -1.5px;
+  letter-spacing: -0.8px;
   padding-inline-start: 0;
 }
-.web-brand span {
+.web-brand-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #f6c453, #e87972);
+  color: #17131a;
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+.web-brand-name {
+  color: #fff;
+}
+.web-brand-section {
   color: #b7a4ff;
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 2px;
-  margin-inline-start: 8px;
+  margin-inline-start: 1px;
+}
+.web-header-tools {
+  flex-shrink: 0;
+}
+.web-header-tools button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.web-header-tools button span:first-child {
+  color: #d9cfff;
+  font-size: 17px;
 }
 /* Navigation now belongs to the app shell, not each route's TV layout. */
 #app :is(.home-sidebar, .modern-sidebar-shell) {
@@ -75,6 +117,124 @@ body {
   margin-inline-start: 0;
   width: 100%;
   max-width: none;
+}
+#app
+  :is(
+    .home-main,
+    .home-screen-main,
+    .library-content,
+    .search-screen-content,
+    .settings-workspace
+  ) {
+  padding-inline: var(--web-page-gutter);
+}
+#app :is(.home-route-content, .library-route-content, .search-route-content, .settings-content) {
+  width: min(100%, 1480px);
+  margin-inline: auto;
+}
+#app :is(.home-hero, .home-hero-section, .detail-hero, .meta-detail-hero) {
+  border-radius: 20px;
+  overflow: hidden;
+}
+#app
+  :is(.home-row, .home-modern-row, .home-grid-section, .search-results-section, .library-section) {
+  margin-block: 28px;
+}
+#app :is(.home-row-title, .search-results-title, .library-title, .home-section-title) {
+  color: #f4f6f8;
+  font-size: 1.2rem;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+#app :is(.home-poster-frame, .search-result-poster, .library-poster) {
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.2);
+}
+#app
+  :is(.home-content-card, .search-result-card, .library-card, .stream-card, .settings-group-card) {
+  border: 1px solid var(--web-border);
+  border-radius: 12px;
+  background: var(--web-surface);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.12);
+}
+#app :is(.home-content-card, .search-result-card, .library-card, .stream-card):hover {
+  border-color: rgb(246 196 83 / 0.42);
+}
+#app :is(.home-poster-title, .search-result-title, .library-poster-title) {
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+#app :is(.detail-content, .meta-detail-content, .stream-content, .player-content) {
+  width: min(100%, 1280px);
+  margin-inline: auto;
+}
+#app :is(.stream-list, .stream-groups, .source-list) {
+  gap: 10px;
+}
+#app :is(.stream-card, .stream-row, .source-card) {
+  min-height: 64px;
+  padding: 12px 16px;
+}
+#app .settings-workspace {
+  display: block;
+  width: min(100%, 1280px);
+  margin-inline: auto;
+}
+#app .settings-sidebar-frame {
+  padding: 0;
+  overflow-x: auto;
+}
+#app .settings-sidebar {
+  display: flex;
+  gap: 6px;
+  padding: 16px 0;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--web-border);
+}
+#app .settings-nav-item {
+  flex: 0 0 auto;
+  min-height: 42px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+#app .settings-nav-item.selected {
+  background: rgb(246 196 83 / 0.16);
+  color: var(--web-accent);
+}
+#app .settings-content-frame {
+  padding: 28px 0 64px;
+}
+#app
+  :is(
+    .settings-group-card,
+    .plugins-settings-card,
+    .plugins-repository-card,
+    .addons-settings-card,
+    .account-card
+  ) {
+  background: var(--web-surface);
+  border-radius: 12px;
+}
+#app :is(.settings-title, .plugins-title, .addons-title, .account-title, .licenses-title) {
+  font-size: 2rem;
+  letter-spacing: 0;
+}
+#app :is(.settings-subtitle, .settings-row-subtitle, .web-provider-card p) {
+  color: var(--web-muted);
+}
+#app
+  :is(
+    .plugins-button,
+    .plugins-action-button,
+    .account-button,
+    .stream-route-chip,
+    .settings-action-row
+  ) {
+  border-radius: 10px;
+}
+#app :is(.home-main, .home-screen-main, .search-screen-content, .library-content) {
+  padding-bottom: 56px;
 }
 .web-with-header .screen {
   min-height: calc(100dvh - var(--web-header-height));
@@ -189,6 +349,16 @@ body {
   .web-header button {
     padding-inline: 10px;
   }
+  #app
+    :is(
+      .home-main,
+      .home-screen-main,
+      .library-content,
+      .search-screen-content,
+      .settings-workspace
+    ) {
+    padding-inline: 18px;
+  }
 }
 @media (max-width: 400px) {
   .web-header {
@@ -197,7 +367,7 @@ body {
   .web-header .web-brand {
     font-size: 25px;
   }
-  .web-brand span {
+  .web-brand-section {
     display: none;
   }
   .web-header-tools button {

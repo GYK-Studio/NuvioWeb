@@ -3,6 +3,7 @@ import { Router } from "../../navigation/router.js";
 import { ScreenUtils } from "../../navigation/screen.js";
 import { addonRepository } from "../../../data/repository/addonRepository.js";
 import { LocalStore } from "../../../core/storage/localStore.js";
+import { mediaServerRepository } from "../../../data/repository/mediaServerRepository.js";
 import { SessionStore } from "../../../core/storage/sessionStore.js";
 import { TmdbSettingsStore } from "../../../data/local/tmdbSettingsStore.js";
 import { HomeCatalogStore } from "../../../data/local/homeCatalogStore.js";
@@ -4490,6 +4491,10 @@ export const SettingsScreen = {
       this.integrationView = "animeskip";
       this.contentFocusKey = "integration:back";
     });
+    this.actionMap.set("integration:hub:jellyfin", () => {
+      this.integrationView = "jellyfin";
+      this.contentFocusKey = "integration:back";
+    });
 
     return `
         ${this.renderSectionHeader(SECTION_META.find((item) => item.id === "integration"))}
@@ -4519,6 +4524,11 @@ export const SettingsScreen = {
               title: t("settings.integration.animeskip.label"),
               subtitle: t("settings.integration.animeskip.subtitle")
             })}
+            ${this.renderActionRow({
+              focusKey: "integration:hub:jellyfin",
+              title: "Jellyfin",
+              subtitle: "Conecta tu servidor multimedia y detecta tu biblioteca"
+            })}
           </div>
         </div>
     `;
@@ -4531,10 +4541,68 @@ export const SettingsScreen = {
         debrid: "integration:hub:debrid",
         tmdb: "integration:hub:tmdb",
         mdblist: "integration:hub:mdblist",
-        animeskip: "integration:hub:animeskip"
+        animeskip: "integration:hub:animeskip",
+        jellyfin: "integration:hub:jellyfin"
       };
       this.contentFocusKey = focusByIntegration[key] || "integration:hub:tmdb";
     });
+
+    if (key === "jellyfin") {
+      const server = mediaServerRepository.get("jellyfin");
+      this.actionMap.set("integration:jellyfin:url", () => {
+        this.openTextDialog({
+          title: "Conectar Jellyfin",
+          label: "URL del servidor",
+          placeholder: "https://jellyfin.example.com",
+          draft: server?.url || "",
+          saveLabel: "Detectar y guardar",
+          returnFocusKey: "integration:jellyfin:url",
+          onSubmit: async (value) => {
+            await mediaServerRepository.saveJellyfin(value);
+            await this.render({ refreshModel: false });
+          }
+        });
+      });
+      this.actionMap.set("integration:jellyfin:remove", () => {
+        if (server) {
+          mediaServerRepository.remove(server.id);
+          void this.render({ refreshModel: false });
+        }
+      });
+      return `
+        ${this.renderSectionHeader({
+          label: "Jellyfin",
+          subtitle: "Biblioteca multimedia personal"
+        })}
+        <div class="settings-group-card settings-group-card-fill">
+          <div class="settings-stack">
+            ${this.renderActionRow({
+              focusKey: "integration:back",
+              title: "Volver a Integraciones",
+              subtitle: "Regresar al centro de conexiones",
+              icon: "back"
+            })}
+            ${this.renderActionRow({
+              focusKey: "integration:jellyfin:url",
+              title: server ? server.name : "Detectar servidor",
+              subtitle: server
+                ? `${server.url}${server.version ? ` · Jellyfin ${server.version}` : ""}`
+                : "Introduce la URL pública o local de tu servidor Jellyfin"
+            })}
+            ${
+              server
+                ? this.renderActionRow({
+                    focusKey: "integration:jellyfin:remove",
+                    title: "Desconectar servidor",
+                    subtitle: "Eliminar esta conexión de este navegador"
+                  })
+                : ""
+            }
+            <p class="settings-help-copy">La detección consulta solo <code>/System/Info/Public</code>. El catálogo y la reproducción autenticada se añadirán usando la API oficial del servidor.</p>
+          </div>
+        </div>
+      `;
+    }
 
     if (key === "debrid") {
       const providers = DebridProviders.visible();

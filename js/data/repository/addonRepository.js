@@ -10,6 +10,11 @@ const PROFILES_KEY = "profiles";
 const PROFILE_SCOPED_VERSION = 1;
 const MANIFEST_SUFFIX = "/manifest.json";
 const DEFAULT_ADDON_URLS = ["https://v3-cinemeta.strem.io", "https://opensubtitles-v3.strem.io"];
+const COMMUNITY_ADDON_URLS = [
+  "https://raw.githubusercontent.com/adrianjael/pluggin-latino/refs/heads/main",
+  "https://raw.githubusercontent.com/KennethJYS/Nuvio-Providers-Latino/refs/heads/main"
+];
+const COMMUNITY_ADDONS_MIGRATION_KEY = "communityAddonSourcesV1";
 const MANIFEST_CACHE_KEY = "addonManifestCacheV2";
 const MANIFEST_CACHE_VERSION = 2;
 const MANIFEST_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
@@ -309,11 +314,24 @@ class AddonRepository {
   }
 
   getInstalledAddonUrls() {
-    return this.readProfileScopedValue(
+    const urls = this.readProfileScopedValue(
       ADDON_URLS_KEY,
       (value) => this.normalizeAddonUrlList(value),
       DEFAULT_ADDON_URLS
     );
+    const profileId = this.getActiveStorageProfileId();
+    const migrations = LocalStore.get(COMMUNITY_ADDONS_MIGRATION_KEY, {});
+    if (migrations?.[profileId] === true) {
+      return urls;
+    }
+    const merged = Array.from(new Set([...urls, ...COMMUNITY_ADDON_URLS]));
+    LocalStore.set(COMMUNITY_ADDONS_MIGRATION_KEY, { ...migrations, [profileId]: true });
+    this.writeProfileScopedValue(
+      ADDON_URLS_KEY,
+      (value) => this.normalizeAddonUrlList(value),
+      merged
+    );
+    return merged;
   }
 
   getAddonEnabledStates() {
