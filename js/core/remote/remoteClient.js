@@ -21,7 +21,7 @@ export class RemoteClient extends EventTarget {
   send(data) {
     if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify(data));
   }
-  async start() {
+  async start(name = "Nuvio Web") {
     this.stop();
     const base = new URL(String(globalThis.__NUVIO_ENV__?.NUVIO_REMOTE_URL || ""));
     if (base.protocol !== "https:" && !(base.protocol === "http:" && base.hostname === "127.0.0.1"))
@@ -32,7 +32,7 @@ export class RemoteClient extends EventTarget {
     const response = await fetch(new URL("/remote/pairings", base), {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ name: "Nuvio Web" }),
+      body: JSON.stringify({ name }),
       signal: AbortSignal.timeout(10000)
     });
     const grant = await response.json();
@@ -47,20 +47,58 @@ export class RemoteClient extends EventTarget {
     this.timer = setInterval(() => {
       if (
         !SessionStore.accessToken ||
-        SessionStore.accessToken !== this.token ||
-        ProfileManager.getActiveProfileId() !== this.profile ||
-        Date.now() >= grant.expiresAt
+        Date.now() >= (this.grant.linkExpiresAt || this.grant.expiresAt)
       ) {
         this.stop();
         this.emit({ type: "revoked" });
+        return;
+      }
+      if (ProfileManager.getActiveProfileId() !== this.profile) {
+        this.profile = ProfileManager.getActiveProfileId();
+        this.send({ type: "suspend" });
+        this.content.reset();
+        return;
+      }
+      if (SessionStore.accessToken !== this.token || Date.now() >= this.grant.expiresAt - 60000) {
+        void this.renew();
         return;
       }
       this.publishState();
     }, 1000);
     return grant;
   }
-  async createCode() {
-    if (this.closed) return this.start();
+  async renew() {
+    if (this.closed || this.renewing) return;
+    this.renewing = true;
+    const grant = this.grant;
+    try {
+      const token = SessionStore.accessToken;
+      const response = await fetch(new URL("/remote/refresh/web", this.base), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ webSessionId: grant.webSessionId }),
+        signal: AbortSignal.timeout(10000)
+      });
+      const result = await response.json();
+      if (this.closed || grant !== this.grant) return;
+      if (!response.ok) {
+        if (result.error === "UNAUTHORIZED") {
+          this.stop();
+          this.emit({ type: "revoked" });
+        }
+        return;
+      }
+      Object.assign(grant, result);
+      this.token = token;
+      this.publishState();
+    } catch {
+      this.emit({ type: "offline" });
+    } finally {
+      this.renewing = false;
+    }
+  }
+  async createCode(name) {
+    if (this.closed) return this.start(name);
     if (this.socket?.readyState !== WebSocket.OPEN) fail("SESSION_OFFLINE");
     return new Promise((resolve, reject) => {
       const cleanup = () => {
@@ -138,7 +176,7 @@ export class RemoteClient extends EventTarget {
     };
     socket.onclose = (event) => {
       if (this.closed || socket !== this.socket) return;
-      if (event.code === 4001 || Date.now() >= this.grant.expiresAt) {
+      if (event.code === 4001 || Date.now() >= (this.grant.linkExpiresAt || this.grant.expiresAt)) {
         this.stop();
         this.emit({ type: "revoked" });
         return;
@@ -175,11 +213,28 @@ export class RemoteClient extends EventTarget {
       position: v?.currentTime || 0,
       duration: Number.isFinite(v?.duration) ? v.duration : 0,
       volume: v?.volume ?? 1,
-      muted: v?.muted ?? false
+      muted: v?.muted ?? false,
+      buffering: available && !v.paused && v.readyState < 3,
+      rate: v?.playbackRate || 1,
+      capabilities: {
+        seek: available && Number.isFinite(v?.duration) && v.duration > 0,
+        volume: available,
+        rate: available,
+        fullscreen: false
+      }
     };
   }
   publishState() {
-    if (!this.closed) this.send({ type: "state", state: this.snapshot() });
+    if (this.closed) return;
+    const state = this.snapshot();
+    // Leave headroom below the transport's 16 KiB limit, including multi-byte titles.
+    const bytes = () => new TextEncoder().encode(JSON.stringify(state)).length;
+    while (bytes() > 14500 && (state.content.items?.length || state.content.tracks?.length)) {
+      if ((state.content.items?.length || 0) >= (state.content.tracks?.length || 0))
+        state.content.items.pop();
+      else state.content.tracks.pop();
+    }
+    this.send({ type: "state", state });
   }
   async execute(c) {
     if (
@@ -193,20 +248,31 @@ export class RemoteClient extends EventTarget {
       return this.content.activate(p.key);
     }
     if (c.type === "catalog.page") return this.content.setPage(p.page);
+    if (c.type === "catalog.season") return this.content.setSeason(p.season);
     if (c.type === "navigation.home") return Router.navigate("home");
+    if (c.type === "navigation.library") return Router.navigate("library");
+    if (c.type === "navigation.discover") return Router.navigate("discover");
     if (c.type === "navigation.back") return Router.back();
     if (c.type === "catalog.search") {
       if (typeof p.query !== "string" || p.query.length < 2 || p.query.length > 120)
         fail("INVALID_PAYLOAD");
       return Router.navigate("search", { query: p.query });
     }
-    if (c.type === "player.fullscreen") fail("LOCAL_INTERACTION_REQUIRED");
+    if (c.type === "player.fullscreen") {
+      this.emit({ type: "local.gesture", action: "fullscreen" });
+      fail("LOCAL_INTERACTION_REQUIRED");
+    }
     const v = document.getElementById("videoPlayer");
     if (Router.getCurrent() !== "player" || !v?.currentSrc) fail("NO_SOURCE");
-    if (c.type === "player.play") {
+    if (c.type === "player.setRate") {
+      if (![0.5, 0.75, 1, 1.25, 1.5, 2].includes(p.rate)) fail("INVALID_PAYLOAD");
+      v.playbackRate = p.rate;
+      if (v.playbackRate !== p.rate) fail("UNSUPPORTED_CAPABILITY");
+    } else if (c.type === "player.play") {
       try {
         await v.play();
       } catch {
+        this.emit({ type: "local.gesture", action: "play" });
         fail("LOCAL_INTERACTION_REQUIRED");
       }
     } else if (c.type === "player.pause") v.pause();

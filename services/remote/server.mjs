@@ -1,6 +1,8 @@
 import http from "node:http";
+import { createHash } from "node:crypto";
 import { WebSocketServer } from "ws";
 import { RemoteCore } from "./core.mjs";
+import { attachStorage } from "./storage.mjs";
 
 const origins = new Set((process.env.REMOTE_ALLOWED_ORIGINS || "").split(",").filter(Boolean));
 // Android supplies the WSS endpoint origin. Devices still need pairing tokens.
@@ -16,6 +18,7 @@ const apiKey = process.env.NUVIO_SUPABASE_ANON_KEY;
 if (!backend?.startsWith("https://") || !apiKey || !origins.size)
   throw new Error("Configure remote auth backend and origins");
 const core = new RemoteCore();
+attachStorage(core, process.env.REMOTE_DATA_FILE);
 const limits = new Map();
 function rate(key, max, interval = 60000) {
   const now = Date.now();
@@ -39,10 +42,18 @@ const devices = (s) => ({
     id: d.id,
     name: d.name,
     approved: d.approved,
-    active: s.active === d.id
+    active: s.active === d.id,
+    lastSeen: d.lastSeen,
+    online: d.socket?.readyState === 1
   }))
 });
 function publicContent(content = {}) {
+  const artwork = (value) =>
+    typeof value === "string" &&
+    value.length <= 512 &&
+    /^https:\/\/image\.tmdb\.org\/t\/p\/[a-zA-Z0-9/_\.%-]+$/.test(value)
+      ? value
+      : undefined;
   const text = (value) =>
     String(value || "")
       .replace(/https?:\/\/\S+/g, "[enlace]")
@@ -59,7 +70,14 @@ function publicContent(content = {}) {
               kind: item.kind === "audio" ? "audio" : "subtitle",
               selected: Boolean(item.selected)
             }
-          : { key: item.key, label: text(item.label), detail: text(item.detail) }
+          : {
+              key: item.key,
+              label: text(item.label),
+              detail: text(item.detail),
+              thumbnail: artwork(item.thumbnail),
+              mediaType: text(item.mediaType),
+              year: text(item.year)
+            }
       );
   return {
     title: text(content.title),
@@ -67,7 +85,13 @@ function publicContent(content = {}) {
     page: Math.max(0, Math.min(10000, Number(content.page) || 0)),
     pageCount: Math.max(1, Math.min(10001, Number(content.pageCount) || 1)),
     items: rows(content.items, 12),
-    tracks: rows(content.tracks, 24, true)
+    tracks: rows(content.tracks, 24, true),
+    seasons: Array.isArray(content.seasons)
+      ? content.seasons.filter((n) => Number.isSafeInteger(n) && n >= 0 && n <= 10000).slice(0, 100)
+      : [],
+    selectedSeason: Number.isSafeInteger(content.selectedSeason) ? content.selectedSeason : null,
+    description: text(content.description),
+    thumbnail: artwork(content.thumbnail)
   };
 }
 const server = http.createServer(async (req, res) => {
@@ -106,7 +130,7 @@ const server = http.createServer(async (req, res) => {
     }
     const body = JSON.parse(Buffer.concat(chunks).toString());
     let result;
-    if (req.url === "/remote/pairings") {
+    if (req.url === "/remote/pairings" || req.url === "/remote/refresh/web") {
       if (!origins.has(origin)) throw new Error("UNAUTHORIZED");
       const authorization = req.headers.authorization;
       if (!authorization?.startsWith("Bearer ") || authorization.length > 8192)
@@ -119,12 +143,35 @@ const server = http.createServer(async (req, res) => {
       if (!response.ok) throw new Error("UNAUTHORIZED");
       const user = await response.json();
       if (!user.id || user.is_anonymous) throw new Error("UNAUTHORIZED");
-      rate(`owner:${user.id}`, 5);
-      result = core.create(user.id, body.name);
+      rate(`owner:${user.id}`, 10);
+      result =
+        req.url === "/remote/refresh/web"
+          ? core.renewWeb(body.webSessionId, user.id)
+          : core.create(user.id, body.name);
+    } else if (req.url === "/remote/device/status") {
+      if (typeof body.refreshToken !== "string" || body.refreshToken.length > 100)
+        throw new Error("UNAUTHORIZED");
+      result = core.deviceStatus(body.webSessionId, body.deviceId, body.refreshToken);
+    } else if (req.url === "/remote/devices/revoke") {
+      if (typeof body.refreshToken !== "string" || body.refreshToken.length > 100)
+        throw new Error("UNAUTHORIZED");
+      core.renewDevice(body.webSessionId, body.deviceId, body.refreshToken);
+      const s = core.session(body.webSessionId);
+      core.revoke(s, body.deviceId);
+      send(s.web, devices(s));
+      result = { revoked: true };
+    } else if (req.url === "/remote/refresh/device") {
+      if (typeof body.refreshToken !== "string" || body.refreshToken.length > 100)
+        throw new Error("UNAUTHORIZED");
+      result = core.renewDevice(body.webSessionId, body.deviceId, body.refreshToken);
     } else if (req.url === "/remote/pairings/claim") {
       rate(`claim:${req.socket.remoteAddress}`, 5);
       if (typeof body.code !== "string" || body.code.length > 64)
         throw new Error("INVALID_PAYLOAD");
+      rate(
+        `challenge:${createHash("sha256").update(body.code.replace(/\s/g, "").toUpperCase()).digest("hex")}`,
+        5
+      );
       result = core.claim(body.code, body.name);
       const s = core.session(result.webSessionId);
       send(s.web, devices(s));
@@ -165,9 +212,9 @@ server.on("upgrade", (req, socket, head) => {
 wss.on("connection", (socket, req) => {
   let identity = null;
   const authTimer = setTimeout(() => socket.close(4003, "Authentication required"), 5000);
-  socket.alive = true;
+  socket.lastPong = Date.now();
   socket.on("pong", () => {
-    socket.alive = true;
+    socket.lastPong = Date.now();
   });
   socket.on("error", () => {});
   socket.on("message", (raw) => {
@@ -175,7 +222,12 @@ wss.on("connection", (socket, req) => {
       rate(`ws:${req.socket.remoteAddress}`, 100, 1000);
       const m = JSON.parse(raw.toString());
       if (!identity) {
-        if (m.type !== "authenticate" || typeof m.token !== "string" || m.token.length > 100)
+        if (
+          m.type !== "authenticate" ||
+          !["web", "device"].includes(m.role) ||
+          typeof m.token !== "string" ||
+          m.token.length > 100
+        )
           throw new Error("UNAUTHORIZED");
         if (m.role === "web") {
           if (!origins.has(req.headers.origin)) throw new Error("UNAUTHORIZED");
@@ -189,6 +241,8 @@ wss.on("connection", (socket, req) => {
           const { s, d } = core.device(m.webSessionId, m.deviceId, m.token, false);
           d.socket?.close(4001, "Replaced");
           d.socket = socket;
+          d.lastSeen = Date.now();
+          core.changed();
           identity = { s, d, role: "device" };
           send(socket, {
             type: "connected",
@@ -213,7 +267,16 @@ wss.on("connection", (socket, req) => {
       core.session(s.id);
       if (role === "web") {
         if (s.web !== socket) throw new Error("UNAUTHORIZED");
-        if (m.type === "pairing.create") {
+        if (m.type === "close") {
+          core.remove(s.id);
+          return;
+        }
+        if (s.accessExpires <= Date.now()) throw new Error("UNAUTHORIZED");
+        if (m.type === "suspend") {
+          core.suspend(s);
+          for (const device of s.devices.values()) send(device.socket, { type: "suspended" });
+          send(socket, devices(s));
+        } else if (m.type === "pairing.create") {
           rate(`pairing:${s.id}`, 5);
           send(socket, core.pairing(s));
         } else if (m.type === "approve") {
@@ -244,7 +307,15 @@ wss.on("connection", (socket, req) => {
             duration: Math.max(0, Number(p.duration) || 0),
             volume: Math.min(1, Math.max(0, Number(p.volume) || 0)),
             muted: Boolean(p.muted),
-            available: Boolean(p.available)
+            available: Boolean(p.available),
+            buffering: Boolean(p.buffering),
+            rate: Number.isFinite(p.rate) ? Math.min(2, Math.max(0.5, p.rate)) : 1,
+            capabilities: {
+              seek: Boolean(p.capabilities?.seek),
+              volume: Boolean(p.capabilities?.volume),
+              rate: Boolean(p.capabilities?.rate),
+              fullscreen: false
+            }
           };
           s.version++;
           broadcast(s, {
@@ -261,17 +332,21 @@ wss.on("connection", (socket, req) => {
                 type: "command.result",
                 commandId: m.commandId,
                 status: m.status === "completed" ? "completed" : "rejected",
+                stateVersion: s.version,
                 error:
                   typeof m.error === "string" && /^[A-Z_]{1,40}$/.test(m.error)
                     ? m.error
                     : undefined
               };
               send(device.socket, item.result);
+              core.record("command.result", item.result.status, s.id, device.id);
+              core.changed();
             }
           }
         }
       } else {
         if (d.socket !== socket || !s.devices.has(d.id)) throw new Error("UNAUTHORIZED");
+        if (d.accessExpires <= Date.now()) throw new Error("UNAUTHORIZED");
         rate(`device:${d.id}`, 20, 1000);
         if (m.type === "revoke.self") {
           core.revoke(s, d.id);
@@ -307,6 +382,7 @@ wss.on("connection", (socket, req) => {
         type: "error",
         error: /^[A-Z_]+$/.test(error.message) ? error.message : "INVALID_PAYLOAD"
       });
+      if (!identity) socket.close(4001, "Unauthorized");
     }
   });
   socket.on("close", () => {
@@ -321,11 +397,8 @@ setInterval(() => {
   core.sweep();
   for (const [key, value] of limits) if (value.until < Date.now()) limits.delete(key);
   for (const socket of wss.clients) {
-    if (!socket.alive) socket.terminate();
-    else {
-      socket.alive = false;
-      socket.ping();
-    }
+    if (Date.now() - socket.lastPong >= 45000) socket.terminate();
+    else socket.ping();
   }
 }, 15000).unref();
 server.listen(Number(process.env.PORT || 3001), process.env.HOST || "127.0.0.1");

@@ -38,7 +38,34 @@ test("expiry and duplicate commands", () => {
   advance(10000);
   assert.throws(() => validateCommand(c, now()), /STALE_STATE/);
   advance(900000);
-  assert.throws(() => core.session(s.id), /UNAUTHORIZED/);
+  assert.throws(() => core.device(s.id, mobile.deviceId, mobile.token), /UNAUTHORIZED/);
+  assert.ok(core.session(s.id));
+});
+test("revocable renewal and persistence keep hashes only, with absolute 30-day expiry", () => {
+  const { core, web, s, mobile, advance, now } = setup();
+  core.approve(s, mobile.deviceId);
+  advance(900001);
+  assert.throws(() => core.web(s.id, web.token), /UNAUTHORIZED/);
+  assert.throws(() => core.renewWeb(s.id, "other-owner"), /UNAUTHORIZED/);
+  const webAccess = core.renewWeb(s.id, "user-a");
+  assert.ok(core.web(s.id, webAccess.token));
+  const renewed = core.renewDevice(s.id, mobile.deviceId, mobile.refreshToken);
+  assert.ok(core.device(s.id, mobile.deviceId, renewed.token));
+  const records = JSON.stringify(core.exportRecords());
+  assert.ok(!records.includes(mobile.token));
+  assert.ok(!records.includes(mobile.refreshToken));
+  assert.ok(!records.includes(webAccess.token));
+  const restored = new RemoteCore(now);
+  restored.importRecords(JSON.parse(records));
+  assert.equal(restored.session(s.id).web, null);
+  assert.ok(restored.renewDevice(s.id, mobile.deviceId, mobile.refreshToken));
+  restored.revoke(restored.session(s.id), mobile.deviceId);
+  assert.throws(
+    () => restored.renewDevice(s.id, mobile.deviceId, mobile.refreshToken),
+    /UNAUTHORIZED/
+  );
+  advance(30 * 24 * 60 * 60 * 1000);
+  assert.throws(() => core.renewWeb(s.id, "user-a"), /UNAUTHORIZED/);
 });
 test("reject arbitrary actions, URLs, invalid ranges and stale ordering", () => {
   const { s, now } = setup();
@@ -81,4 +108,14 @@ test("three devices can pair but only the active approved device controls", () =
   };
   assert.throws(() => core.command(s, first, command), /UNAUTHORIZED/);
   assert.equal(core.command(s, second, command), null);
+  core.suspend(s);
+  assert.throws(
+    () => core.command(s, second, { ...command, sequence: 2, commandId: "suspended-command-123" }),
+    /UNAUTHORIZED/
+  );
+  core.approve(s, second.id);
+  assert.equal(
+    core.command(s, second, { ...command, sequence: 2, commandId: "reapproved-command-123" }),
+    null
+  );
 });

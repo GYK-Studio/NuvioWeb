@@ -6,11 +6,13 @@ on:
     paths:
       - "apps/remote/**"
       - "services/remote/**"
+      - "js/core/remote/**"
       - ".github/workflows/remote-android.yml"
   pull_request:
     paths:
       - "apps/remote/**"
       - "services/remote/**"
+      - "js/core/remote/**"
       - ".github/workflows/remote-android.yml"
 
 permissions:
@@ -43,11 +45,13 @@ jobs:
         run: |
           pnpm --dir apps/remote install --ignore-workspace --frozen-lockfile --ignore-scripts --prod=false
           pnpm --dir services/remote install --ignore-workspace --frozen-lockfile --ignore-scripts --prod=false
+          pnpm install --ignore-workspace --frozen-lockfile --ignore-scripts --prod=false
       - name: Check TypeScript and remote protocol
         run: |
           pnpm --dir apps/remote typecheck
           pnpm --dir apps/remote test
           pnpm --dir services/remote test
+          node --test services/remote/content.test.mjs services/remote/mobile.test.mjs
       - name: Generate Android project
         working-directory: apps/remote
         run: pnpm exec expo prebuild --platform android --no-install

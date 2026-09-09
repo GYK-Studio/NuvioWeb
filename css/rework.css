@@ -1,0 +1,212 @@
+/* Shared web design layer. Native scrolling/virtualized player lists stay intact. */
+:root {
+  --web-nav-width: 0px;
+  --web-page-gutter: clamp(16px, 4vw, 64px);
+  --web-surface: #17171d;
+  --web-border: rgb(255 255 255 / 0.09);
+  --web-header-height: 80px;
+}
+html,
+body {
+  background: #0d0d11;
+}
+.web-header {
+  position: sticky;
+  top: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  min-height: var(--web-header-height);
+  padding: 12px var(--web-page-gutter);
+  background: #101014;
+  border-bottom: 1px solid var(--web-border);
+}
+.web-header[hidden] {
+  display: none;
+}
+.web-header nav,
+.web-header-tools {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.web-header nav {
+  flex: 1;
+}
+.web-header button {
+  background: transparent;
+  border: 0;
+  color: #b6b4c1;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.web-header button[aria-current],
+.web-header button:hover {
+  color: #fff;
+  background: #26232f;
+}
+.web-header .web-brand {
+  color: #fff;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  padding-inline-start: 0;
+}
+.web-brand span {
+  color: #b7a4ff;
+  font-size: 10px;
+  letter-spacing: 2px;
+  margin-inline-start: 8px;
+}
+/* Navigation now belongs to the app shell, not each route's TV layout. */
+#app :is(.home-sidebar, .modern-sidebar-shell) {
+  display: none !important;
+}
+#app :is(.home-shell, .settings-shell, .library-shell, .search-screen-shell, .addons-shell) {
+  display: block;
+  grid-template-columns: minmax(0, 1fr);
+  padding-inline-start: 0;
+}
+#app :is(.home-main, .home-content, .library-content, .settings-main) {
+  margin-inline-start: 0;
+  width: 100%;
+  max-width: none;
+}
+.web-with-header .screen {
+  min-height: calc(100dvh - var(--web-header-height));
+}
+.web-with-header .web-back-navigation {
+  position: relative;
+  top: auto;
+  padding: 12px var(--web-page-gutter);
+  background: #0d0d11;
+}
+#app.web-has-back-navigation {
+  padding-top: 0;
+}
+#app :is(.home-row-title, .search-results-title, .library-title) {
+  letter-spacing: -0.035em;
+  font-weight: 650;
+}
+#app :is(.home-poster-frame, .search-result-poster, .library-poster) {
+  border-radius: 12px;
+  outline: 1px solid rgb(255 255 255 / 0.1);
+  outline-offset: -1px;
+  overflow: hidden;
+}
+#app :is(.home-content-card, .search-result-card) {
+  transition: opacity 150ms;
+}
+#app
+  :is(
+    .plugins-settings-card,
+    .plugins-repository-card,
+    .addons-settings-card,
+    .settings-content-frame,
+    .account-card
+  ) {
+  border: 1px solid var(--web-border);
+  background: var(--web-surface);
+  border-radius: 16px;
+  box-shadow: none;
+}
+#app :is(.plugins-title, .addons-title, .settings-title, .account-title, .licenses-title) {
+  font-size: clamp(28px, 3vw, 42px);
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+#app :is(.settings-sidebar-frame, .settings-content-frame) {
+  padding: 20px;
+}
+#app .settings-sidebar {
+  gap: 8px;
+}
+#app :is(input:not([type="range"]):not([type="checkbox"]), select, textarea) {
+  border-radius: 10px;
+  border: 1px solid #494651;
+  background-color: #101014;
+  min-height: 44px;
+}
+#app :is(.plugins-button, .plugins-action-button, .account-button, .stream-route-chip) {
+  border-radius: 10px;
+  min-height: 44px;
+}
+.web-featured-providers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 16px;
+  margin-block: 24px;
+}
+.web-provider-card {
+  padding: 24px;
+  border: 1px solid var(--web-border);
+  border-radius: 16px;
+  background: #19171f;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.web-provider-card h3 {
+  margin: 0;
+  font-size: 19px;
+}
+.web-provider-card p {
+  color: #bbb7c8;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.web-provider-card button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px;
+  background: #c7b8ff;
+  color: #191026;
+  font-weight: 650;
+}
+@media (max-width: 960px) {
+  :root {
+    --web-header-height: 132px;
+  }
+  .web-header {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+  .web-header nav {
+    order: 3;
+    flex-basis: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .web-header-tools {
+    margin-inline-start: auto;
+    gap: 0;
+  }
+  .web-header button {
+    padding-inline: 10px;
+  }
+}
+@media (max-width: 400px) {
+  .web-header {
+    padding-inline: 12px;
+  }
+  .web-header .web-brand {
+    font-size: 25px;
+  }
+  .web-brand span {
+    display: none;
+  }
+  .web-header-tools button {
+    font-size: 12px;
+    padding-inline: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #app :is(.home-content-card, .search-result-card) {
+    transition: none;
+  }
+}

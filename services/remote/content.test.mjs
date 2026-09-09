@@ -9,17 +9,30 @@ test("web publishes usable state even if catalog snapshot throws", async () => {
     write: false,
     format: "esm",
     platform: "node",
-    plugins: [{ name: "remote-dependencies", setup(b) {
-      b.onResolve({ filter: /(sessionStore|profileManager|router|remoteContent)\.js$/ }, args => ({ path: args.path, namespace: "mock" }));
-      b.onLoad({ filter: /.*/, namespace: "mock" }, ({ path }) => ({ contents:
-        path.includes("sessionStore") ? "export const SessionStore={accessToken:'test'}" :
-        path.includes("profileManager") ? "export const ProfileManager={getActiveProfileId:()=>1}" :
-        path.includes("router") ? "export const Router={getCurrent:()=> 'home'}" :
-        "export class RemoteContent {snapshot(){throw Error('broken catalog')} reset(){}}"
-      }));
-    }}]
+    plugins: [
+      {
+        name: "remote-dependencies",
+        setup(b) {
+          b.onResolve(
+            { filter: /(sessionStore|profileManager|router|remoteContent)\.js$/ },
+            (args) => ({ path: args.path, namespace: "mock" })
+          );
+          b.onLoad({ filter: /.*/, namespace: "mock" }, ({ path }) => ({
+            contents: path.includes("sessionStore")
+              ? "export const SessionStore={accessToken:'test'}"
+              : path.includes("profileManager")
+                ? "export const ProfileManager={getActiveProfileId:()=>1}"
+                : path.includes("router")
+                  ? "export const Router={getCurrent:()=> 'home'}"
+                  : "export class RemoteContent {snapshot(){throw Error('broken catalog')} reset(){}}"
+          }));
+        }
+      }
+    ]
   });
-  const { RemoteClient } = await import(`data:text/javascript;base64,${Buffer.from(output.outputFiles[0].text).toString("base64")}`);
+  const { RemoteClient } = await import(
+    `data:text/javascript;base64,${Buffer.from(output.outputFiles[0].text).toString("base64")}`
+  );
   const previousDocument = globalThis.document;
   globalThis.document = { getElementById: () => null };
   try {
@@ -30,11 +43,15 @@ test("web publishes usable state even if catalog snapshot throws", async () => {
     assert.deepEqual(state.content.items, []);
     let published;
     client.closed = false;
-    client.send = message => { published = message; };
+    client.send = (message) => {
+      published = message;
+    };
     client.publishState();
     assert.equal(published.type, "state");
     assert.equal(published.state.volume, 1);
-  } finally { globalThis.document = previousDocument; }
+  } finally {
+    globalThis.document = previousDocument;
+  }
 });
 test("content actions are opaque, paginated and invalidated on navigation", async () => {
   let route = "search",

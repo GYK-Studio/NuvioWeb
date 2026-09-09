@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test core.test.mjs integration.test.mjs"
+    "test": "node --test core.test.mjs integration.test.mjs storage.test.mjs"
   },
   "dependencies": {
     "ws": "^8.18.3"

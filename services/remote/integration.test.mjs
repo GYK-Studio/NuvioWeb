@@ -5,6 +5,7 @@ import WebSocket from "ws";
 
 test("real WebSocket channel: approval, routing, result and revocation", async () => {
   process.env.PORT = "0";
+  process.env.REMOTE_DATA_FILE = "";
   process.env.HOST = "127.0.0.1";
   process.env.REMOTE_ALLOWED_ORIGINS = "http://127.0.0.1";
   process.env.REMOTE_DEVICE_ORIGINS = "https://remote.gykstudio.tech";
@@ -45,6 +46,17 @@ test("real WebSocket channel: approval, routing, result and revocation", async (
     );
     await wait;
     const claim = core.claim(grant.code, "Test phone");
+    const renewalResponse = await fetch(`http://127.0.0.1:${port}/remote/refresh/device`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        webSessionId: claim.webSessionId,
+        deviceId: claim.deviceId,
+        refreshToken: claim.refreshToken
+      })
+    });
+    assert.equal(renewalResponse.status, 200);
+    Object.assign(claim, await renewalResponse.json());
     mobile = new WebSocket(`ws://127.0.0.1:${port}/remote/channel`, {
       origin: "https://remote.gykstudio.tech"
     });
