@@ -43,16 +43,23 @@ export function openRemotePanel() {
     dialog.className = "remote-panel";
     dialog.setAttribute("aria-labelledby", "remote-title");
     dialog.innerHTML = `<header><h2 id="remote-title">Control desde móvil</h2><button type="button" data-close>Cerrar</button></header>
-      <p>Empareja Nuvio Remote y aprueba el dispositivo aquí. Puedes recuperar el control en cualquier momento.</p>
+      <ol class="remote-steps">
+        <li><strong>Ponle nombre</strong> a esta pantalla y pulsa <strong>Crear código</strong>.</li>
+        <li>En Nuvio Remote pulsa <strong>Escanear QR</strong> o pega el código.</li>
+        <li><strong>Aprueba el teléfono</strong> en la lista de abajo. El código caduca en 2 minutos.</li>
+      </ol>
       <p role="status" data-status>Sin conexión</p>
       <label>Nombre de esta pantalla <input data-name maxlength="60" value="Nuvio Web" autocomplete="off"></label>
-      <canvas width="256" height="256" aria-label="Código QR de emparejamiento" hidden></canvas>
+      <figure class="remote-qr" hidden><canvas width="256" height="256" aria-label="Código QR de emparejamiento"></canvas><figcaption>Apunta con la cámara del móvil</figcaption></figure>
       <p data-code class="remote-code"></p>
-      <div class="remote-actions"><button type="button" data-start>Crear código</button><button type="button" data-stop>Desconectar todos</button></div>
+      <div class="remote-actions"><button type="button" data-start>Crear código</button><button type="button" data-copy hidden>Copiar código</button><button type="button" data-stop>Desconectar todos</button></div>
       <h3>Dispositivos</h3><div data-devices><p>Ningún dispositivo emparejado.</p></div>`;
     document.body.append(dialog);
     const status = dialog.querySelector("[data-status]");
+    const figure = dialog.querySelector(".remote-qr");
+    const copyButton = dialog.querySelector("[data-copy]");
     let expiration;
+    let countdown;
     dialog.querySelector("[data-close]").onclick = () => dialog.close();
     dialog.addEventListener("close", () => {
       document.body.classList.remove("nuvio-modal-open");
@@ -83,16 +90,38 @@ export function openRemotePanel() {
           dialog.querySelector("[data-name]").value.trim() || "Nuvio Web"
         );
         const canvas = dialog.querySelector("canvas");
-        canvas.hidden = false;
+        figure.hidden = false;
         QrCodeGenerator.generate(canvas, grant.code, 256);
         dialog.querySelector("[data-code]").textContent = grant.code;
-        status.textContent = "Escanea el QR o introduce el código. Caduca en dos minutos.";
+        copyButton.hidden = false;
+        copyButton.onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(grant.code);
+            copyButton.textContent = "¡Copiado!";
+          } catch {
+            copyButton.textContent = "Copia el código a mano";
+          }
+          setTimeout(() => {
+            copyButton.textContent = "Copiar código";
+          }, 2500);
+        };
         clearTimeout(expiration);
-        expiration = setTimeout(() => {
-          canvas.hidden = true;
-          dialog.querySelector("[data-code]").textContent =
-            "Código caducado. Crea uno nuevo si aún no emparejaste.";
-        }, 120000);
+        clearInterval(countdown);
+        const deadline = Date.now() + 120000;
+        const tick = () => {
+          const left = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+          status.textContent = `Escanea el QR o introduce el código. Caduca en ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}.`;
+          if (left <= 0) {
+            clearInterval(countdown);
+            figure.hidden = true;
+            copyButton.hidden = true;
+            dialog.querySelector("[data-code]").textContent =
+              "Código caducado. Crea uno nuevo si aún no emparejaste.";
+          }
+        };
+        tick();
+        countdown = setInterval(tick, 1000);
+        expiration = setTimeout(() => clearInterval(countdown), 121000);
       } catch (error) {
         status.textContent = `No se pudo iniciar: ${error.message}. Revisa NUVIO_REMOTE_URL y tu sesión.`;
       } finally {
@@ -102,7 +131,9 @@ export function openRemotePanel() {
     dialog.querySelector("[data-stop]").onclick = () => {
       client.stop();
       clearTimeout(expiration);
-      dialog.querySelector("canvas").hidden = true;
+      clearInterval(countdown);
+      figure.hidden = true;
+      copyButton.hidden = true;
       dialog.querySelector("[data-code]").textContent = "";
       dialog.querySelector("[data-devices]").replaceChildren();
       status.textContent = "Todos los dispositivos desconectados.";
@@ -117,8 +148,24 @@ export function openRemotePanel() {
           const row = document.createElement("div");
           row.className = "remote-device";
           const label = document.createElement("span");
-          label.textContent = `${device.name} · ${device.approved ? "Autorizado" : "Solicita permiso"} · ${device.online ? "Conectado" : "Sin conexión"}${device.lastSeen ? ` · ${new Date(device.lastSeen).toLocaleString()}` : ""}`;
-          row.append(label);
+          label.className = "remote-device-name";
+          label.textContent = device.name;
+          const pill = document.createElement("span");
+          const state = !device.approved
+            ? ["solicita", "Solicita permiso"]
+            : !device.online
+              ? ["off", "Sin conexión"]
+              : device.active
+                ? ["on", "Con este control"]
+                : ["idle", "Autorizado"];
+          pill.className = `remote-pill is-${state[0]}`;
+          pill.textContent = state[1];
+          const seen = document.createElement("span");
+          seen.className = "remote-seen";
+          seen.textContent = device.lastSeen
+            ? `Última actividad: ${new Date(device.lastSeen).toLocaleString()}`
+            : "";
+          row.append(label, pill, seen);
           if (!device.approved || !device.active) {
             const approve = document.createElement("button");
             approve.textContent = device.approved ? "Dar control" : "Aprobar";

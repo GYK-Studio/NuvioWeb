@@ -1090,10 +1090,66 @@ html,
   font-family: monospace;
   user-select: all;
 }
+.remote-steps {
+  margin: 0 0 8px;
+  padding-left: 22px;
+  display: grid;
+  gap: 4px;
+  color: #cfd2dc;
+}
+.remote-qr {
+  margin: 16px auto;
+  padding: 16px;
+  width: fit-content;
+  max-width: 100%;
+  background: #fff;
+  border-radius: 16px;
+  text-align: center;
+}
+.remote-qr[hidden] {
+  display: none;
+}
+.remote-qr figcaption {
+  margin-top: 8px;
+  color: #33333c;
+  font-size: 0.85rem;
+}
 .remote-device {
   padding-block: 12px;
 }
 .remote-device span {
   flex: 1 1 100%;
   overflow-wrap: anywhere;
+}
+.remote-device-name {
+  font-weight: 700;
+}
+.remote-seen {
+  color: #a7abb8;
+  font-size: 0.85rem;
+}
+.remote-pill {
+  flex: 0 0 auto !important;
+  padding: 2px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: #33333f;
+  color: #e8e8ef;
+}
+.remote-pill.is-solicita {
+  background: #4a3413;
+  color: #ffd88a;
+}
+.remote-pill.is-off {
+  background: #3a3a44;
+  color: #a7abb8;
+}
+.remote-pill.is-on {
+  background: #173e31;
+  color: #7de8b6;
+}
+.remote-pill.is-idle {
+  background: #1d2f4d;
+  color: #9cc4ff;
 }

@@ -39,6 +39,8 @@ export function validateCommand(command, now = Date.now()) {
     "navigation.left",
     "navigation.right",
     "navigation.select",
+    "navigation.scrollUp",
+    "navigation.scrollDown",
     "player.play",
     "player.pause",
     "player.fullscreen"
@@ -77,6 +79,31 @@ export function validateCommand(command, now = Date.now()) {
       fail("INVALID_PAYLOAD");
   } else if (command.type === "catalog.page") {
     if (!keys(p, ["page"]) || !Number.isSafeInteger(p.page) || p.page < 0 || p.page > 10000)
+      fail("INVALID_PAYLOAD");
+  } else if (command.type === "keyboard.text") {
+    if (
+      !keys(p, ["text"]) ||
+      typeof p.text !== "string" ||
+      p.text.length < 1 ||
+      p.text.length > 200
+    )
+      fail("INVALID_PAYLOAD");
+  } else if (command.type === "keyboard.key") {
+    if (
+      !keys(p, ["key"]) ||
+      ![
+        "Enter",
+        "Backspace",
+        "Escape",
+        "Tab",
+        "Delete",
+        " ",
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight"
+      ].includes(p.key)
+    )
       fail("INVALID_PAYLOAD");
   } else fail("UNSUPPORTED_CAPABILITY");
   return command;

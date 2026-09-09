@@ -2,11 +2,11 @@
   "expo": {
     "name": "Nuvio Remote",
     "slug": "nuvio-remote",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "icon": "./assets/icon.png",
     "android": {
       "package": "tech.gykstudio.nuvio.remote",
-      "versionCode": 5,
+      "versionCode": 6,
       "icon": "./assets/icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

@@ -18,6 +18,7 @@ import { Connection } from "./connection";
 import { emptySession, sessionEvent } from "./session";
 import { RangeControl } from "./RangeControl";
 
+const APP_VERSION = "0.1.1";
 const clock = (seconds: number) => {
   const n = Math.max(0, Math.floor(seconds || 0));
   return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
@@ -29,7 +30,13 @@ const commandError: Record<string, string> = {
   STALE_STATE: "La pantalla cambió. Actualiza el estado y selecciona de nuevo.",
   UNAUTHORIZED: "No tienes el control. Autoriza este teléfono desde la web.",
   SESSION_OFFLINE: "La web está desconectada.",
-  UNSUPPORTED_CAPABILITY: "Esta fuente o navegador no permite esa acción."
+  UNSUPPORTED_CAPABILITY:
+    "La web no puede hacer eso aquí (sin campo de texto o vista no compatible)."
+};
+const kindLabel: Record<string, string> = {
+  movie: "Película",
+  series: "Serie",
+  tv: "TV"
 };
 
 export default function App() {
@@ -52,8 +59,10 @@ export default function App() {
       lastSeen?: number;
     }>
   >([]);
-  const [tab, setTab] = useState<"remote" | "browse" | "connection">("remote");
+  const [tab, setTab] = useState<"remote" | "browse" | "keyboard" | "connection">("remote");
   const [advanced, setAdvanced] = useState(false);
+  const [torch, setTorch] = useState(false);
+  const [keyboardText, setKeyboardText] = useState("");
   const [now, setNow] = useState(Date.now());
   const [snapshotAt, setSnapshotAt] = useState(Date.now());
   const [feedback, setFeedback] = useState("");
@@ -179,6 +188,24 @@ export default function App() {
       <Text style={styles.buttonText}>{label}</Text>
     </Pressable>
   );
+  const repeatTimers = useRef<{
+    delay?: ReturnType<typeof setTimeout>;
+    tick?: ReturnType<typeof setInterval>;
+  }>({});
+  const stopRepeat = () => {
+    if (repeatTimers.current.delay) clearTimeout(repeatTimers.current.delay);
+    if (repeatTimers.current.tick) clearInterval(repeatTimers.current.tick);
+    repeatTimers.current = {};
+  };
+  useEffect(() => stopRepeat, []);
+  // Mantener pulsado repite la orden: el D-pad deja de sentirse "tosco".
+  const startRepeat = (type: string, payload: Record<string, unknown> = {}) => {
+    stopRepeat();
+    action(type, payload);
+    repeatTimers.current.delay = setTimeout(() => {
+      repeatTimers.current.tick = setInterval(() => action(type, payload), 140);
+    }, 420);
+  };
   const dpad = (
     <View style={styles.dpad} accessibilityLabel="Controles de navegación">
       {[
@@ -206,10 +233,11 @@ export default function App() {
         <Pressable
           key={String(command)}
           accessibilityRole="button"
-          accessibilityLabel={String(label)}
+          accessibilityLabel={`${String(label)} (mantén para repetir)`}
           accessibilityState={{ disabled: !canControl }}
           disabled={!canControl}
-          onPress={() => action(String(command))}
+          onPressIn={() => canControl && startRepeat(String(command))}
+          onPressOut={stopRepeat}
           style={({ pressed }) => [
             styles.dpadButton,
             placement,
@@ -225,6 +253,12 @@ export default function App() {
       ))}
     </View>
   );
+  const scrollRow = (
+    <View style={styles.row}>
+      {button("Página ↑", () => action("navigation.scrollUp"), false, true)}
+      {button("Página ↓", () => action("navigation.scrollDown"), false, true)}
+    </View>
+  );
   return (
     <View style={styles.page}>
       <StatusBar barStyle="light-content" />
@@ -238,7 +272,7 @@ export default function App() {
             />
             <View>
               <Text style={styles.brand}>Nuvio Remote</Text>
-              <Text style={styles.version}>Mando para Nuvio Web · 0.4.0</Text>
+              <Text style={styles.version}>Mando para Nuvio Web · {APP_VERSION}</Text>
             </View>
           </View>
           <View style={[styles.connectionDot, canControl && styles.connectionDotOnline]} />
@@ -248,6 +282,7 @@ export default function App() {
             [
               ["remote", "Mando"],
               ["browse", "Explorar"],
+              ["keyboard", "Teclado"],
               ["connection", "Conexión"]
             ] as const
           ).map(([id, label]) => (
@@ -258,6 +293,7 @@ export default function App() {
               onPress={() => {
                 setTab(id);
                 setScan(false);
+                setTorch(false);
               }}
               style={[styles.tab, tab === id && styles.tabActive]}
             >
@@ -276,16 +312,20 @@ export default function App() {
           <Text style={styles.eyebrow}>
             {tab === "browse"
               ? "TU PRÓXIMA HISTORIA"
-              : tab === "connection"
-                ? "TU CONEXIÓN"
-                : "EN TU PANTALLA"}
+              : tab === "keyboard"
+                ? "ESCRIBE EN LA WEB"
+                : tab === "connection"
+                  ? "TU CONEXIÓN"
+                  : "EN TU PANTALLA"}
           </Text>
           <Text accessibilityRole="header" style={styles.title}>
             {tab === "browse"
               ? "Encuentra algo para ver"
-              : tab === "connection"
-                ? "Tus pantallas"
-                : state.content?.title || "Controla tu pantalla"}
+              : tab === "keyboard"
+                ? "Teclado del mando"
+                : tab === "connection"
+                  ? "Tus pantallas"
+                  : state.content?.title || "Controla tu pantalla"}
           </Text>
           <View style={styles.statusRow}>
             <View style={[styles.statusDot, session.online && styles.statusDotOnline]} />
@@ -353,17 +393,35 @@ export default function App() {
             })}
             {scan && (
               <>
-                <CameraView
-                  style={{ height: 260 }}
-                  barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-                  onBarcodeScanned={({ data }) => {
-                    if (/^[A-F0-9]{32}$/.test(data)) {
-                      setCode(data);
-                      setScan(false);
-                    } else setStatus("Este QR no es un código de Nuvio Remote.");
-                  }}
-                />
-                {button("Cerrar cámara", () => setScan(false))}
+                <Text style={styles.copy}>Centra el QR de la web dentro del marco.</Text>
+                <View style={styles.qrFrame}>
+                  <CameraView
+                    style={styles.qrCamera}
+                    barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+                    enableTorch={torch}
+                    onBarcodeScanned={({ data }) => {
+                      if (/^[A-F0-9]{32}$/.test(data)) {
+                        setCode(data);
+                        setScan(false);
+                        setTorch(false);
+                        setStatus("Código leído. Pulsa Solicitar conexión.");
+                      } else setStatus("Este QR no es un código de Nuvio Remote.");
+                    }}
+                  />
+                  <View pointerEvents="none" style={styles.qrCornerTopLeft} />
+                  <View pointerEvents="none" style={styles.qrCornerTopRight} />
+                  <View pointerEvents="none" style={styles.qrCornerBottomLeft} />
+                  <View pointerEvents="none" style={styles.qrCornerBottomRight} />
+                </View>
+                <View style={styles.row}>
+                  {button(torch ? "Apagar linterna" : "Encender linterna", () =>
+                    setTorch((value) => !value)
+                  )}
+                  {button("Cerrar cámara", () => {
+                    setScan(false);
+                    setTorch(false);
+                  })}
+                </View>
               </>
             )}
             {button(
@@ -417,6 +475,8 @@ export default function App() {
                   {button("Actualizar estado", () => c.sync())}
                   <Text style={styles.label}>Navegación</Text>
                   {dpad}
+                  <Text style={styles.label}>Desplazar la página</Text>
+                  {scrollRow}
                   <Text style={styles.title}>
                     {!state.available
                       ? "Sin vídeo activo"
@@ -536,6 +596,8 @@ export default function App() {
                 <View style={styles.card}>
                   <Text style={styles.label}>Navegación</Text>
                   {dpad}
+                  <Text style={styles.label}>Desplazar la página</Text>
+                  {scrollRow}
                   <View style={styles.row}>
                     {button("Inicio", () => action("navigation.home"), false, true)}
                     {button("Biblioteca", () => action("navigation.library"), false, true)}
@@ -571,6 +633,68 @@ export default function App() {
                 </View>
               </>
             )}
+            {tab === "keyboard" && (
+              <View style={styles.card}>
+                <Text style={styles.label}>Escribir en la web</Text>
+                <Text style={styles.copy}>
+                  Toca un campo de texto en la web (o usa Buscar) y envía el texto desde aquí. Lo
+                  escrito sustituye el contenido del campo enfocado.
+                </Text>
+                <TextInput
+                  accessibilityLabel="Texto para enviar a la web"
+                  style={styles.input}
+                  value={keyboardText}
+                  onChangeText={setKeyboardText}
+                  placeholder="Escribe aquí…"
+                  placeholderTextColor="#858d9f"
+                  maxLength={200}
+                  returnKeyType="send"
+                  onSubmitEditing={() => {
+                    if (keyboardText.length >= 1) {
+                      action("keyboard.text", { text: keyboardText.slice(0, 200) });
+                      setKeyboardText("");
+                    }
+                  }}
+                />
+                <View style={styles.row}>
+                  {button(
+                    "Enviar texto",
+                    () => {
+                      if (keyboardText.length < 1) {
+                        setStatus("Escribe algo primero.");
+                        return;
+                      }
+                      action("keyboard.text", { text: keyboardText.slice(0, 200) });
+                      setKeyboardText("");
+                    },
+                    false,
+                    true
+                  )}
+                  {button("Borrar", () => setKeyboardText(""), !keyboardText.length)}
+                </View>
+                <Text style={styles.label}>Teclas especiales</Text>
+                <View style={styles.row}>
+                  {button("Espacio", () => action("keyboard.key", { key: " " }), false, true)}
+                  {button(
+                    "⌫ Borrar",
+                    () => action("keyboard.key", { key: "Backspace" }),
+                    false,
+                    true
+                  )}
+                  {button("Intro", () => action("keyboard.key", { key: "Enter" }), false, true)}
+                </View>
+                <View style={styles.row}>
+                  {button("←", () => action("keyboard.key", { key: "ArrowLeft" }), false, true)}
+                  {button("↑", () => action("keyboard.key", { key: "ArrowUp" }), false, true)}
+                  {button("↓", () => action("keyboard.key", { key: "ArrowDown" }), false, true)}
+                  {button("→", () => action("keyboard.key", { key: "ArrowRight" }), false, true)}
+                </View>
+                <View style={styles.row}>
+                  {button("Esc", () => action("keyboard.key", { key: "Escape" }), false, true)}
+                  {button("Tab", () => action("keyboard.key", { key: "Tab" }), false, true)}
+                </View>
+              </View>
+            )}
             {tab === "connection" && (
               <View style={styles.card}>
                 <Text style={styles.label}>Pantalla vinculada</Text>
@@ -600,7 +724,7 @@ export default function App() {
                   debe seguir abierta. El vídeo se reproduce en la web, no en este teléfono.
                 </Text>
                 {button("Actualizar conexión", () => c.sync())}
-                <Text style={styles.copy}>Nuvio Remote · 0.4.0</Text>
+                <Text style={styles.copy}>Nuvio Remote · {APP_VERSION}</Text>
               </View>
             )}
           </>
@@ -622,11 +746,14 @@ export default function App() {
                 {!!state.content.description && (
                   <Text style={styles.copy}>{state.content.description}</Text>
                 )}
+                {!!(state.content.seasons || []).length && (
+                  <Text style={styles.label}>Temporadas</Text>
+                )}
                 <View style={styles.row}>
                   {(state.content.seasons || []).map((season: number) => (
                     <View key={season}>
                       {button(
-                        `Temporada ${season}${state.content.selectedSeason === season ? " ✓" : ""}`,
+                        `T${season}${state.content.selectedSeason === season ? " ✓" : ""}`,
                         () => action("catalog.season", { season }),
                         false,
                         true
@@ -636,26 +763,41 @@ export default function App() {
                 </View>
               </>
             )}
+            {tab === "browse" && state.content.route === "stream" && (
+              <>
+                <Text style={styles.label}>
+                  Fuentes ({(state.content.items || []).length}) · toca ▶ para reproducir en la web
+                </Text>
+              </>
+            )}
             {(tab === "browse" ? state.content.items || [] : []).map((item: any, index: number) => (
-              <View key={item.key} style={styles.result}>
+              <View key={item.key} style={styles.resultRow}>
                 {!!item.thumbnail && (
                   <Image
                     source={{ uri: item.thumbnail }}
                     accessibilityIgnoresInvertColors
                     accessible={false}
-                    style={{ width: 72, height: 108, borderRadius: 8 }}
+                    style={styles.poster}
                   />
                 )}
-                <Text style={styles.eyebrow}>
-                  {String(index + 1 + state.content.page * 12).padStart(2, "0")}
-                </Text>
-                {button(
-                  item.label,
-                  () => action("catalog.activate", { key: item.key }),
-                  false,
-                  true
-                )}
-                {!!item.detail && <Text style={styles.copy}>{item.detail}</Text>}
+                <View style={styles.resultBody}>
+                  <View style={styles.badgeRow}>
+                    <Text style={styles.eyebrow}>{String(index + 1).padStart(2, "0")}</Text>
+                    {!!kindLabel[String(item.mediaType || "")] && (
+                      <Text style={styles.kindBadge}>
+                        {kindLabel[String(item.mediaType || "")]}
+                      </Text>
+                    )}
+                    {!!item.year && <Text style={styles.year}>{String(item.year)}</Text>}
+                  </View>
+                  {button(
+                    state.content.route === "stream" ? `▶ ${item.label}` : item.label,
+                    () => action("catalog.activate", { key: item.key }),
+                    false,
+                    true
+                  )}
+                  {!!item.detail && <Text style={styles.copy}>{item.detail}</Text>}
+                </View>
               </View>
             ))}
             {tab === "browse" && state.content.pageCount > 1 && (
@@ -853,6 +995,81 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#252832"
+  },
+  resultRow: {
+    flexDirection: "row",
+    gap: 12,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#252832"
+  },
+  resultBody: { flex: 1, gap: 8, justifyContent: "center" },
+  poster: { width: 96, height: 144, borderRadius: 10, backgroundColor: "#0D0F15" },
+  badgeRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  kindBadge: {
+    color: "#D9C6FF",
+    backgroundColor: "#2A2138",
+    borderWidth: 1,
+    borderColor: "#4A3A6E",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    fontSize: 12,
+    fontWeight: "700",
+    overflow: "hidden"
+  },
+  year: { color: "#858996", fontSize: 13, fontWeight: "600" },
+  qrFrame: {
+    position: "relative",
+    height: 300,
+    borderRadius: 18,
+    overflow: "hidden",
+    backgroundColor: "#000"
+  },
+  qrCamera: { flex: 1 },
+  qrCornerTopLeft: {
+    position: "absolute",
+    top: 24,
+    left: 24,
+    width: 56,
+    height: 56,
+    borderTopWidth: 4,
+    borderLeftWidth: 4,
+    borderColor: "#4ED69C",
+    borderTopLeftRadius: 12
+  },
+  qrCornerTopRight: {
+    position: "absolute",
+    top: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderTopWidth: 4,
+    borderRightWidth: 4,
+    borderColor: "#4ED69C",
+    borderTopRightRadius: 12
+  },
+  qrCornerBottomLeft: {
+    position: "absolute",
+    bottom: 24,
+    left: 24,
+    width: 56,
+    height: 56,
+    borderBottomWidth: 4,
+    borderLeftWidth: 4,
+    borderColor: "#4ED69C",
+    borderBottomLeftRadius: 12
+  },
+  qrCornerBottomRight: {
+    position: "absolute",
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderBottomWidth: 4,
+    borderRightWidth: 4,
+    borderColor: "#4ED69C",
+    borderBottomRightRadius: 12
   },
   playButton: {
     alignSelf: "center",

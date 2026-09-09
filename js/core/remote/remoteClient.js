@@ -8,6 +8,75 @@ const fail = (code) => {
   throw new Error(code);
 };
 const SESSION_KEY = "nuvio.remote.webSession";
+
+function findVerticalScroller(node) {
+  let current = node instanceof Element ? node : null;
+  while (current && current !== document.body) {
+    let overflow = "";
+    try {
+      overflow = getComputedStyle(current).overflowY;
+    } catch {
+      overflow = "";
+    }
+    if (
+      (overflow === "auto" || overflow === "scroll") &&
+      current.scrollHeight > current.clientHeight + 4
+    ) {
+      return current;
+    }
+    current = current.parentElement;
+  }
+  return document.scrollingElement || document.documentElement;
+}
+
+function remoteKeyboardField() {
+  const active = document.activeElement;
+  if (
+    active instanceof HTMLInputElement ||
+    active instanceof HTMLTextAreaElement ||
+    active?.isContentEditable === true
+  ) {
+    return active;
+  }
+  const screen = Router.getCurrentScreen();
+  return (
+    screen?.container?.querySelector(
+      "input:not([type=hidden]):not([disabled]), textarea:not([disabled])"
+    ) || null
+  );
+}
+
+function writeRemoteKeyboardInput(text, key) {
+  const field = remoteKeyboardField();
+  if (!field) fail("UNSUPPORTED_CAPABILITY");
+  if (typeof text === "string") {
+    if (!/^(?:input|textarea)$/i.test(field.tagName) && field.isContentEditable !== true)
+      fail("UNSUPPORTED_CAPABILITY");
+    const value = String(text).slice(0, 200);
+    if (field.isContentEditable === true) {
+      field.focus();
+      document.execCommand?.("selectAll", false, null);
+      document.execCommand?.("insertText", false, value);
+    } else {
+      const setter =
+        field instanceof HTMLInputElement
+          ? Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set
+          : Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
+      setter?.call(field, value);
+    }
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    field.dispatchEvent(new Event("change", { bubbles: true }));
+    return;
+  }
+  const init = { bubbles: true, cancelable: true, key, code: key, repeat: false };
+  field.focus?.();
+  field.dispatchEvent(new KeyboardEvent("keydown", init));
+  field.dispatchEvent(new KeyboardEvent("keypress", init));
+  if (key === "Enter" && field instanceof HTMLInputElement) {
+    field.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  field.dispatchEvent(new KeyboardEvent("keyup", init));
+}
 export class RemoteClient extends EventTarget {
   constructor() {
     super();
@@ -291,6 +360,37 @@ export class RemoteClient extends EventTarget {
       const screen = Router.getCurrentScreen();
       if (!screen?.container) fail("UNSUPPORTED_CAPABILITY");
       ScreenUtils.moveFocusDirectional(screen.container, direction);
+      // The web focus call uses preventScroll, so bring the newly focused
+      // control into view or remote D-pad navigation walks off-screen.
+      try {
+        screen.container
+          ?.querySelector(".focusable.focused")
+          ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+      } catch {}
+      return;
+    }
+    if (c.type === "navigation.scrollUp" || c.type === "navigation.scrollDown") {
+      const screen = Router.getCurrentScreen();
+      const container = screen?.container;
+      const focused = container?.querySelector(".focusable.focused");
+      const scroller = findVerticalScroller(focused) || findVerticalScroller(container);
+      const distance = Math.round(
+        (scroller === document.scrollingElement || !scroller
+          ? globalThis.innerHeight || 600
+          : scroller.clientHeight || 600) * 0.75
+      );
+      const delta = c.type === "navigation.scrollUp" ? -distance : distance;
+      if (scroller && scroller !== document.scrollingElement) scroller.scrollTop += delta;
+      else globalThis.scrollBy?.({ top: delta, behavior: "smooth" });
+      return;
+    }
+    if (c.type === "keyboard.text" || c.type === "keyboard.key") {
+      if (c.type === "keyboard.text" && (typeof p.text !== "string" || !p.text.length))
+        fail("INVALID_PAYLOAD");
+      writeRemoteKeyboardInput(
+        c.type === "keyboard.text" ? p.text : null,
+        c.type === "keyboard.key" ? p.key : null
+      );
       return;
     }
     if (c.type === "navigation.select") {

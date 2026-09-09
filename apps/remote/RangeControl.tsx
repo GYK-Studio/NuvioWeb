@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { rangeValue } from "./controls";
 
@@ -16,9 +16,20 @@ export function RangeControl({
   onChange: (value: number) => void;
 }) {
   const [width, setWidth] = useState(1);
+  const lastSent = useRef<{ value: number; at: number }>({ value: NaN, at: 0 });
   const bounded = Math.max(0, Math.min(max || 0, value || 0));
   const change = (next: number) => {
     if (!disabled && max > 0) onChange(Math.max(0, Math.min(max, next)));
+  };
+  // Arrastrar el dedo mueve la barra; se limita el envío para no saturar la web.
+  const drag = (locationX: number) => {
+    if (disabled || max <= 0) return;
+    const next = Math.max(0, Math.min(max, rangeValue(locationX, width, max)));
+    const now = Date.now();
+    if (Math.abs(next - lastSent.current.value) < max / 100 && now - lastSent.current.at < 400)
+      return;
+    lastSent.current = { value: next, at: now };
+    onChange(next);
   };
   return (
     <View style={s.wrap}>
@@ -38,6 +49,10 @@ export function RangeControl({
         disabled={disabled || max <= 0}
         onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
         onPress={(e) => change(rangeValue(e.nativeEvent.locationX, width, max))}
+        onTouchMove={(e) => drag(e.nativeEvent.locationX)}
+        onTouchEnd={() => {
+          lastSent.current = { value: NaN, at: 0 };
+        }}
         style={s.target}
       >
         <View pointerEvents="none" style={[s.track, disabled && { opacity: 0.4 }]}>
