@@ -34,18 +34,20 @@ const singleFlight = new PluginExecutionFlight();
 const queuedExecutions = [];
 const COMMUNITY_PLUGIN_REPOSITORIES = [
   {
-    url: "https://raw.githubusercontent.com/adrianjael/pluggin-latino/refs/heads/main",
+    url: "https://raw.githubusercontent.com/adrianjael/pluggin-latino/refs/heads/main/manifest.json",
     name: "Nuvio Latino"
   },
   {
-    url: "https://raw.githubusercontent.com/KennethJYS/Nuvio-Providers-Latino/refs/heads/main",
+    url: "https://raw.githubusercontent.com/KennethJYS/Nuvio-Providers-Latino/refs/heads/main/manifest.json",
     name: "Latino Providers"
   },
   {
-    url: "https://raw.githubusercontent.com/Kokuuuuuun/Nuvio-Latino-Hub-Providers/refs/heads/main",
+    url: "https://raw.githubusercontent.com/Kokuuuuuun/Nuvio-Latino-Hub-Providers/refs/heads/main/manifest.json",
     name: "Nuvio Latino Hub Providers"
   }
 ];
+let communityHydrationInFlight = null;
+const communityHydrationAttempted = new Set();
 let runningExecutions = 0;
 let runtimeReadyPromise = null;
 let reconcileTail = Promise.resolve();
@@ -1453,6 +1455,47 @@ export const PluginManager = {
     }
     if (external) return saveExternalRepository();
     throw new Error("Repository format is not supported");
+  },
+
+  async ensureCommunityRepositories() {
+    if (communityHydrationInFlight) return communityHydrationInFlight;
+    communityHydrationInFlight = (async () => {
+      if (!canEdit()) return { ok: false, reason: "read-only" };
+      const targetProfileId = getEffectivePluginProfileId();
+      const state = currentState(targetProfileId);
+      const pending = state.repositories.filter((repository) => {
+        if (!isExecutablePluginRepository(repository)) return false;
+        const isCommunity = COMMUNITY_PLUGIN_REPOSITORIES.some(
+          (community) =>
+            repositoryIdentity(canonicalizePluginUrl(community.url)) ===
+            repositoryIdentity(repository.url)
+        );
+        if (!isCommunity) return false;
+        if (communityHydrationAttempted.has(repository.id)) return false;
+        const scraperCount = state.scrapers.filter(
+          (entry) => entry.repositoryId === repository.id
+        ).length;
+        return scraperCount === 0 && Number(repository.scraperCount || 0) === 0;
+      });
+      if (!pending.length) return { ok: true, hydrated: 0 };
+      let hydrated = 0;
+      for (const repository of pending) {
+        communityHydrationAttempted.add(repository.id);
+        try {
+          const result = await PluginManager.refreshRepository(repository.id);
+          if (result?.ok !== false) hydrated += 1;
+        } catch (error) {
+          logPluginDiagnostic("community repository auto-hydration failed", {
+            repository: diagnosticRepository(repository),
+            error: diagnosticError(error)
+          });
+        }
+      }
+      return { ok: true, hydrated };
+    })().finally(() => {
+      communityHydrationInFlight = null;
+    });
+    return communityHydrationInFlight;
   },
 
   async refreshRepository(repositoryId) {

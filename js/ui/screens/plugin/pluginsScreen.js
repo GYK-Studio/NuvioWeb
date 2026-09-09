@@ -168,6 +168,21 @@ export const PluginsScreen = {
       }
       this.render();
     });
+    // Community repositories are auto-injected as empty stubs so first-time
+    // users see them immediately. Hydrate them in the background so the
+    // screen goes from "0 providers" to the real provider list without
+    // requiring a manual Refresh on every repository.
+    void PluginManager.ensureCommunityRepositories?.().then((result) => {
+      if (
+        runtimeProbeGeneration !== this.runtimeProbeGeneration ||
+        Router.getCurrent() !== "plugins" ||
+        this.busy ||
+        this.hasActiveTextInput()
+      ) {
+        return;
+      }
+      if (Number(result?.hydrated || 0) > 0) this.render();
+    });
     this.bindEvents();
     this.render();
   },
