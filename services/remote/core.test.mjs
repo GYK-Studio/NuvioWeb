@@ -89,6 +89,32 @@ test("reject arbitrary actions, URLs, invalid ranges and stale ordering", () => 
     /INVALID/
   );
 });
+test("accepts semantic remote navigation commands without payloads", () => {
+  const { s, now } = setup();
+  for (const type of [
+    "navigation.up",
+    "navigation.down",
+    "navigation.left",
+    "navigation.right",
+    "navigation.select"
+  ]) {
+    assert.equal(
+      validateCommand(
+        {
+          version: 1,
+          commandId: `navigation-${type.split(".").pop()}-1234`,
+          webSessionId: s.id,
+          sequence: 1,
+          type,
+          payload: {},
+          expiresAt: new Date(now() + 9000).toISOString()
+        },
+        now()
+      ).type,
+      type
+    );
+  }
+});
 test("three devices can pair but only the active approved device controls", () => {
   const { core, s, mobile, now } = setup();
   const first = core.approve(s, mobile.deviceId);

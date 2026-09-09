@@ -179,6 +179,25 @@ export default function App() {
       <Text style={styles.buttonText}>{label}</Text>
     </Pressable>
   );
+  const dpad = (
+    <View style={styles.dpad} accessibilityLabel="Controles de navegación">
+      <View style={styles.dpadRow}>
+        <View style={styles.dpadSpacer} />
+        {button("↑", () => action("navigation.up"), false, true)}
+        <View style={styles.dpadSpacer} />
+      </View>
+      <View style={styles.dpadRow}>
+        {button("←", () => action("navigation.left"), false, true)}
+        {button("OK", () => action("navigation.select"), false, true)}
+        {button("→", () => action("navigation.right"), false, true)}
+      </View>
+      <View style={styles.dpadRow}>
+        <View style={styles.dpadSpacer} />
+        {button("↓", () => action("navigation.down"), false, true)}
+        <View style={styles.dpadSpacer} />
+      </View>
+    </View>
+  );
   return (
     <View style={styles.page}>
       <StatusBar barStyle="light-content" />
@@ -356,6 +375,8 @@ export default function App() {
                     </Text>
                   )}
                   {button("Actualizar estado", () => c.sync())}
+                  <Text style={styles.label}>Navegación</Text>
+                  {dpad}
                   <Text style={styles.title}>
                     {!state.available
                       ? "Sin vídeo activo"
@@ -473,6 +494,8 @@ export default function App() {
             {tab === "browse" && (
               <>
                 <View style={styles.card}>
+                  <Text style={styles.label}>Navegación</Text>
+                  {dpad}
                   <View style={styles.row}>
                     {button("Inicio", () => action("navigation.home"), false, true)}
                     {button("Biblioteca", () => action("navigation.library"), false, true)}
@@ -537,7 +560,7 @@ export default function App() {
                   debe seguir abierta. El vídeo se reproduce en la web, no en este teléfono.
                 </Text>
                 {button("Actualizar conexión", () => c.sync())}
-                <Text style={styles.copy}>Nuvio Remote · 0.3.0</Text>
+                <Text style={styles.copy}>Nuvio Remote · 0.4.0</Text>
               </View>
             )}
           </>
@@ -786,5 +809,8 @@ const styles = StyleSheet.create({
   buttonText: { color: "#fff", fontSize: 16 },
   disabled: { opacity: 0.45 },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  dpad: { alignItems: "center", gap: 8 },
+  dpadRow: { flexDirection: "row", gap: 8 },
+  dpadSpacer: { width: 48, height: 48 },
   copy: { color: "#bbb", fontSize: 14, lineHeight: 22 }
 });

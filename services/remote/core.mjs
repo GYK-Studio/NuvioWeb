@@ -34,6 +34,11 @@ export function validateCommand(command, now = Date.now()) {
     "navigation.back",
     "navigation.library",
     "navigation.discover",
+    "navigation.up",
+    "navigation.down",
+    "navigation.left",
+    "navigation.right",
+    "navigation.select",
     "player.play",
     "player.pause",
     "player.fullscreen"

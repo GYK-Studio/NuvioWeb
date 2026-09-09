@@ -34,7 +34,7 @@ El backend actual autentica la creación del vínculo usando `/auth/v1/user`; la
 
 - Código aleatorio de 128 bits, una sola reclamación y caducidad de dos minutos.
 - Aprobación/rechazo/revocación local, aislamiento de sesiones y almacenamiento de hashes de credenciales en el servicio.
-- Comandos cerrados para Inicio, Volver, buscar en la web, reproducir, pausar, seek, volumen y silencio.
+- Comandos cerrados para Inicio, Volver, cruceta direccional, selección, buscar en la web, reproducir, pausar, seek, volumen y silencio.
 - Rechazo explícito de pantalla completa remota que requiere gesto local.
 - Caducidad de comandos, deduplicación, límites de mensajes, reconexión y estado de reproducción sin URLs ni claves de proveedores.
 - UI web responsive con controles nativos; UI móvil inicial para conexión y mando.
@@ -103,9 +103,9 @@ No hay APK ni IPA generados localmente en esta entrega. Con HTTPS público, web 
 
 ### APK automático para probar en Android
 
-El workflow `.github/workflows/remote-android.yml` se ejecuta al subir cambios de la app o del servicio y también con **Actions → Nuvio Remote Android APK → Run workflow**. Comprueba TypeScript y el protocolo, genera Android con Expo Prebuild y compila `assembleRelease` con JavaScript incluido. No necesita Expo Go, Metro, EXPO_TOKEN ni una cuenta de Expo.
+El workflow `.github/workflows/remote-android.yml` se ejecuta al subir cambios de la app o del servicio, al crear un tag `vX.Y.Z` y también con **Actions → Nuvio Remote Android APK → Run workflow**. El tag debe coincidir con la versión de `apps/remote/app.json`; para esta revisión es `v0.4.0`. Comprueba TypeScript y el protocolo, genera Android con Expo Prebuild y compila `assembleRelease` con JavaScript incluido. No necesita Expo Go, Metro, EXPO_TOKEN ni una cuenta de Expo.
 
-Cuando termine en verde, descarga el artefacto `nuvio-remote-android-test-N`, extrae el ZIP e instala el APK en un teléfono Android ARM64. Es un APK con firma de prueba, no una publicación de Play Store. Para distribución pública se necesita firma privada de producción. El workflow aún no se ha ejecutado en GitHub; la generación nativa local sí pasó. Esta máquina no tiene Android SDK disponible en las rutas comprobadas, por lo que no se ha validado la compilación Gradle completa.
+Cuando termine en verde, descarga el artefacto `nuvio-remote-android-v0.4.0-N`, extrae el ZIP e instala el APK en un teléfono Android ARM64. Al ejecutarse con el tag `v0.4.0`, además adjunta la APK al release de GitHub con ese tag. Es un APK con firma de prueba, no una publicación de Play Store. Para distribución pública se necesita firma privada de producción. El workflow aún no se ha ejecutado en GitHub; la generación nativa local sí pasó. Esta máquina no tiene Android SDK disponible en las rutas comprobadas, por lo que no se ha validado la compilación Gradle completa.
 
 Primero despliega el servicio en `https://remote.gykstudio.tech` con las variables indicadas arriba y redespliega la web con `NUVIO_REMOTE_URL`. Comprueba `/health` del servicio. Abre Ajustes → About → Control desde móvil en la web, crea un código, escanéalo con la app y aprueba el dispositivo en la web. Prueba búsqueda, selección, pausa, salto y volumen. Los vínculos de esta versión caducan a los 15 minutos: crea otro código para continuar.
 

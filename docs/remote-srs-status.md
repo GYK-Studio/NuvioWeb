@@ -1,6 +1,6 @@
 # Control remoto 0.3.0 — estado del SRS
 
-Fecha: 2026-09-09. El SRS original conserva los criterios de aceptación; este informe no los reduce. Implementación ampliada, **aceptación integral pendiente**.
+Fecha: 2026-09-09. El SRS original conserva los criterios de aceptación; este informe no los reduce. Implementación ampliada, **aceptación integral pendiente**. La app móvil se entrega como 0.4.0 / versionCode 5.
 
 ## Despliegue requerido
 
@@ -31,7 +31,7 @@ La web conserva `NUVIO_REMOTE_URL=https://remote.gykstudio.tech`. APK **0.3.0 / 
 | RF-06    | Acceso 15 min, renovación autenticada, límite absoluto de vínculo 30 días, hashes persistentes; secretos móviles en SecureStore. La pestaña web debe permanecer abierta: cerrar o recargar revoca su sesión.                                                                                                        |
 | RF-07    | Logout local bloquea ejecución; perfil nuevo suspende permisos y requiere aprobación. Renovación de JWT del mismo usuario ya no destruye el vínculo. **Revocación externa del backend no es un evento inmediato:** depende de la validación del backend al renovar; falta integración de eventos para garantizarlo. |
 | RF-08    | Límites por IP y hash de desafío, además de cuotas de sesiones/dispositivos. Detrás de Coolify se usa IP del socket: límites conservadores compartidos por proxy, no se confía en X-Forwarded-For. Pendiente diseño/prueba de IP real confiable.                                                                    |
-| RF-09–10 | Hasta cinco pantallas guardadas y seleccionables, nombres propios; Inicio, Volver, Biblioteca y Descubrir mediante acciones semánticas.                                                                                                                                                                             |
+| RF-09–10 | Hasta cinco pantallas guardadas y seleccionables, nombres propios; Inicio, Volver, Biblioteca y Descubrir mediante acciones semánticas. La app móvil también incluye cruceta arriba/abajo/izquierda/derecha y selección OK; la web mueve el foco con su motor de navegación existente. |
 | RF-11    | Resultados paginados con clave opaca, título, tipo/año y miniatura si procede de image.tmdb.org. Otros servidores de imágenes no están permitidos. Inicio, biblioteca y catálogo de Descubrir expuestos, con cargar más en Descubrir.                                                                               |
 | RF-12–13 | Ficha, selector de temporada, episodio y fuente explícita. No se permite que una fuente retirada caiga en la primera del filtro. Se espera reproducción observable hasta 5 s; una carga más lenta puede devolver error aunque termine después.                                                                      |
 | RF-14–17 | Play/pausa/seek/volumen/silencio, velocidad, pistas nativas y de addons a través de las opciones existentes de la web. Selección de pistas confirmada por estado hasta 5 s. Estado incluye buffering y capacidades. Pendiente matriz con medios reales.                                                             |

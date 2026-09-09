@@ -1,6 +1,7 @@
 import { SessionStore } from "../storage/sessionStore.js";
 import { ProfileManager } from "../profile/profileManager.js";
 import { Router } from "../../ui/navigation/router.js";
+import { ScreenUtils } from "../../ui/navigation/screen.js";
 import { RemoteContent } from "./remoteContent.js";
 
 const fail = (code) => {
@@ -253,6 +254,35 @@ export class RemoteClient extends EventTarget {
     if (c.type === "navigation.library") return Router.navigate("library");
     if (c.type === "navigation.discover") return Router.navigate("discover");
     if (c.type === "navigation.back") return Router.back();
+    const direction = {
+      "navigation.up": "up",
+      "navigation.down": "down",
+      "navigation.left": "left",
+      "navigation.right": "right"
+    }[c.type];
+    if (direction) {
+      const screen = Router.getCurrentScreen();
+      if (!screen?.container) fail("UNSUPPORTED_CAPABILITY");
+      ScreenUtils.moveFocusDirectional(screen.container, direction);
+      return;
+    }
+    if (c.type === "navigation.select") {
+      const screen = Router.getCurrentScreen();
+      const target = screen?.container?.querySelector(".focusable.focused");
+      if (!screen || !target) fail("UNSUPPORTED_CAPABILITY");
+      if (screen.activateControl) return screen.activateControl(target);
+      if (typeof target.click === "function") return target.click();
+      return screen.onKeyDown?.({
+        key: "Enter",
+        keyCode: 13,
+        which: 13,
+        target,
+        repeat: false,
+        preventDefault() {},
+        stopPropagation() {},
+        stopImmediatePropagation() {}
+      });
+    }
     if (c.type === "catalog.search") {
       if (typeof p.query !== "string" || p.query.length < 2 || p.query.length > 120)
         fail("INVALID_PAYLOAD");
