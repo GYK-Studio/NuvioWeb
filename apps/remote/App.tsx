@@ -19,7 +19,7 @@ import { Connection } from "./connection";
 import { emptySession, sessionEvent } from "./session";
 import { RangeControl } from "./RangeControl";
 
-const APP_VERSION = "0.1.1";
+const APP_VERSION = "0.1.2";
 const UPDATE_CHECK_URL = "https://api.github.com/GYK-Studio/NuvioWeb/releases/latest";
 const compareVersions = (latest: string, current: string) => {
   const parse = (value: string) =>
