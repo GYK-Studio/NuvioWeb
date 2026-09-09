@@ -67,6 +67,18 @@ test("revocable renewal and persistence keep hashes only, with absolute 30-day e
   advance(30 * 24 * 60 * 60 * 1000);
   assert.throws(() => core.renewWeb(s.id, "user-a"), /UNAUTHORIZED/);
 });
+test("a browser session resumes after reload without persisting its access token", () => {
+  const { core, web, s, mobile, advance } = setup();
+  core.approve(s, mobile.deviceId);
+  advance(60_000);
+  const resumed = core.resumeWeb(web.webSessionId, "user-a");
+  assert.equal(resumed.webSessionId, web.webSessionId);
+  assert.equal(resumed.linkExpiresAt, s.expires);
+  assert.ok(resumed.code, "resume creates a fresh short-lived pairing code when capacity remains");
+  assert.ok(core.web(s.id, resumed.token));
+  assert.throws(() => core.web(s.id, web.token), /UNAUTHORIZED/);
+  assert.throws(() => core.resumeWeb(s.id, "other-owner"), /UNAUTHORIZED/);
+});
 test("reject arbitrary actions, URLs, invalid ranges and stale ordering", () => {
   const { s, now } = setup();
   const c = {

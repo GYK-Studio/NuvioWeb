@@ -33,7 +33,7 @@ Respuestas que requieren atención aunque el host sí contestó:
 - 301/302: `api.themoviedb.org`, `awish.pro`, `cineby.sc`, `dsvplay.com`, `player.pelisserieshoy.com`, `player.videasy.net`, `player.vimeo.com`, `proyectox.yoyatengoabuela.com`, `seriesflixhd.best`, `sfastwish.com`, `vidmoly.to`, `wishfast.top`, `xupalace.org`.
 - Los restantes 30 hosts devolvieron 200 a HEAD en la raíz.
 
-La respuesta de una raíz no prueba el endpoint específico. Los destinos dinámicos, concatenados, descargados o cifrados pueden no estar en la extracción estática. No se autorizan automáticamente nuevos hosts ni subdominios. Las redirecciones siguen bloqueadas por el proxy.
+La respuesta de una raíz no prueba el endpoint específico. Los destinos dinámicos, concatenados, descargados o cifrados pueden no estar en la extracción estática. No se autorizan automáticamente nuevos hosts ni subdominios. Las redirecciones se siguen hasta cuatro saltos y cada destino debe estar también en la lista exacta de hosts autorizados.
 
 ## Límites pendientes
 

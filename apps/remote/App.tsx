@@ -181,21 +181,48 @@ export default function App() {
   );
   const dpad = (
     <View style={styles.dpad} accessibilityLabel="Controles de navegación">
-      <View style={styles.dpadRow}>
-        <View style={styles.dpadSpacer} />
-        {button("↑", () => action("navigation.up"), false, true)}
-        <View style={styles.dpadSpacer} />
-      </View>
-      <View style={styles.dpadRow}>
-        {button("←", () => action("navigation.left"), false, true)}
-        {button("OK", () => action("navigation.select"), false, true)}
-        {button("→", () => action("navigation.right"), false, true)}
-      </View>
-      <View style={styles.dpadRow}>
-        <View style={styles.dpadSpacer} />
-        {button("↓", () => action("navigation.down"), false, true)}
-        <View style={styles.dpadSpacer} />
-      </View>
+      {[
+        { symbol: "↑", label: "Subir", command: "navigation.up", placement: styles.dpadUp },
+        {
+          symbol: "←",
+          label: "Ir a la izquierda",
+          command: "navigation.left",
+          placement: styles.dpadLeft
+        },
+        {
+          symbol: "OK",
+          label: "Seleccionar",
+          command: "navigation.select",
+          placement: styles.dpadSelect
+        },
+        {
+          symbol: "→",
+          label: "Ir a la derecha",
+          command: "navigation.right",
+          placement: styles.dpadRight
+        },
+        { symbol: "↓", label: "Bajar", command: "navigation.down", placement: styles.dpadDown }
+      ].map(({ symbol, label, command, placement }) => (
+        <Pressable
+          key={String(command)}
+          accessibilityRole="button"
+          accessibilityLabel={String(label)}
+          accessibilityState={{ disabled: !canControl }}
+          disabled={!canControl}
+          onPress={() => action(String(command))}
+          style={({ pressed }) => [
+            styles.dpadButton,
+            placement,
+            command === "navigation.select" && styles.dpadSelectButton,
+            pressed && styles.pressed,
+            !canControl && styles.disabled
+          ]}
+        >
+          <Text style={command === "navigation.select" ? styles.dpadSelectText : styles.dpadSymbol}>
+            {String(symbol)}
+          </Text>
+        </Pressable>
+      ))}
     </View>
   );
   return (
@@ -203,10 +230,18 @@ export default function App() {
       <StatusBar barStyle="light-content" />
       <View style={styles.header}>
         <View style={styles.brandRow}>
-          <Text style={styles.brand}>
-            nuvio<Text style={styles.brandAccent}> remote</Text>
-          </Text>
-          <Text style={styles.version}>02</Text>
+          <View style={styles.brandLockup}>
+            <Image
+              source={require("./assets/icon.png")}
+              style={styles.brandIcon}
+              accessible={false}
+            />
+            <View>
+              <Text style={styles.brand}>Nuvio Remote</Text>
+              <Text style={styles.version}>Mando para Nuvio Web · 0.4.0</Text>
+            </View>
+          </View>
+          <View style={[styles.connectionDot, canControl && styles.connectionDotOnline]} />
         </View>
         <View style={styles.tabs}>
           {(
@@ -237,23 +272,28 @@ export default function App() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.eyebrow}>
-          {tab === "browse"
-            ? "TU PRÓXIMA HISTORIA"
-            : tab === "connection"
-              ? "TU CONEXIÓN"
-              : "EN TU PANTALLA"}
-        </Text>
-        <Text accessibilityRole="header" style={styles.title}>
-          {tab === "browse"
-            ? "¿Qué vemos hoy?"
-            : tab === "connection"
-              ? "Todo conectado."
-              : "Dale al play."}
-        </Text>
-        <Text accessibilityLiveRegion="polite" style={styles.status}>
-          {status}
-        </Text>
+        <View style={styles.heroIntro}>
+          <Text style={styles.eyebrow}>
+            {tab === "browse"
+              ? "TU PRÓXIMA HISTORIA"
+              : tab === "connection"
+                ? "TU CONEXIÓN"
+                : "EN TU PANTALLA"}
+          </Text>
+          <Text accessibilityRole="header" style={styles.title}>
+            {tab === "browse"
+              ? "Encuentra algo para ver"
+              : tab === "connection"
+                ? "Tus pantallas"
+                : state.content?.title || "Controla tu pantalla"}
+          </Text>
+          <View style={styles.statusRow}>
+            <View style={[styles.statusDot, session.online && styles.statusDotOnline]} />
+            <Text accessibilityLiveRegion="polite" style={styles.status}>
+              {status}
+            </Text>
+          </View>
+        </View>
         {!!feedback && (
           <Text accessibilityLiveRegion="polite" style={styles.copy}>
             {feedback}
@@ -734,83 +774,157 @@ export default function App() {
   );
 }
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#0c0e14" },
+  page: { flex: 1, backgroundColor: "#090A10" },
   header: {
-    paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 16 : 60,
-    paddingHorizontal: 20,
-    gap: 20,
-    paddingBottom: 8,
-    backgroundColor: "#0c0e14"
+    paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 12 : 56,
+    paddingHorizontal: 18,
+    gap: 18,
+    paddingBottom: 12,
+    backgroundColor: "#090A10",
+    borderBottomWidth: 1,
+    borderBottomColor: "#20222B"
   },
   brandRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  brand: { color: "#ffffff", fontSize: 24, fontWeight: "800", letterSpacing: -1 },
-  brandAccent: { color: "#b9a5ff", fontWeight: "400" },
-  version: { color: "#8c94a8", fontSize: 13 },
-  tabs: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  brandLockup: { flexDirection: "row", alignItems: "center", gap: 11 },
+  brandIcon: { width: 42, height: 42, borderRadius: 12 },
+  brand: { color: "#F8F8FB", fontSize: 19, fontWeight: "800", letterSpacing: -0.5 },
+  version: { color: "#858996", fontSize: 11, marginTop: 2 },
+  connectionDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#5A5E6A",
+    borderWidth: 2,
+    borderColor: "#252832"
+  },
+  connectionDotOnline: { backgroundColor: "#4ED69C", borderColor: "#173E31" },
+  tabs: {
+    flexDirection: "row",
+    gap: 4,
+    padding: 4,
+    borderRadius: 16,
+    backgroundColor: "#12141B"
+  },
   tab: {
-    flexGrow: 1,
-    minHeight: 48,
-    padding: 12,
+    flex: 1,
+    minHeight: 44,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 24
+    borderRadius: 12
   },
-  tabActive: { backgroundColor: "#c7b8ff" },
-  tabText: { color: "#aeb5c5", fontSize: 15, fontWeight: "600" },
-  tabTextActive: { color: "#161022" },
+  tabActive: { backgroundColor: "#F3F2F7" },
+  tabText: { color: "#969AA7", fontSize: 14, fontWeight: "600" },
+  tabTextActive: { color: "#111218", fontWeight: "800" },
   content: {
-    padding: 20,
-    paddingTop: 28,
-    paddingBottom: 56,
-    gap: 20,
+    padding: 18,
+    paddingTop: 30,
+    paddingBottom: 64,
+    gap: 18,
     width: "100%",
-    maxWidth: 680,
+    maxWidth: 720,
     alignSelf: "center"
   },
-  eyebrow: { color: "#c4b5fd", fontSize: 13, letterSpacing: 2 },
-  title: { color: "#fff", fontSize: 32, fontWeight: "700", letterSpacing: -1 },
-  mediaTitle: { color: "#fff", fontSize: 21, fontWeight: "600", lineHeight: 29 },
-  status: { color: "#ddd", fontSize: 16 },
-  card: { backgroundColor: "#161a24", padding: 20, borderRadius: 24, gap: 16 },
-  result: { gap: 8, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#2b3040" },
+  heroIntro: { gap: 9, paddingHorizontal: 2, marginBottom: 2 },
+  eyebrow: { color: "#B89AFF", fontSize: 11, fontWeight: "800", letterSpacing: 1.8 },
+  title: {
+    color: "#F8F8FB",
+    fontSize: 34,
+    fontWeight: "800",
+    lineHeight: 39,
+    letterSpacing: -1.5
+  },
+  mediaTitle: { color: "#F8F8FB", fontSize: 20, fontWeight: "700", lineHeight: 27 },
+  statusRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  statusDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#777B87" },
+  statusDotOnline: { backgroundColor: "#4ED69C" },
+  status: { flex: 1, color: "#B7BAC5", fontSize: 14, lineHeight: 20 },
+  card: {
+    backgroundColor: "#12141B",
+    padding: 18,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "#20232C",
+    gap: 16
+  },
+  result: {
+    gap: 9,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#252832"
+  },
   playButton: {
     alignSelf: "center",
-    minWidth: 112,
-    minHeight: 112,
-    borderRadius: 56,
-    padding: 20,
-    backgroundColor: "#c7b8ff",
+    minWidth: 124,
+    minHeight: 124,
+    borderRadius: 62,
+    padding: 22,
+    backgroundColor: "#FF735F",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8
+    gap: 7,
+    borderWidth: 6,
+    borderColor: "#2A191A"
   },
-  playSymbol: { color: "#161022", fontSize: 32 },
-  playLabel: { color: "#161022", fontSize: 14, fontWeight: "700" },
-  pressed: { opacity: 0.7 },
-  label: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  playSymbol: { color: "#150E10", fontSize: 34, fontWeight: "800" },
+  playLabel: { color: "#150E10", fontSize: 13, fontWeight: "800" },
+  pressed: { opacity: 0.76, transform: [{ scale: 0.96 }] },
+  label: { color: "#F4F4F7", fontSize: 15, fontWeight: "700" },
   input: {
-    backgroundColor: "#101014",
-    color: "#fff",
+    backgroundColor: "#0D0F15",
+    color: "#F8F8FB",
     borderWidth: 1,
-    borderColor: "#73737e",
-    borderRadius: 8,
-    minHeight: 48,
-    padding: 12,
+    borderColor: "#363A47",
+    borderRadius: 14,
+    minHeight: 52,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
     fontSize: 16
   },
   button: {
-    backgroundColor: "#282e3e",
-    borderRadius: 16,
-    minHeight: 48,
-    padding: 12,
+    flexGrow: 1,
+    backgroundColor: "#22252F",
+    borderRadius: 14,
+    minHeight: 50,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#303440"
   },
-  buttonText: { color: "#fff", fontSize: 16 },
-  disabled: { opacity: 0.45 },
-  row: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  dpad: { alignItems: "center", gap: 8 },
-  dpadRow: { flexDirection: "row", gap: 8 },
-  dpadSpacer: { width: 48, height: 48 },
-  copy: { color: "#bbb", fontSize: 14, lineHeight: 22 }
+  buttonText: { color: "#F5F5F8", fontSize: 15, fontWeight: "600", textAlign: "center" },
+  disabled: { opacity: 0.38 },
+  row: { flexDirection: "row", flexWrap: "wrap", gap: 10, alignItems: "center" },
+  dpad: {
+    position: "relative",
+    alignSelf: "center",
+    width: 276,
+    height: 276,
+    borderRadius: 138,
+    backgroundColor: "#0D0F15",
+    borderWidth: 1,
+    borderColor: "#282B35"
+  },
+  dpadButton: {
+    position: "absolute",
+    width: 84,
+    height: 84,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 26,
+    backgroundColor: "#1C1F28",
+    borderWidth: 1,
+    borderColor: "#2D303B"
+  },
+  dpadUp: { top: 8, left: 96 },
+  dpadDown: { bottom: 8, left: 96 },
+  dpadLeft: { top: 96, left: 8 },
+  dpadRight: { top: 96, right: 8 },
+  dpadSelect: { top: 96, left: 96 },
+  dpadSelectButton: { backgroundColor: "#F3F2F7", borderColor: "#F3F2F7" },
+  dpadSymbol: { color: "#EDEDF2", fontSize: 28, fontWeight: "500" },
+  dpadSelectText: { color: "#111218", fontSize: 15, fontWeight: "900", letterSpacing: 0.7 },
+  copy: { color: "#AEB1BC", fontSize: 14, lineHeight: 21 }
 });

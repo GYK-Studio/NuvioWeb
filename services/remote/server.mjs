@@ -119,7 +119,13 @@ const server = http.createServer(async (req, res) => {
   }
   try {
     rate(`http:${req.socket.remoteAddress}`, 30);
-    if (req.method !== "POST" || req.headers["content-type"] !== "application/json")
+    if (
+      req.method !== "POST" ||
+      String(req.headers["content-type"] || "")
+        .split(";", 1)[0]
+        .trim()
+        .toLowerCase() !== "application/json"
+    )
       throw new Error("INVALID_PAYLOAD");
     const chunks = [];
     let size = 0;
@@ -130,7 +136,11 @@ const server = http.createServer(async (req, res) => {
     }
     const body = JSON.parse(Buffer.concat(chunks).toString());
     let result;
-    if (req.url === "/remote/pairings" || req.url === "/remote/refresh/web") {
+    if (
+      req.url === "/remote/pairings" ||
+      req.url === "/remote/refresh/web" ||
+      req.url === "/remote/sessions/resume"
+    ) {
       if (!origins.has(origin)) throw new Error("UNAUTHORIZED");
       const authorization = req.headers.authorization;
       if (!authorization?.startsWith("Bearer ") || authorization.length > 8192)
@@ -147,7 +157,9 @@ const server = http.createServer(async (req, res) => {
       result =
         req.url === "/remote/refresh/web"
           ? core.renewWeb(body.webSessionId, user.id)
-          : core.create(user.id, body.name);
+          : req.url === "/remote/sessions/resume"
+            ? core.resumeWeb(body.webSessionId, user.id)
+            : core.create(user.id, body.name);
     } else if (req.url === "/remote/device/status") {
       if (typeof body.refreshToken !== "string" || body.refreshToken.length > 100)
         throw new Error("UNAUTHORIZED");

@@ -40,6 +40,10 @@ const COMMUNITY_PLUGIN_REPOSITORIES = [
   {
     url: "https://raw.githubusercontent.com/KennethJYS/Nuvio-Providers-Latino/refs/heads/main",
     name: "Latino Providers"
+  },
+  {
+    url: "https://raw.githubusercontent.com/Kokuuuuuun/Nuvio-Latino-Hub-Providers/refs/heads/main",
+    name: "Nuvio Latino Hub Providers"
   }
 ];
 let runningExecutions = 0;

@@ -1,4 +1,4 @@
-# Control remoto 0.3.0 — estado del SRS
+# Control remoto 0.4.0 — estado del SRS
 
 Fecha: 2026-09-09. El SRS original conserva los criterios de aceptación; este informe no los reduce. Implementación ampliada, **aceptación integral pendiente**. La app móvil se entrega como 0.4.0 / versionCode 5.
 
@@ -21,7 +21,7 @@ NUVIO_SUPABASE_ANON_KEY=TU_CLAVE_PUBLICA_EXISTENTE
 
 Montar **un volumen persistente en `/data`**, con permiso de escritura para el usuario `node` del contenedor (UID 1000). **Una réplica**: almacenamiento local, no un servicio distribuido. Sin volumen, recrear el contenedor pierde los vínculos. No usar `service_role`. No subir `/data/remote.json` al repositorio. Hacer copias de seguridad protegidas y no restaurar copias antiguas sin considerar que pueden restaurar permisos revocados.
 
-La web conserva `NUVIO_REMOTE_URL=https://remote.gykstudio.tech`. APK **0.3.0 / versionCode 4**, generado por el workflow existente. No hay APK compilado localmente ni despliegue ejecutado por el agente.
+La web conserva `NUVIO_REMOTE_URL=https://remote.gykstudio.tech`. APK **0.4.0 / versionCode 5**, generado por el workflow existente. No hay APK compilado localmente ni despliegue ejecutado por el agente.
 
 ## Cobertura funcional
 

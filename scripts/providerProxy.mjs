@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 import { parseProperties } from "./envProperties.mjs";
 
 const MAX_BYTES = 1024 * 1024;
+const MAX_REDIRECTS = 4;
 let active = 0;
 let windowStart = 0;
 let requests = 0;
@@ -41,7 +42,21 @@ export function validateTarget(raw, allowed) {
   return url;
 }
 
-async function upstream(input, allowed) {
+export function nextRedirectRequest(input, currentUrl, location, statusCode) {
+  const url = new URL(String(location || ""), currentUrl).toString();
+  const next = { ...input, url, headers: { ...(input.headers || {}) } };
+  if ([301, 302, 303].includes(Number(statusCode)) && String(input.method || "GET") !== "GET") {
+    next.method = "GET";
+    next.body = "";
+    Object.keys(next.headers).forEach((name) => {
+      if (["content-type", "content-length"].includes(name.toLowerCase()))
+        delete next.headers[name];
+    });
+  }
+  return next;
+}
+
+async function upstream(input, allowed, redirects = 0) {
   const url = validateTarget(input.url, allowed);
   const addresses = await resolve4(url.hostname);
   if (!addresses.length || !addresses.every(isPublicIPv4))
@@ -50,7 +65,18 @@ async function upstream(input, allowed) {
   if (!["GET", "POST"].includes(method)) throw new Error("Method is not allowed");
   const headers = { "accept-encoding": "identity" };
   for (const [key, value] of Object.entries(input.headers || {})) {
-    if (["accept", "accept-language", "content-type", "user-agent"].includes(key.toLowerCase())) {
+    if (
+      [
+        "accept",
+        "accept-language",
+        "content-type",
+        "cookie",
+        "origin",
+        "referer",
+        "user-agent",
+        "x-requested-with"
+      ].includes(key.toLowerCase())
+    ) {
       headers[key.toLowerCase()] = String(value).slice(0, 2048);
     }
   }
@@ -66,6 +92,25 @@ async function upstream(input, allowed) {
         lookup: (_host, _options, callback) => callback(null, addresses[0], 4)
       },
       (response) => {
+        if ([301, 302, 303, 307, 308].includes(Number(response.statusCode))) {
+          response.resume();
+          if (!response.headers.location) {
+            reject(new Error("Provider redirect has no destination"));
+            return;
+          }
+          if (redirects >= MAX_REDIRECTS) {
+            reject(new Error("Provider redirect limit exceeded"));
+            return;
+          }
+          const next = nextRedirectRequest(
+            input,
+            url,
+            response.headers.location,
+            response.statusCode
+          );
+          upstream(next, allowed, redirects + 1).then(resolve, reject);
+          return;
+        }
         const chunks = [];
         let size = 0;
         response.on("data", (chunk) => {
@@ -82,13 +127,18 @@ async function upstream(input, allowed) {
             statusText: response.statusMessage,
             url: url.toString(),
             body: Buffer.concat(chunks).toString("utf8"),
-            headers: { "content-type": response.headers["content-type"] || "" },
+            headers: {
+              "content-type": response.headers["content-type"] || "",
+              "set-cookie": Array.isArray(response.headers["set-cookie"])
+                ? response.headers["set-cookie"].join("\n")
+                : response.headers["set-cookie"] || ""
+            },
             truncated: false
           })
         );
       }
     );
-    // Redirects are deliberately not followed, including redirects to private networks.
+    // Every redirect is resolved, allowlisted and DNS-pinned again inside upstream().
     const deadline = setTimeout(() => request.destroy(new Error("Upstream timeout")), 15000);
     request.on("error", reject);
     request.on("close", () => clearTimeout(deadline));

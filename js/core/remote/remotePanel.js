@@ -139,7 +139,7 @@ export function openRemotePanel() {
         status.textContent = "Sesión finalizada. Crea un código nuevo para conectar.";
       else if (m.type === "error") status.textContent = `Error de control: ${m.error}`;
     });
-    window.addEventListener("pagehide", () => client.stop());
+    window.addEventListener("pagehide", () => client.disconnect());
   }
   document.body.classList.add("nuvio-modal-open");
   dialog.showModal();

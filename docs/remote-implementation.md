@@ -1,6 +1,6 @@
 # Control remoto — entrega inicial, no SRS completo
 
-> Histórico de la entrega inicial. Para el estado vigente 0.3.0, configuración de persistencia y matriz de requisitos, consultar [remote-srs-status.md](remote-srs-status.md).
+> Histórico de la entrega inicial. Para el estado vigente 0.4.0, configuración de persistencia y matriz de requisitos, consultar [remote-srs-status.md](remote-srs-status.md).
 
 Fecha: 2026-09-08. Esta entrega implementa una primera ruta de control y deja explícitos los requisitos pendientes. No se ha desplegado el servicio ni publicado una app.
 

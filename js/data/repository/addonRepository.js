@@ -12,7 +12,8 @@ const MANIFEST_SUFFIX = "/manifest.json";
 const DEFAULT_ADDON_URLS = ["https://v3-cinemeta.strem.io", "https://opensubtitles-v3.strem.io"];
 const COMMUNITY_ADDON_URLS = [
   "https://raw.githubusercontent.com/adrianjael/pluggin-latino/refs/heads/main",
-  "https://raw.githubusercontent.com/KennethJYS/Nuvio-Providers-Latino/refs/heads/main"
+  "https://raw.githubusercontent.com/KennethJYS/Nuvio-Providers-Latino/refs/heads/main",
+  "https://raw.githubusercontent.com/Kokuuuuuun/Nuvio-Latino-Hub-Providers/refs/heads/main"
 ];
 const COMMUNITY_ADDONS_MIGRATION_KEY = "communityAddonSourcesV1";
 const MANIFEST_CACHE_KEY = "addonManifestCacheV2";

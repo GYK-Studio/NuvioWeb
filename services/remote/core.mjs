@@ -202,7 +202,14 @@ export class RemoteCore {
     s.codeHash = hash(code);
     s.pairExpires = this.now() + 120000;
     this.codes.set(s.codeHash, s.id);
-    return { type: "pairing.created", code, pairingExpiresAt: s.pairExpires, expiresAt: s.expires };
+    this.changed();
+    return {
+      type: "pairing.created",
+      code,
+      pairingExpiresAt: s.pairExpires,
+      expiresAt: s.accessExpires,
+      linkExpiresAt: s.expires
+    };
   }
   command(s, d, command) {
     if (d.accessExpires <= this.now() || s.accessExpires <= this.now()) fail("UNAUTHORIZED");
@@ -238,6 +245,12 @@ export class RemoteCore {
     s.accessExpires = Math.min(this.now() + ACCESS_MS, s.expires);
     this.changed();
     return { token, expiresAt: s.accessExpires, linkExpiresAt: s.expires };
+  }
+  resumeWeb(id, owner) {
+    const s = this.session(id);
+    const grant = this.renewWeb(id, owner);
+    const pairing = s.devices.size < 3 ? this.pairing(s) : {};
+    return { webSessionId: s.id, name: s.name, ...grant, ...pairing };
   }
   record(type, status, sessionId, deviceId) {
     this.audit.push({

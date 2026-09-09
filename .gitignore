@@ -9,6 +9,7 @@ local.example.properties
 node_modules/
 tests/*
 !tests/test-web-controls.mjs
+!tests/provider-proxy.test.mjs
 *.ipk
 *.wgt
 dist/

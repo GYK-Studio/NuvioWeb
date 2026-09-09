@@ -5,9 +5,9 @@
   "version": "1.0.7",
   "scripts": {
     "build": "node ./scripts/build.mjs",
-    "test": "npm run test:plugins",
+    "test": "npm run build && npm run test:web && npm run test:providers",
     "test:web": "node tests/test-web-controls.mjs",
-    "test:plugins": "npm run build && node ./tests/test-plugin-system.mjs && node ./tests/test-plugin-localization.mjs",
+    "test:providers": "node --test tests/provider-proxy.test.mjs",
     "prepare": "husky || true",
     "lint": "eslint \"js/**/*.js\" \"eslint.config.mjs\"",
     "format": "prettier --write .",

@@ -1,6 +1,6 @@
 # Nuvio Remote 0.2.0
 
-> Histórico del rework visual. La versión actual es 0.3.0; consultar `docs/remote-srs-status.md` para nuevas capacidades, persistencia y pendientes de aceptación.
+> Histórico del rework visual. La versión actual es 0.4.0; consultar `docs/remote-srs-status.md` para nuevas capacidades, persistencia y pendientes de aceptación.
 
 Renovación exclusiva de la APK. No cambia la web ni el servicio remoto.
 

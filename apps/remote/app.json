@@ -3,13 +3,20 @@
     "name": "Nuvio Remote",
     "slug": "nuvio-remote",
     "version": "0.4.0",
-    "icon": "../../assets/brand/nuvio_remote_icon.png",
+    "icon": "./assets/icon.png",
     "android": {
       "package": "tech.gykstudio.nuvio.remote",
       "versionCode": 5,
-      "icon": "../../assets/brand/nuvio_remote_icon.png"
+      "icon": "./assets/icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#090A10"
+      }
     },
-    "ios": { "bundleIdentifier": "tech.gykstudio.nuvio.remote" },
+    "ios": {
+      "bundleIdentifier": "tech.gykstudio.nuvio.remote",
+      "icon": "./assets/icon.png"
+    },
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "plugins": [

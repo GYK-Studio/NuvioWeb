@@ -7,6 +7,7 @@ import { RemoteContent } from "./remoteContent.js";
 const fail = (code) => {
   throw new Error(code);
 };
+const SESSION_KEY = "nuvio.remote.webSession";
 export class RemoteClient extends EventTarget {
   constructor() {
     super();
@@ -23,21 +24,42 @@ export class RemoteClient extends EventTarget {
     if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify(data));
   }
   async start(name = "Nuvio Web") {
-    this.stop();
+    this.disconnect();
     const base = new URL(String(globalThis.__NUVIO_ENV__?.NUVIO_REMOTE_URL || ""));
     if (base.protocol !== "https:" && !(base.protocol === "http:" && base.hostname === "127.0.0.1"))
       fail("INVALID_CONFIGURATION");
     if (base.username || base.password || base.search || base.hash) fail("INVALID_CONFIGURATION");
     const token = SessionStore.accessToken;
     if (!token || SessionStore.isAnonymousSession) fail("UNAUTHORIZED");
-    const response = await fetch(new URL("/remote/pairings", base), {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ name }),
-      signal: AbortSignal.timeout(10000)
-    });
-    const grant = await response.json();
+    let storedSessionId = "";
+    try {
+      storedSessionId = sessionStorage.getItem(SESSION_KEY) || "";
+    } catch {
+      // Session storage can be disabled by the browser; pairing still works.
+    }
+    const request = async (path, body) => {
+      const response = await fetch(new URL(path, base), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(10000)
+      });
+      const result = await response.json();
+      return { response, result };
+    };
+    let { response, result: grant } = storedSessionId
+      ? await request("/remote/sessions/resume", { webSessionId: storedSessionId })
+      : { response: null, result: null };
+    if (!response?.ok) {
+      try {
+        sessionStorage.removeItem(SESSION_KEY);
+      } catch {}
+      ({ response, result: grant } = await request("/remote/pairings", { name }));
+    }
     if (!response.ok) fail(grant.error || "UNAVAILABLE");
+    try {
+      sessionStorage.setItem(SESSION_KEY, grant.webSessionId);
+    } catch {}
     this.grant = grant;
     this.base = base;
     this.profile = ProfileManager.getActiveProfileId();
@@ -99,7 +121,11 @@ export class RemoteClient extends EventTarget {
     }
   }
   async createCode(name) {
-    if (this.closed) return this.start(name);
+    if (this.closed) {
+      const grant = await this.start(name);
+      if (!grant.code) fail("RATE_LIMITED");
+      return grant;
+    }
     if (this.socket?.readyState !== WebSocket.OPEN) fail("SESSION_OFFLINE");
     return new Promise((resolve, reject) => {
       const cleanup = () => {
@@ -239,7 +265,8 @@ export class RemoteClient extends EventTarget {
   }
   async execute(c) {
     if (
-      SessionStore.accessToken !== this.token ||
+      !SessionStore.accessToken ||
+      SessionStore.isAnonymousSession ||
       ProfileManager.getActiveProfileId() !== this.profile
     )
       fail("UNAUTHORIZED");
@@ -352,12 +379,18 @@ export class RemoteClient extends EventTarget {
   }
   stop() {
     this.send({ type: "close" });
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch {}
+    this.disconnect();
+    this.seen.clear();
+    this.content.reset();
+  }
+  disconnect() {
     this.closed = true;
     clearInterval(this.timer);
     clearTimeout(this.retry);
     this.socket?.close();
     this.socket = null;
-    this.seen.clear();
-    this.content.reset();
   }
 }

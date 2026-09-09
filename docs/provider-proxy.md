@@ -18,7 +18,13 @@ Para desarrollo, `local.properties` contiene la configuración y está excluido 
 
 - HTTPS, puerto 443, GET/POST y hosts exactos exclusivamente.
 - Resolución IPv4 validada y fijada a la conexión; bloqueo de redes privadas, locales y reservadas.
-- No sigue redirecciones. No reenvía cookies, Authorization, Host ni cabeceras arbitrarias.
+- Sigue como máximo cuatro redirecciones HTTP. Cada salto vuelve a exigir HTTPS, host exacto
+  autorizado, DNS IPv4 pública y conexión fijada a esa IP; una redirección no puede escapar hacia
+  la red privada. Para 301/302/303 convierte POST en GET como un navegador; 307/308 conserva el
+  método.
+- Admite las cabeceras de proveedor `Cookie`, `Origin`, `Referer` y `X-Requested-With`, además de
+  contenido y agente de usuario. Nunca reenvía `Authorization` ni `Host`. Devuelve `Set-Cookie`
+  sólo dentro de la respuesta JSON del sandbox; no escribe cookies en el navegador.
 - Máximo 1 MiB por petición/respuesta, 10 conexiones concurrentes y 120 peticiones/minuto por proceso.
 - Origen obligatorio y JSON; sin CORS entre dominios. La comprobación de Origin no autentica a clientes no navegador: para exposición con muchos usuarios añade autenticación y límites por usuario en un gateway.
 - Solo obtiene texto para proveedores: **no es un proxy de vídeo**, no resuelve DRM, captchas ni bloqueos de reproducción. El enlace de vídeo final también debe ser compatible con el navegador.

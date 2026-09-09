@@ -49,8 +49,8 @@ export function RangeControl({
 }
 const s = StyleSheet.create({
   wrap: { gap: 4 },
-  label: { color: "#bcc2d1", fontSize: 13 },
+  label: { color: "#B7BAC5", fontSize: 13, fontWeight: "600" },
   target: { minHeight: 48, justifyContent: "center" },
-  track: { height: 6, backgroundColor: "#34394b", borderRadius: 3, overflow: "hidden" },
-  fill: { height: 6, backgroundColor: "#c7b8ff", borderRadius: 3 }
+  track: { height: 7, backgroundColor: "#30333D", borderRadius: 4, overflow: "hidden" },
+  fill: { height: 7, backgroundColor: "#FF735F", borderRadius: 4 }
 });
