@@ -14612,6 +14612,35 @@ html[data-card-depth="true"][data-card-depth-trailers="true"] .detail-trailer-ca
   font-weight: 700;
   margin-bottom: 8px;
   color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.player-dialog-close {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-dialog-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.player-dialog-close.focused {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 2px var(--secondary-color);
 }
 
 .player-dialog-tabs {
@@ -18559,14 +18588,14 @@ html[data-card-depth="true"][data-card-depth-trailers="true"] .detail-trailer-ca
 }
 
 .stream-route-title {
-  margin: 0 0 16px;
-  font-size: clamp(56px, 4vw, 72px);
-  line-height: 1.08;
+  margin: 0 0 12px;
+  font-size: clamp(32px, 2.4vw, 46px);
+  line-height: 1.1;
   font-weight: 700;
 }
 
 .stream-route-episode-code {
-  font-size: clamp(30px, 2vw, 38px);
+  font-size: clamp(17px, 1.2vw, 22px);
   line-height: 1.35;
   font-weight: 500;
   color: var(--text-secondary);
@@ -18596,19 +18625,21 @@ html[data-card-depth="true"][data-card-depth-trailers="true"] .detail-trailer-ca
 }
 
 .stream-route-chip-wrap {
-  height: clamp(64px, 4.2vw, 78px);
-  margin-bottom: 20px;
+  height: auto;
+  min-height: 52px;
+  margin-bottom: 14px;
 }
 
 .stream-route-chip-track {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 10px;
   height: 100%;
   overflow-x: auto;
-  padding: 6px 8px;
+  padding: 4px 2px;
   box-sizing: border-box;
   scrollbar-width: none;
+  scroll-behavior: smooth;
 }
 
 .stream-route-chip-track::-webkit-scrollbar {
@@ -18617,19 +18648,20 @@ html[data-card-depth="true"][data-card-depth-trailers="true"] .detail-trailer-ca
 
 .stream-route-chip {
   flex-shrink: 0;
-  min-height: clamp(56px, 3.8vw, 70px);
-  padding: 0 clamp(30px, 2vw, 40px);
+  min-height: 44px;
+  padding: 8px 20px;
   border-radius: 999px;
   border: 1px solid var(--border-color);
   background: var(--card-bg);
   color: var(--text-secondary);
-  font-size: var(--tv-secondary-text);
+  font-size: 15px;
   line-height: 1.35;
   font-weight: 500;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .stream-route-chip.selected {
@@ -18700,6 +18732,7 @@ html[data-card-depth="true"][data-card-depth-trailers="true"] .detail-trailer-ca
   scrollbar-width: none;
   scroll-padding-top: 8px;
   scroll-padding-bottom: 10px;
+  scroll-behavior: smooth;
 }
 
 .stream-route-list::-webkit-scrollbar {

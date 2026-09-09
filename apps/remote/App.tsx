@@ -11,7 +11,8 @@ import {
   BackHandler,
   StatusBar,
   Platform,
-  Image
+  Image,
+  Linking
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Connection } from "./connection";
@@ -19,6 +20,20 @@ import { emptySession, sessionEvent } from "./session";
 import { RangeControl } from "./RangeControl";
 
 const APP_VERSION = "0.1.1";
+const UPDATE_CHECK_URL = "https://api.github.com/GYK-Studio/NuvioWeb/releases/latest";
+const compareVersions = (latest: string, current: string) => {
+  const parse = (value: string) =>
+    String(value || "")
+      .replace(/^v/i, "")
+      .split(".")
+      .map((part) => Number.parseInt(part, 10) || 0);
+  const a = parse(latest);
+  const b = parse(current);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) > (b[i] || 0) ? 1 : -1;
+  }
+  return 0;
+};
 const clock = (seconds: number) => {
   const n = Math.max(0, Math.floor(seconds || 0));
   return `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
@@ -63,6 +78,36 @@ export default function App() {
   const [advanced, setAdvanced] = useState(false);
   const [torch, setTorch] = useState(false);
   const [keyboardText, setKeyboardText] = useState("");
+  const [updateInfo, setUpdateInfo] = useState<{ version: string; url: string } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 10000);
+        const response = await fetch(UPDATE_CHECK_URL, {
+          headers: { Accept: "application/vnd.github+json" },
+          signal: controller.signal
+        });
+        clearTimeout(timer);
+        if (!response.ok || cancelled) return;
+        const release = await response.json();
+        const latest = String(release?.tag_name || release?.name || "");
+        const apk = Array.isArray(release?.assets)
+          ? release.assets.find((asset: any) => String(asset?.name || "").endsWith(".apk"))
+          : null;
+        const url = String(apk?.browser_download_url || release?.html_url || "");
+        if (latest && url && compareVersions(latest, APP_VERSION) > 0) {
+          setUpdateInfo({ version: latest.replace(/^v/i, ""), url });
+        }
+      } catch {
+        // Sin red o sin releases: la app sigue funcionando igual.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [now, setNow] = useState(Date.now());
   const [snapshotAt, setSnapshotAt] = useState(Date.now());
   const [feedback, setFeedback] = useState("");
@@ -338,6 +383,19 @@ export default function App() {
           <Text accessibilityLiveRegion="polite" style={styles.copy}>
             {feedback}
           </Text>
+        )}
+        {!!updateInfo && (
+          <View style={styles.updateBanner}>
+            <Text style={styles.updateTitle}>Nueva versión disponible: {updateInfo.version}</Text>
+            <Text style={styles.updateCopy}>
+              Estás en {APP_VERSION}. Descarga la APK y reinstálala encima.
+            </Text>
+            {button("Descargar actualización", () => {
+              void Linking.openURL(updateInfo.url).catch(() =>
+                setStatus("No se pudo abrir la descarga.")
+              );
+            })}
+          </View>
         )}
         {!session.paired ? (
           <View style={styles.card}>
@@ -1143,5 +1201,15 @@ const styles = StyleSheet.create({
   dpadSelectButton: { backgroundColor: "#F3F2F7", borderColor: "#F3F2F7" },
   dpadSymbol: { color: "#EDEDF2", fontSize: 28, fontWeight: "500" },
   dpadSelectText: { color: "#111218", fontSize: 15, fontWeight: "900", letterSpacing: 0.7 },
-  copy: { color: "#AEB1BC", fontSize: 14, lineHeight: 21 }
+  copy: { color: "#AEB1BC", fontSize: 14, lineHeight: 21 },
+  updateBanner: {
+    backgroundColor: "#173E31",
+    borderWidth: 1,
+    borderColor: "#2C6B55",
+    borderRadius: 18,
+    padding: 16,
+    gap: 10
+  },
+  updateTitle: { color: "#7DE8B6", fontSize: 16, fontWeight: "800" },
+  updateCopy: { color: "#B7D9C9", fontSize: 14, lineHeight: 20 }
 });

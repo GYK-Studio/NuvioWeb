@@ -6959,6 +6959,33 @@ export const PlayerScreen = {
     this.renderStartupErrorOverlay();
   },
 
+  retryStartupPlayback(forceEngine = null) {
+    const playbackUrl = String(this.activePlaybackUrl || "").trim();
+    if (!playbackUrl) {
+      return;
+    }
+    // Manual retry starts clean: drop the failed marks and the auto-recovery
+    // counters so the replay (or the forced engine) gets a full attempt.
+    this.failedPlaybackUrls?.delete?.(playbackUrl);
+    const currentCandidate = this.getCurrentStreamCandidate?.();
+    const currentId = String(currentCandidate?.id || "").trim();
+    if (currentId) {
+      this.failedPlaybackStreamIds?.delete?.(currentId);
+    }
+    this.playbackRecoveryActive = false;
+    this.playbackRecoveryAttempts = 0;
+    this.clearStartupError();
+    this.resetPlaybackEngineValidation();
+    const sourceCandidate =
+      this.getStreamCandidateByUrl(playbackUrl) || this.getCurrentStreamCandidate();
+    void this.playStreamByUrl(playbackUrl, {
+      preservePlaybackState: false,
+      resetSilentAudioState: true,
+      ...(forceEngine ? { forceEngine } : {}),
+      sourceCandidate
+    });
+  },
+
   getPlaybackErrorCodeLabel(mediaErrorCode = 0) {
     const code = Number(mediaErrorCode || 0);
     if (code === 1) return "1 aborted";
@@ -7498,6 +7525,10 @@ export const PlayerScreen = {
     const detailLines = Array.isArray(this.startupErrorDetails)
       ? this.startupErrorDetails.filter(Boolean)
       : [];
+    const alternativeEngine =
+      typeof PlayerController.getAlternativePlaybackEngine === "function"
+        ? PlayerController.getAlternativePlaybackEngine(this.activePlaybackUrl)
+        : null;
     overlay.innerHTML = `
       <div class="player-startup-error-shell">
         <div class="player-startup-error-title">${escapeHtml(t("player_error_title", {}, "Playback Error"))}</div>
@@ -7511,9 +7542,23 @@ export const PlayerScreen = {
         `
             : ""
         }
-        <button class="player-startup-error-button focusable focused" type="button" tabindex="-1" data-player-error-action="back">
-          ${escapeHtml(t("player_go_back", {}, "Go Back"))}
-        </button>
+        <div class="player-startup-error-actions">
+          <button class="player-startup-error-button focusable focused" type="button" tabindex="-1" data-player-error-action="retry">
+            ${escapeHtml(t("player_retry", {}, "Retry"))}
+          </button>
+          ${
+            alternativeEngine
+              ? `
+          <button class="player-startup-error-button focusable" type="button" tabindex="-1" data-player-error-action="engine" data-engine="${escapeHtml(String(alternativeEngine))}">
+            ${escapeHtml(t("player_try_engine", { engine: alternativeEngine }, `Try ${alternativeEngine}`))}
+          </button>
+          `
+              : ""
+          }
+          <button class="player-startup-error-button focusable" type="button" tabindex="-1" data-player-error-action="back">
+            ${escapeHtml(t("player_go_back", {}, "Go Back"))}
+          </button>
+        </div>
       </div>
     `;
     this.uiRefs = {
@@ -10099,6 +10144,12 @@ export const PlayerScreen = {
       this.speedDialogVisible;
     modalBackdrop.classList.toggle("hidden", !hasModal);
     modalBackdrop.classList.toggle("episodes-open", Boolean(this.episodePanelVisible));
+    // Clicking the dimmed backdrop closes the topmost dialog, like Escape does.
+    modalBackdrop.onclick = (event) => {
+      if (event?.target === modalBackdrop) {
+        this.closeTopPlayerDialog();
+      }
+    };
     controlsOverlay?.classList.toggle("modal-blocked", hasModal);
   },
 
@@ -18022,7 +18073,7 @@ export const PlayerScreen = {
     });
 
     const nextMarkup = `
-      <div class="player-dialog-title">${escapeHtml(t("subtitle_dialog_title", {}, "Subtitles"))}</div>
+      <div class="player-dialog-title"><span>${escapeHtml(t("subtitle_dialog_title", {}, "Subtitles"))}</span><button type="button" class="player-dialog-close focusable" data-dialog-close="subtitle" aria-label="${escapeAttribute(t("common.close", {}, "Close"))}">&#10005;</button></div>
       ${supportNotice ? `<div class="player-dialog-support-message" role="status">${escapeHtml(supportNotice)}</div>` : ""}
       <div class="player-subtitle-overlay-grid">
         <div class="player-subtitle-rail player-subtitle-language-rail">
@@ -18864,7 +18915,9 @@ export const PlayerScreen = {
         ? "Loading audio tracks..."
         : this.getUnavailableTrackMessage("audio");
       dialog.innerHTML = `
-        <div class="player-dialog-title">${escapeHtml(t("audio_dialog_title", {}, "Audio"))}</div>
+        <div class="player-dialog-title"><span>${escapeHtml(t("audio_dialog_title", {}, "Audio"))}</span><button type="button" class="player-dialog-close focusable" data-dialog-close="audio" aria-label="${escapeAttribute(t("common.close", {}, "Close"))}">&#10005;</button></div>
+        ${supportNotice ? `<div class="player-dialog-support-message" role="status">${escapeHtml(supportNotice)}</div>` : ""}
+        <div class="player-dialog-empty${loading ? " player-dialog-loading" : ""}">
         ${supportNotice ? `<div class="player-dialog-support-message" role="status">${escapeHtml(supportNotice)}</div>` : ""}
         <div class="player-dialog-empty${loading ? " player-dialog-loading" : ""}">
           ${loading ? renderLoadingIndicator() : ""}
@@ -18879,7 +18932,7 @@ export const PlayerScreen = {
 
     this.audioDialogIndex = clamp(this.audioDialogIndex, 0, entries.length - 1);
     dialog.innerHTML = `
-      <div class="player-dialog-title">${escapeHtml(t("audio_dialog_title", {}, "Audio"))}</div>
+      <div class="player-dialog-title"><span>${escapeHtml(t("audio_dialog_title", {}, "Audio"))}</span><button type="button" class="player-dialog-close focusable" data-dialog-close="audio" aria-label="${escapeAttribute(t("common.close", {}, "Close"))}">&#10005;</button></div>
       ${supportNotice ? `<div class="player-dialog-support-message" role="status">${escapeHtml(supportNotice)}</div>` : ""}
       ${hasSupportedEntries ? "" : `<div class="player-audio-support-message" role="status">${escapeHtml(t("player.audio.noSupportedTracks", {}, "No supported audio tracks available"))}</div>`}
       <div class="player-audio-overlay-grid">
@@ -19091,7 +19144,7 @@ export const PlayerScreen = {
     const speedOptions = this.getPlaybackSpeedOptions();
     this.speedDialogIndex = clamp(this.speedDialogIndex, 0, speedOptions.length - 1);
     dialog.innerHTML = `
-      <div class="player-dialog-title">${escapeHtml(t("player_playback_speed", {}, "Playback speed"))}</div>
+      <div class="player-dialog-title"><span>${escapeHtml(t("player_playback_speed", {}, "Playback speed"))}</span><button type="button" class="player-dialog-close focusable" data-dialog-close="speed" aria-label="${escapeAttribute(t("common.close", {}, "Close"))}">&#10005;</button></div>
       <div class="player-dialog-list">
         ${speedOptions
           .map(
@@ -19289,6 +19342,46 @@ export const PlayerScreen = {
     this.renderSourcesPanel();
     this.updateModalBackdrop();
     this.resetControlsAutoHide();
+  },
+
+  closeTopPlayerDialog() {
+    if (this.episodePanelVisible) {
+      this.hideEpisodePanel();
+      return true;
+    }
+    if (this.sourcesPanelVisible) {
+      this.closeSourcesPanel();
+      return true;
+    }
+    if (this.speedDialogVisible) {
+      this.closeSpeedDialog();
+      return true;
+    }
+    if (this.audioDialogVisible) {
+      this.closeAudioDialog();
+      return true;
+    }
+    if (this.subtitleDialogVisible) {
+      this.closeSubtitleDialog();
+      return true;
+    }
+    return false;
+  },
+
+  closePlayerDialog(which = "top") {
+    if (which === "subtitle") {
+      this.closeSubtitleDialog();
+    } else if (which === "audio") {
+      this.closeAudioDialog();
+    } else if (which === "speed") {
+      this.closeSpeedDialog();
+    } else if (which === "sources") {
+      this.closeSourcesPanel();
+    } else if (which === "episodes") {
+      this.hideEpisodePanel();
+    } else {
+      this.closeTopPlayerDialog();
+    }
   },
 
   async reloadSources({ forceRefresh = false } = {}) {
@@ -21261,14 +21354,28 @@ export const PlayerScreen = {
     }
     this.syncPointerFocus(target);
 
+    const dialogClose = target.closest?.("[data-dialog-close]");
+    if (dialogClose) {
+      this.closePlayerDialog(String(dialogClose.dataset.dialogClose || "top"));
+      this.resetControlsAutoHide();
+      return true;
+    }
+
     if (this.isPostPlayVisible() && this.handlePostPlayPointer(target, event)) {
       return true;
     }
 
     const errorAction = target.closest?.("[data-player-error-action]");
     if (errorAction && this.isStartupErrorVisible()) {
-      if (String(errorAction.dataset.playerErrorAction || "") === "back") {
+      const actionName = String(errorAction.dataset.playerErrorAction || "");
+      if (actionName === "back") {
         this.navigateBackToStreamScreen();
+        return true;
+      }
+      if (actionName === "retry" || actionName === "engine") {
+        this.retryStartupPlayback(
+          actionName === "engine" ? String(errorAction.dataset.engine || "") : null
+        );
         return true;
       }
       return false;
@@ -21546,7 +21653,17 @@ export const PlayerScreen = {
       event?.preventDefault?.();
       event?.stopPropagation?.();
       if (isBackKey || isSelectKeyCode(keyCode) || keyCode === 66) {
-        if (!this.navigateBackToStreamScreen()) {
+        const focusedErrorAction = this.container
+          ?.querySelector("#playerStartupErrorOverlay .player-startup-error-button.focused")
+          ?.getAttribute("data-player-error-action");
+        if (!isBackKey && focusedErrorAction === "retry") {
+          this.retryStartupPlayback();
+        } else if (!isBackKey && focusedErrorAction === "engine") {
+          const focusedButton = this.container?.querySelector(
+            "#playerStartupErrorOverlay .player-startup-error-button.focused"
+          );
+          this.retryStartupPlayback(String(focusedButton?.dataset?.engine || "") || null);
+        } else if (!this.navigateBackToStreamScreen()) {
           Router.back();
         }
       }
