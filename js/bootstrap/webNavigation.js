@@ -4,6 +4,20 @@ import { Router } from "../ui/navigation/router.js";
 // mouse and touch users without changing route history or account state.
 export function installWebNavigation() {
   const app = document.getElementById("app");
+  document.addEventListener(
+    "wheel",
+    (event) => {
+      const menu = event.target?.closest?.(".library-picker-menu");
+      if (!menu || menu.scrollHeight <= menu.clientHeight || !Number(event.deltaY)) return;
+      const before = menu.scrollTop;
+      menu.scrollTop += event.deltaY;
+      if (menu.scrollTop !== before) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    },
+    { passive: false }
+  );
   const header = document.createElement("header");
   header.className = "web-header";
   header.hidden = true;

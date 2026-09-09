@@ -314,24 +314,26 @@ class AddonRepository {
   }
 
   getInstalledAddonUrls() {
-    const urls = this.readProfileScopedValue(
+    const storedUrls = this.readProfileScopedValue(
       ADDON_URLS_KEY,
       (value) => this.normalizeAddonUrlList(value),
       DEFAULT_ADDON_URLS
     );
-    const profileId = this.getActiveStorageProfileId();
-    const migrations = LocalStore.get(COMMUNITY_ADDONS_MIGRATION_KEY, {});
-    if (migrations?.[profileId] === true) {
-      return urls;
-    }
-    const merged = Array.from(new Set([...urls, ...COMMUNITY_ADDON_URLS]));
-    LocalStore.set(COMMUNITY_ADDONS_MIGRATION_KEY, { ...migrations, [profileId]: true });
-    this.writeProfileScopedValue(
-      ADDON_URLS_KEY,
-      (value) => this.normalizeAddonUrlList(value),
-      merged
+    const urls = storedUrls.filter(
+      (url) => !COMMUNITY_ADDON_URLS.includes(this.canonicalizeUrl(url))
     );
-    return merged;
+    if (urls.length !== storedUrls.length) {
+      const profileId = this.getActiveStorageProfileId();
+      const migrations = LocalStore.get(COMMUNITY_ADDONS_MIGRATION_KEY, {});
+      this.writeProfileScopedValue(
+        ADDON_URLS_KEY,
+        (value) => this.normalizeAddonUrlList(value),
+        urls,
+        profileId
+      );
+      LocalStore.set(COMMUNITY_ADDONS_MIGRATION_KEY, { ...migrations, [profileId]: true });
+    }
+    return urls;
   }
 
   getAddonEnabledStates() {

@@ -131,10 +131,13 @@
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 24px max(16px, var(--web-page-gutter, 24px));
 }
 .web-login-form {
   width: min(100%, 440px);
+  box-sizing: border-box;
   display: grid;
   gap: 14px;
   padding: clamp(24px, 5vw, 40px);
@@ -192,6 +195,23 @@
   text-align: center;
   font-size: 14px;
   padding: 10px 0;
+}
+
+@media (max-width: 520px) {
+  .web-login {
+    min-height: 100svh;
+    padding: 16px;
+    place-items: center;
+  }
+  .web-login-form {
+    width: 100%;
+    max-width: 440px;
+    padding: 24px 20px;
+    border-radius: 16px;
+  }
+  .web-login h1 {
+    font-size: 2rem;
+  }
 }
 
 .settings-shell .settings-workspace,

@@ -327,6 +327,23 @@ export const LibraryScreen = {
     }
     this.container.__libraryEventsBound = true;
 
+    this.container.addEventListener(
+      "wheel",
+      (event) => {
+        const menu = event.target?.closest?.(".library-picker-menu");
+        if (!menu || menu.scrollHeight <= menu.clientHeight || !Number(event.deltaY)) {
+          return;
+        }
+        const before = menu.scrollTop;
+        menu.scrollTop += event.deltaY;
+        if (menu.scrollTop !== before) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      },
+      { passive: false }
+    );
+
     this.container.addEventListener("click", async (event) => {
       const target = event.target?.closest?.(
         ".focusable, .library-dialog-input, .library-dialog-textarea"

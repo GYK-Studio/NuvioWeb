@@ -32,6 +32,16 @@ import { emitPluginDiagnosticEvent } from "../diagnostics/pluginDiagnostics.js";
 
 const singleFlight = new PluginExecutionFlight();
 const queuedExecutions = [];
+const COMMUNITY_PLUGIN_REPOSITORIES = [
+  {
+    url: "https://raw.githubusercontent.com/adrianjael/pluggin-latino/refs/heads/main",
+    name: "Nuvio Latino"
+  },
+  {
+    url: "https://raw.githubusercontent.com/KennethJYS/Nuvio-Providers-Latino/refs/heads/main",
+    name: "Latino Providers"
+  }
+];
 let runningExecutions = 0;
 let runtimeReadyPromise = null;
 let reconcileTail = Promise.resolve();
@@ -53,7 +63,49 @@ function withReconcileLock(task) {
 }
 
 function currentState(profileId = null) {
-  return normalizePluginState(profileId == null ? PluginStore.get() : PluginStore.get(profileId));
+  const targetProfileId = profileId == null ? undefined : profileId;
+  const state = normalizePluginState(
+    targetProfileId == null ? PluginStore.get() : PluginStore.get(targetProfileId)
+  );
+  const repositories = state.repositories.map((repository) => {
+    const isKnownCommunityRepository = COMMUNITY_PLUGIN_REPOSITORIES.some(
+      (community) =>
+        repositoryIdentity(canonicalizePluginUrl(community.url)) ===
+        repositoryIdentity(repository.url)
+    );
+    return isKnownCommunityRepository &&
+      normalizePluginRepositoryType(repository.type) === PLUGIN_REPOSITORY_TYPES.UNKNOWN
+      ? {
+          ...repository,
+          type: PLUGIN_REPOSITORY_TYPES.NUVIO_JS,
+          repoType: PLUGIN_REPOSITORY_TYPES.NUVIO_JS,
+          repoTypeDeclared: true,
+          enabled: repository.enabled !== false
+        }
+      : repository;
+  });
+  let changed = repositories.some(
+    (repository, index) => JSON.stringify(repository) !== JSON.stringify(state.repositories[index])
+  );
+  COMMUNITY_PLUGIN_REPOSITORIES.forEach((community) => {
+    const url = canonicalizePluginUrl(community.url);
+    if (repositories.some((entry) => repositoryIdentity(entry.url) === repositoryIdentity(url))) {
+      return;
+    }
+    repositories.push(
+      createRemoteStub({
+        url,
+        name: community.name,
+        repoType: PLUGIN_REPOSITORY_TYPES.NUVIO_JS,
+        enabled: true
+      })
+    );
+    changed = true;
+  });
+  if (!changed) return state;
+  const next = normalizePluginState({ ...state, repositories });
+  PluginStore.replace(next, targetProfileId);
+  return next;
 }
 
 function diagnosticError(error) {
@@ -572,15 +624,9 @@ async function classifyRemoteRepository(remote, quota) {
   }
   // A future/unknown explicit enum is not safe to reinterpret from its URL or
   // document. Preserve it as an opaque row until a client understands it.
-  if (hasExplicitType && explicitType === PLUGIN_REPOSITORY_TYPES.UNKNOWN) {
-    const result = { type: PLUGIN_REPOSITORY_TYPES.UNKNOWN, url };
-    logPluginDiagnostic("repository classified", {
-      stage: "explicit-unknown-type",
-      input: diagnosticRepository(remote),
-      result: { type: result.type, url: diagnosticUrl(result.url) }
-    });
-    return result;
-  }
+  // Older synced rows may have been persisted as UNKNOWN before the manifest
+  // detector ran. Re-inspect the document so valid Nuvio manifests can recover
+  // without requiring users to remove and re-add the repository.
   if (explicitType !== PLUGIN_REPOSITORY_TYPES.UNKNOWN) {
     if (
       [PLUGIN_REPOSITORY_TYPES.NUVIO_JS, PLUGIN_REPOSITORY_TYPES.EXTERNAL_DEX].includes(

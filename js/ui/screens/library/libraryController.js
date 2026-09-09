@@ -24,6 +24,7 @@ import { LibraryPreferencesStore } from "../../../data/local/libraryPreferencesS
 const ALL_KEY = "__all__";
 const MESSAGE_CLEAR_MS = 2400;
 const SYNC_LOADING_MIN_MS = 700;
+const LIBRARY_LOAD_TIMEOUT_MS = 10000;
 const LEADING_ARTICLE_REGEX = /^(the|an|a)\s+/i;
 export const LIBRARY_VIEW_MODE = { SAVED: "saved", CLOUD: "cloud" };
 export const LIBRARY_WATCHED_FILTER = {
@@ -193,6 +194,14 @@ function t(key, params = {}, fallback = key) {
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function withTimeout(promise, timeoutMs, message) {
+  let timeoutId = 0;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
 function nextAnimationFrame() {
@@ -585,11 +594,31 @@ export class LibraryController {
     if (this.disposed || reloadToken !== this.reloadToken) {
       return;
     }
-    const [listTabs, allItems, watchedItems] = await Promise.all([
-      libraryRepository.getListTabs({ sourceMode }),
-      libraryRepository.getItems({ hydrate: false, sourceMode }),
-      watchedItemsRepository.getAll(5000).catch(() => [])
-    ]);
+    let listTabs;
+    let allItems;
+    let watchedItems;
+    try {
+      [listTabs, allItems, watchedItems] = await withTimeout(
+        Promise.all([
+          libraryRepository.getListTabs({ sourceMode }),
+          libraryRepository.getItems({ hydrate: false, sourceMode }),
+          watchedItemsRepository.getAll(5000).catch(() => [])
+        ]),
+        LIBRARY_LOAD_TIMEOUT_MS,
+        "Library loading timed out"
+      );
+    } catch (error) {
+      if (this.disposed || reloadToken !== this.reloadToken) return;
+      console.warn("Library initial data failed", error);
+      this.setState({
+        allItems: [],
+        listTabs: [],
+        isLoading: false,
+        isSyncing: false,
+        errorMessage: "No se pudo cargar la biblioteca. Inténtalo de nuevo."
+      });
+      return;
+    }
     if (this.disposed || reloadToken !== this.reloadToken) {
       return;
     }

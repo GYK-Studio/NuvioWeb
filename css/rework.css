@@ -536,6 +536,20 @@ body {
   background: rgb(246 196 83 / 0.14);
   color: var(--web-accent);
 }
+#app .library-picker-menu {
+  max-height: min(320px, 48vh);
+  padding: 4px;
+  border-radius: 10px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+#app .library-picker-option {
+  min-height: 44px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
 
 #app .player-source-card {
   min-height: 76px;
