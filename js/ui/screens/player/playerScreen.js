@@ -3082,6 +3082,7 @@ export const PlayerScreen = {
     this.loadingLogoFillTarget = 0;
     this.loadingLogoFillFrame = null;
     this.loadingTorrentStatus = "";
+    this.loadingPlaybackStatus = "";
     this.torrentOverlayData = null;
     this.loadingProgressRefreshInFlight = false;
     this.seekLoading = false;
@@ -7691,7 +7692,7 @@ export const PlayerScreen = {
     const loadingStatus = this.uiRefs?.loadingStatus;
     const bufferingStatus = this.uiRefs?.bufferingStatus;
     const subtitle = this.uiRefs?.loadingSubtitle;
-    const statusText = String(this.loadingTorrentStatus || "").trim();
+    const statusText = String(this.loadingPlaybackStatus || this.loadingTorrentStatus || "").trim();
     const hasStatus =
       Boolean(statusText) && PlayerSettingsStore.get().showPlayerLoadingStatus !== false;
     const hasSubtitle = Boolean(subtitle?.textContent?.trim());
@@ -11048,6 +11049,8 @@ export const PlayerScreen = {
     };
 
     const onPlaying = () => {
+      this.loadingPlaybackStatus = "";
+      this.syncLoadingOverlayStatus();
       if (this.isStartupErrorVisible()) {
         if (!Environment.isWebOS()) {
           return;
@@ -11518,8 +11521,13 @@ export const PlayerScreen = {
           }
           this.lastPlaybackErrorAt = 0;
           this.loadingVisible = true;
+          this.loadingPlaybackStatus =
+            Number(eventDetail.hlsResponseCode || 0) === 403
+              ? "Fuente no disponible (403) · probando otra"
+              : "Fuente no disponible · probando otra";
           this.paused = false;
           this.sourcesError = null;
+          this.syncLoadingOverlayStatus();
           this.updateLoadingVisibility();
           console.warn("Playback source failed during startup; trying next source", {
             failedUrl: this.activePlaybackUrl,
