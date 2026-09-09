@@ -27,19 +27,9 @@ import {
   directDebridPreparationKey
 } from "../../../core/debrid/directDebridStreamPreparer.js";
 import { DebridStreamPresentation } from "../../../core/debrid/directDebridStreamPresentation.js";
-import {
-  browserStreamResolver as WebOsEngineFsResolver,
-  browserStreamResolver as TizenStreamingServerResolver,
-  browserNativePlayerService as WebOsLunaService
-} from "../../../platform/browserServices.js";
 import { DebridSettingsStore } from "../../../data/local/debridSettingsStore.js";
 import { StreamBadgeSettingsStore } from "../../../data/local/streamBadgeSettingsStore.js";
 import {
-  ensureWebOsImageProxyReady,
-  onWebOsImageProxyReady
-} from "../../../core/media/imageProxy.js";
-import {
-  clearFailedAddonLogos,
   getCachedAddonLogoDisplayUrl,
   hasFailedAddonLogo,
   normalizeAddonLogoLookup,
@@ -60,7 +50,6 @@ import {
   normalizeStreamBadgeChipColor,
   normalizeStreamBadgeRules
 } from "../../../core/streams/streamBadgeRules.js";
-import { normalizeMathematicalAlphanumericSymbols } from "../../../core/streams/streamDisplayText.js";
 import { renderLoadingIndicator } from "../../components/loadingIndicator.js";
 import {
   buildStreamVirtualModel,
@@ -81,13 +70,6 @@ const STREAM_DPAD_REPEAT_THROTTLE_MS = 112;
 // focus move O(1) in constrained TV/browser runtimes, where measuring every
 // card forced a full list reflow on each keypress in long source lists.
 const STREAM_BADGE_WINDOW_ROWS = 24;
-const WEBOS_NATIVE_PLAYER_APP_IDS = [
-  "com.webos.app.mediadiscovery",
-  "com.webos.app.photovideo",
-  "com.webos.app.smartshare"
-];
-const WEBOS_DLNA_PROTOCOL_SUFFIX =
-  "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000";
 function t(key, params = {}, fallback = key) {
   return I18n.t(key, params, { fallback });
 }
@@ -110,79 +92,6 @@ function escapeHtml(value = "") {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
-}
-
-function isLaunchableExternalMediaUrl(value = "") {
-  try {
-    const parsed = new URL(String(value || "").trim());
-    return (
-      parsed.protocol === "http:" || parsed.protocol === "https:" || parsed.protocol === "file:"
-    );
-  } catch (_) {
-    return false;
-  }
-}
-
-function isLocalOnlyPlaybackUrl(value = "") {
-  try {
-    const parsed = new URL(String(value || "").trim());
-    if (parsed.protocol === "file:") {
-      return false;
-    }
-    return (
-      parsed.hostname === "127.0.0.1" ||
-      parsed.hostname === "localhost" ||
-      parsed.hostname === "::1"
-    );
-  } catch (_) {
-    return false;
-  }
-}
-
-function buildWebOsDlnaProtocolInfo(mimeType = "video/mp4") {
-  const normalized = String(mimeType || "video/mp4").trim() || "video/mp4";
-  return `http-get:*:${normalized}:${WEBOS_DLNA_PROTOCOL_SUFFIX}`;
-}
-
-function normalizeExternalLaunchFileName(value = "") {
-  const trimmed = String(value || "").trim();
-  return (
-    trimmed
-      .replace(/[\\/:*?"<>|]+/g, " ")
-      .replace(/\s+/g, " ")
-      .trim() || "Nuvio"
-  );
-}
-
-function guessMimeTypeFromUrl(url = "") {
-  const value = String(url || "")
-    .trim()
-    .toLowerCase();
-  if (!value) {
-    return null;
-  }
-  const extensionMatch = value.match(
-    /\.(m3u8|mpd|mp4|m4v|mov|mkv|webm|ts|m2ts|mp3|aac|flac)(?=($|[/?#&]))/i
-  );
-  if (!extensionMatch) {
-    return null;
-  }
-  const extension = String(extensionMatch[1] || "").toLowerCase();
-  const mimeMap = {
-    aac: "audio/aac",
-    flac: "audio/flac",
-    m2ts: "video/mp2t",
-    m3u8: "application/vnd.apple.mpegurl",
-    m4v: "video/mp4",
-    mkv: "video/x-matroska",
-    mov: "video/quicktime",
-    mp3: "audio/mpeg",
-    mp4: "video/mp4",
-    mpd: "application/dash+xml",
-    ts: "video/mp2t",
-    webm: "video/webm"
-  };
-  return mimeMap[extension] || null;
 }
 
 function getDpadDirection(event) {
@@ -402,11 +311,7 @@ function flattenStreams(streamResult) {
         sourceType: stream.sourceType || stream.mimeType || stream.type || stream.source || "",
         raw: stream
       };
-      if (
-        DirectDebridResolver.shouldListStream(entry) ||
-        WebOsEngineFsResolver.canResolveStream(entry) ||
-        TizenStreamingServerResolver.canResolveStream(entry)
-      ) {
+      if (DirectDebridResolver.shouldListStream(entry)) {
         flattened.push(entry);
       }
     });
@@ -453,19 +358,7 @@ function getAddonBadgeLabel(name = "") {
   return letters || cleaned.charAt(0).toUpperCase();
 }
 
-async function ensureAddonLogoImageProxyReady() {
-  if (!Environment.isWebOS()) {
-    return false;
-  }
-  try {
-    return await ensureWebOsImageProxyReady();
-  } catch (_) {
-    return false;
-  }
-}
-
 export async function preloadStreamBadgeImages(settings = StreamBadgeSettingsStore.snapshot()) {
-  await ensureAddonLogoImageProxyReady();
   const rules = normalizeStreamBadgeRules(settings?.rules);
   const urls = new Set();
   rules.imports.forEach((importItem) => {
@@ -505,9 +398,7 @@ function getStreamHeadline(stream = {}) {
     return stream.addonName || "Unknown source";
   }
   const firstLine = String(primary).split(/\r?\n/)[0].trim();
-  const displayLine = Environment.isWebOS()
-    ? normalizeMathematicalAlphanumericSymbols(firstLine)
-    : firstLine;
+  const displayLine = firstLine;
   return displayLine || stream.addonName || "Unknown source";
 }
 
@@ -561,9 +452,6 @@ function renderImageBadgeChip(badge = {}) {
   let displayImageUrl = getCachedAddonLogoDisplayUrl(imageUrl);
   if (imageUrl && !displayImageUrl && !hasFailedAddonLogo(imageUrl)) {
     requestAddonLogo(imageUrl);
-    if (Environment.isWebOS()) {
-      displayImageUrl = getCachedAddonLogoDisplayUrl(imageUrl);
-    }
   }
   const backgroundColor = normalizeStreamBadgeChipColor(badge.tagColor);
   const outlineColor = normalizeStreamBadgeChipColor(badge.borderColor);
@@ -572,7 +460,7 @@ function renderImageBadgeChip(badge = {}) {
     String(badge.tagStyle || "")
       .trim()
       .toLowerCase() === "filled";
-  const fallbackImageUrl = Environment.isWebOS() ? "" : imageUrl;
+  const fallbackImageUrl = imageUrl;
   const safeImageUrl = displayImageUrl || fallbackImageUrl;
   if (!safeImageUrl) {
     return "";
@@ -775,7 +663,7 @@ export const StreamScreen = {
         return marginBottom;
       }
     }
-    this.streamVirtualRowGap = this.isLegacyWebOsRoute() ? 10 : 18;
+    this.streamVirtualRowGap = 18;
     return this.streamVirtualRowGap;
   },
 
@@ -1415,18 +1303,6 @@ export const StreamScreen = {
     this.webOsNativePlayerAppId = "";
     this.nativePlayerPendingStreamId = "";
     this.nativePlayerRequestToken = 0;
-    if (this.releaseImageProxyReadyListener) {
-      this.releaseImageProxyReadyListener();
-      this.releaseImageProxyReadyListener = null;
-    }
-    if (Environment.isWebOS()) {
-      this.releaseImageProxyReadyListener = onWebOsImageProxyReady(() => {
-        clearFailedAddonLogos();
-        this.requestRender({ delayMs: 0 });
-      });
-      void ensureWebOsImageProxyReady();
-      void this.detectWebOsNativePlayerApp();
-    }
 
     // Match Android TV: restore the selected source only when returning from
     // playback. A fresh open of the same item must start from the first source
@@ -1460,7 +1336,6 @@ export const StreamScreen = {
 
     const showAddonLogo = StreamBadgeSettingsStore.snapshot().showAddonLogo === true;
     if (restored && this.streams.length && showAddonLogo) {
-      await ensureAddonLogoImageProxyReady();
       if (token !== this.loadToken || Router.getCurrent() !== "stream") {
         return;
       }
@@ -1528,7 +1403,6 @@ export const StreamScreen = {
     const badgeSettings = StreamBadgeSettingsStore.snapshot();
     const showAddonLogo = badgeSettings.showAddonLogo === true;
     if (showAddonLogo) {
-      await ensureAddonLogoImageProxyReady();
       if (token !== this.loadToken) {
         return;
       }
@@ -2338,21 +2212,10 @@ export const StreamScreen = {
     return this.focusElement(target);
   },
 
-  isLegacyWebOsRoute() {
-    return Boolean(
-      document.documentElement?.classList?.contains("legacy-webos") ||
-      document.body?.classList?.contains("legacy-webos")
-    );
-  },
-
-  shouldUseManualListScroll(listNode) {
-    // The manual transform path is needed only by legacy webOS, matching the
-    // `.legacy-webos` CSS scope and the platform classification in app.js.
-    // Modern webOS and Tizen use the native scroller without touching every row.
-    if (!listNode || !Environment.isWebOS() || !this.isLegacyWebOsRoute()) {
-      return false;
-    }
-    return Number(listNode.scrollHeight || 0) > Number(listNode.clientHeight || 0);
+  shouldUseManualListScroll() {
+    // The manual transform path was only needed by legacy webOS. The web
+    // client always uses the native scroller.
+    return false;
   },
 
   getListScrollTop(listNode) {
@@ -2412,8 +2275,7 @@ export const StreamScreen = {
       return;
     }
 
-    const isModernWebOsNativeScroll = Environment.isWebOS() && !this.isLegacyWebOsRoute();
-    if (!isModernWebOsNativeScroll) {
+    {
       const maxScrollTop = Math.max(
         0,
         Number(listNode.scrollHeight || 0) - Number(listNode.clientHeight || 0)
@@ -2428,27 +2290,10 @@ export const StreamScreen = {
         }
       }
       const applied = Number(listNode.scrollTop || 0);
-      if (
-        this.isLegacyWebOsRoute() &&
-        maxScrollTop > 0 &&
-        normalized > 0 &&
-        Math.abs(applied - normalized) > 2
-      ) {
-        this.applyManualListScroll(listNode, normalized);
-        return;
-      }
       this.listScrollTop = Number(applied || normalized || 0);
       this.requestStreamVirtualSync();
       return;
     }
-
-    // Native scrollers clamp the assignment themselves. Avoid the extra
-    // scrollTo call and layout-forcing readback on long modern-TV lists.
-    const requestedValue = Number(nextScrollTop || 0);
-    const requested = Number.isFinite(requestedValue) ? Math.max(0, requestedValue) : 0;
-    listNode.scrollTop = requested;
-    this.listScrollTop = requested;
-    this.requestStreamVirtualSync();
   },
 
   restoreStreamVirtualScrollPosition(listNode, scrollTop) {
@@ -2613,33 +2458,7 @@ export const StreamScreen = {
   },
 
   async detectWebOsNativePlayerApp() {
-    if (!Environment.isWebOS() || !WebOsLunaService.isAvailable()) {
-      this.webOsNativePlayerAppId = "";
-      return "";
-    }
-    const requestToken = Number(this.nativePlayerRequestToken || 0) + 1;
-    this.nativePlayerRequestToken = requestToken;
-    for (const appId of WEBOS_NATIVE_PLAYER_APP_IDS) {
-      try {
-        const payload = await WebOsLunaService.request("luna://com.webos.applicationManager", {
-          method: "getAppLoadStatus",
-          parameters: { appId }
-        });
-        if (payload?.exist) {
-          if (this.nativePlayerRequestToken === requestToken) {
-            this.webOsNativePlayerAppId = appId;
-            this.requestRender({ delayMs: 0 });
-          }
-          return appId;
-        }
-      } catch (_) {
-        // Continue trying known native-player app ids.
-      }
-    }
-    if (this.nativePlayerRequestToken === requestToken) {
-      this.webOsNativePlayerAppId = "";
-      this.requestRender({ delayMs: 0 });
-    }
+    this.webOsNativePlayerAppId = "";
     return "";
   },
 
@@ -2667,79 +2486,12 @@ export const StreamScreen = {
     }, 2600);
   },
 
-  getStreamRequestHeaders(stream = {}) {
-    const raw = stream?.raw || stream || {};
-    const requestHeaders =
-      raw?.behaviorHints?.proxyHeaders?.request || stream?.behaviorHints?.proxyHeaders?.request;
-    return requestHeaders && typeof requestHeaders === "object" ? { ...requestHeaders } : {};
+  getWebOsNativeLaunchUrl(_stream = {}) {
+    return "";
   },
 
-  resolveStreamMimeType(stream = {}, fallbackUrl = "") {
-    const raw = stream?.raw || stream || {};
-    const candidates = [
-      stream?.mimeType,
-      raw?.mimeType,
-      stream?.sourceType,
-      raw?.sourceType,
-      raw?.type,
-      raw?.source
-    ]
-      .map((value) => String(value || "").trim())
-      .filter(Boolean);
-    const explicit = candidates.find((value) => value.includes("/"));
-    if (explicit) {
-      return explicit;
-    }
-    const alias = String(candidates[0] || "").toLowerCase();
-    const aliasMap = {
-      dash: "application/dash+xml",
-      hls: "application/vnd.apple.mpegurl",
-      m3u8: "application/vnd.apple.mpegurl",
-      m4v: "video/mp4",
-      mkv: "video/x-matroska",
-      mov: "video/quicktime",
-      mp4: "video/mp4",
-      mpd: "application/dash+xml",
-      ts: "video/mp2t",
-      webm: "video/webm"
-    };
-    return aliasMap[alias] || guessMimeTypeFromUrl(fallbackUrl) || "video/mp4";
-  },
-
-  getWebOsNativeLaunchUrl(stream = {}) {
-    const requestHeaders = this.getStreamRequestHeaders(stream);
-    if (Object.keys(requestHeaders).length) {
-      return "";
-    }
-    const candidates = [
-      stream?.engineFs?.publicPlaybackUrl,
-      stream?.raw?.engineFs?.publicPlaybackUrl,
-      stream?.externalUrl,
-      stream?.url,
-      stream?.raw?.externalUrl,
-      stream?.raw?.url
-    ].filter(Boolean);
-    return (
-      candidates.find(
-        (value) => isLaunchableExternalMediaUrl(value) && !isLocalOnlyPlaybackUrl(value)
-      ) || ""
-    );
-  },
-
-  canOfferNativePlayerForStream(stream = {}) {
-    if (!Environment.isWebOS() || !this.webOsNativePlayerAppId) {
-      return false;
-    }
-    if (this.getWebOsNativeLaunchUrl(stream)) {
-      return true;
-    }
-    if (WebOsEngineFsResolver.canResolveStream(stream)) {
-      return true;
-    }
-    return DirectDebridResolver.canResolveStream(stream, {
-      season: this.params?.season ?? null,
-      episode: this.params?.episode ?? null
-    });
+  canOfferNativePlayerForStream(_stream = {}) {
+    return false;
   },
 
   replaceStreamInList(streamId, nextStream = null) {
@@ -2751,136 +2503,16 @@ export const StreamScreen = {
     );
   },
 
-  async resolveStreamForNativePlayer(stream = {}) {
-    const directUrl = this.getWebOsNativeLaunchUrl(stream);
-    if (directUrl) {
-      return { status: "success", stream };
-    }
-    if (WebOsEngineFsResolver.canResolveStream(stream)) {
-      const result = await WebOsEngineFsResolver.resolve(stream, {});
-      if (result?.status === "success" && result.stream) {
-        return result;
-      }
-    }
-    if (
-      DirectDebridResolver.canResolveStream(stream, {
-        season: this.params?.season ?? null,
-        episode: this.params?.episode ?? null
-      })
-    ) {
-      const result = await DirectDebridResolver.resolve(stream, {
-        season: this.params?.season ?? null,
-        episode: this.params?.episode ?? null
-      });
-      if (result?.status === "success" && result.stream) {
-        return result;
-      }
-      return result || { status: "unavailable" };
-    }
+  async resolveStreamForNativePlayer(_stream = {}) {
     return { status: "unavailable" };
   },
 
-  buildWebOsNativePlayerLaunchParameters(stream = {}) {
-    const appId = String(this.webOsNativePlayerAppId || "").trim();
-    const launchUrl = this.getWebOsNativeLaunchUrl(stream);
-    if (!appId || !launchUrl) {
-      return null;
-    }
-    const filename = normalizeExternalLaunchFileName(
-      stream?.behaviorHints?.filename ||
-        stream?.raw?.behaviorHints?.filename ||
-        stream?.title ||
-        stream?.name ||
-        this.params?.itemTitle ||
-        this.params?.playerTitle
-    );
-    const mimeType = this.resolveStreamMimeType(stream, launchUrl);
-    return {
-      id: appId,
-      params: {
-        payload: [
-          {
-            fullPath: launchUrl,
-            artist: "",
-            subtitle: "",
-            dlnaInfo: {
-              flagVal: 4096,
-              cleartextSize: "-1",
-              contentLength: "-1",
-              opVal: 1,
-              protocolInfo: buildWebOsDlnaProtocolInfo(mimeType),
-              duration: 0
-            },
-            mediaType: "VIDEO",
-            thumbnail: "",
-            deviceType: "DMR",
-            album: "",
-            fileName: filename,
-            lastPlayPosition: -1
-          }
-        ]
-      }
-    };
+  buildWebOsNativePlayerLaunchParameters(_stream = {}) {
+    return null;
   },
 
-  async openStreamInNativePlayer(streamId) {
-    if (!Environment.isWebOS() || !this.webOsNativePlayerAppId || !WebOsLunaService.isAvailable()) {
-      return;
-    }
-    if (this.nativePlayerPendingStreamId) {
-      return;
-    }
-    const selected =
-      this.getFilteredStreams().find((stream) => stream.id === streamId) ||
-      this.streams.find((stream) => stream.id === streamId) ||
-      null;
-    if (!selected) {
-      return;
-    }
-
-    this.nativePlayerPendingStreamId = streamId;
-    this.requestRender({ delayMs: 0 });
-    try {
-      const result = await this.resolveStreamForNativePlayer(selected);
-      if (result?.status !== "success" || !result.stream) {
-        this.showStreamToast(
-          t(
-            "player_external_launch_unavailable",
-            {},
-            "This stream cannot be opened in Native Player"
-          )
-        );
-        return;
-      }
-
-      this.replaceStreamInList(streamId, result.stream);
-      const launchParameters = this.buildWebOsNativePlayerLaunchParameters(result.stream);
-      if (!launchParameters) {
-        this.requestRender({ delayMs: 0 });
-        this.showStreamToast(
-          t(
-            "player_external_launch_unavailable",
-            {},
-            "This stream cannot be opened in Native Player"
-          )
-        );
-        return;
-      }
-
-      await WebOsLunaService.request("luna://com.webos.applicationManager", {
-        method: "launch",
-        parameters: launchParameters
-      });
-      this.showStreamToast(
-        t("player_external_launching_media_player", {}, "Opening Native Player")
-      );
-    } catch (error) {
-      console.warn("Failed to open stream in native player", { streamId, error });
-      this.showStreamToast(t("player_external_launch_failed", {}, "Could not open Native Player"));
-    } finally {
-      this.nativePlayerPendingStreamId = "";
-      this.requestRender({ delayMs: 0 });
-    }
+  async openStreamInNativePlayer(_streamId) {
+    return;
   },
 
   buildSourceChipMarkup() {
@@ -3002,9 +2634,6 @@ export const StreamScreen = {
       let displayAddonLogoUrl = cachedAddonLogoUrl || "";
       if (addonLogoUrl && !displayAddonLogoUrl && !hasFailedAddonLogo(addonLogoUrl)) {
         requestAddonLogo(addonLogoUrl, () => this.requestRender({ delayMs: 160 }));
-        if (Environment.isWebOS()) {
-          displayAddonLogoUrl = getCachedAddonLogoDisplayUrl(addonLogoUrl);
-        }
       }
       const addonBadgeLabel = escapeHtml(getAddonBadgeLabel(stream.addonName || ""));
       const performanceConstrained = isPerformanceConstrainedRuntime();
@@ -3291,24 +2920,6 @@ export const StreamScreen = {
       },
       { passive: true }
     );
-    if (Environment.isWebOS()) {
-      list.addEventListener(
-        "wheel",
-        (event) => {
-          const deltaMode = Number(event?.deltaMode || 0);
-          const multiplier = deltaMode === 1 ? 40 : deltaMode === 2 ? list.clientHeight : 1;
-          const deltaY = Number(event?.deltaY || 0) * multiplier;
-          if (!deltaY) {
-            return;
-          }
-          event?.preventDefault?.();
-          this.setListScrollTop(list, this.getListScrollTop(list) + deltaY);
-          this.requestStreamVirtualSync();
-          this.requestStreamBadgeHydration();
-        },
-        { passive: false }
-      );
-    }
   },
 
   requestStreamBadgeHydration() {
@@ -3369,14 +2980,9 @@ export const StreamScreen = {
         // that placeholder-only class once hydrated so its visible wrapping
         // and card geometry remain byte-for-byte CSS-equivalent to the eager
         // rendering path.
-        if (Environment.isTizen()) {
-          placeholder.classList.remove("stream-route-card-badges-lazy");
-        }
         placeholder.dataset.badgesHydrated = "true";
         changed = true;
-        // Keep already-visited Tizen rows hydrated. Removing a wrapped badge row
-        // above the viewport could change list geometry and move the focused card.
-      } else if (!shouldHydrate && hydrated && !Environment.isTizen()) {
+      } else if (!shouldHydrate && hydrated) {
         placeholder.textContent = "";
         placeholder.dataset.badgesHydrated = "false";
         changed = true;
@@ -3760,10 +3366,6 @@ export const StreamScreen = {
     if (this.streamToastTimer) {
       clearTimeout(this.streamToastTimer);
       this.streamToastTimer = null;
-    }
-    if (this.releaseImageProxyReadyListener) {
-      this.releaseImageProxyReadyListener();
-      this.releaseImageProxyReadyListener = null;
     }
     this.renderedMarkup = null;
     this.renderedStreamListStable = false;

@@ -7,12 +7,6 @@ export const PLUGIN_REPOSITORY_TYPES = Object.freeze({
   UNKNOWN: "UNKNOWN"
 });
 
-export const PLUGIN_PLATFORM_IDS = Object.freeze({
-  WEB: "web",
-  TIZEN: "tizen",
-  WEBOS: "webos"
-});
-
 export const MAX_PLUGIN_REPOSITORIES = 256;
 export const MAX_PLUGIN_SCRAPERS = 512;
 export const MAX_MANIFEST_SCRAPERS = 128;

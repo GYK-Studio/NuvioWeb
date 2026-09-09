@@ -175,31 +175,6 @@ export function resolveAspectContentRect(viewportWidth, viewportHeight, videoAsp
   };
 }
 
-export function resolveTizenDisplayMethod(mode, viewAspect, videoAspect) {
-  const normalizedMode = normalizeAspectMode(mode);
-  const safeViewAspect = positiveNumber(viewAspect);
-  const safeVideoAspect = positiveNumber(videoAspect);
-  if (normalizedMode === "FULL_SCREEN" || normalizedMode === "STRETCH") {
-    return "PLAYER_DISPLAY_MODE_FULL_SCREEN";
-  }
-
-  if (normalizedMode === "VERTICAL_STRETCH") {
-    return safeVideoAspect && safeViewAspect && safeVideoAspect > safeViewAspect
-      ? "PLAYER_DISPLAY_MODE_FULL_SCREEN"
-      : "PLAYER_DISPLAY_MODE_LETTER_BOX";
-  }
-
-  if (normalizedMode === "HORIZONTAL_STRETCH") {
-    return safeVideoAspect && safeViewAspect && safeVideoAspect < safeViewAspect
-      ? "PLAYER_DISPLAY_MODE_FULL_SCREEN"
-      : "PLAYER_DISPLAY_MODE_LETTER_BOX";
-  }
-
-  // AVPlay has no native zoom primitive. Letter-boxing is the closest
-  // aspect-preserving fallback for Original and the two zoom modes.
-  return "PLAYER_DISPLAY_MODE_LETTER_BOX";
-}
-
 export function resolveAspectRender(mode, viewportWidth, viewportHeight, videoAspect) {
   const contentRect = resolveAspectContentRect(viewportWidth, viewportHeight, videoAspect);
   const viewAspect =
@@ -211,7 +186,6 @@ export function resolveAspectRender(mode, viewportWidth, viewportHeight, videoAs
   return {
     ...contentRect,
     ...scale,
-    viewAspect,
-    displayMethod: resolveTizenDisplayMethod(mode, viewAspect, videoAspect)
+    viewAspect
   };
 }

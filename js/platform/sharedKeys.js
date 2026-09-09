@@ -72,29 +72,13 @@ function isEditableTarget(target) {
   );
 }
 
-function isSimulator() {
-  const ua = String(globalThis.navigator?.userAgent || "").toLowerCase();
-  return ua.includes("simulator");
-}
-
-export function shouldUseRotatedMapping() {
-  return isSimulator();
-}
-
 export function isFastHorizontalNavigationEnabled() {
   return Boolean(LayoutPreferences.get().fastHorizontalNavigationEnabled);
 }
 
 export function normalizeDirectionalKeyCode(code) {
-  const rotatedMap = {
-    37: 38,
-    38: 37,
-    39: 40,
-    40: 39
-  };
-  if (shouldUseRotatedMapping() && rotatedMap[code]) {
-    return rotatedMap[code];
-  }
+  // Direction rotation only applied to TV simulators. The web client always
+  // uses the physical direction.
   return code;
 }
 
