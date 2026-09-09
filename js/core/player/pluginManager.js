@@ -28,6 +28,7 @@ import {
 import { PLUGIN_QUOTAS } from "./pluginPolicy.js";
 import { validatePluginUrl } from "./pluginSecurity.js";
 import { I18n } from "../../i18n/index.js";
+import { LocalStore } from "../../core/storage/localStore.js";
 import { emitPluginDiagnosticEvent } from "../diagnostics/pluginDiagnostics.js";
 
 const singleFlight = new PluginExecutionFlight();
@@ -48,6 +49,47 @@ const COMMUNITY_PLUGIN_REPOSITORIES = [
 ];
 let communityHydrationInFlight = null;
 const communityHydrationAttempted = new Set();
+const DISMISSED_COMMUNITY_REPOSITORIES_KEY = "pluginDismissedCommunityRepos";
+
+function dismissedCommunityIdentities() {
+  const raw = LocalStore.get(DISMISSED_COMMUNITY_REPOSITORIES_KEY, []);
+  const values = Array.isArray(raw) ? raw : [];
+  return new Set(
+    values
+      .map((value) =>
+        String(value || "")
+          .trim()
+          .toLowerCase()
+      )
+      .filter(Boolean)
+  );
+}
+
+function isCommunityRepositoryUrl(url) {
+  const identity = repositoryIdentity(url);
+  if (!identity) return false;
+  return COMMUNITY_PLUGIN_REPOSITORIES.some(
+    (community) => repositoryIdentity(community.url) === identity
+  );
+}
+
+function dismissCommunityRepository(url) {
+  const identity = repositoryIdentity(url);
+  if (!identity || !isCommunityRepositoryUrl(url)) return;
+  const dismissed = dismissedCommunityIdentities();
+  if (dismissed.has(identity)) return;
+  dismissed.add(identity);
+  LocalStore.set(DISMISSED_COMMUNITY_REPOSITORIES_KEY, Array.from(dismissed));
+}
+
+function undismissCommunityRepository(url) {
+  const identity = repositoryIdentity(url);
+  if (!identity) return;
+  const dismissed = dismissedCommunityIdentities();
+  if (!dismissed.has(identity)) return;
+  dismissed.delete(identity);
+  LocalStore.set(DISMISSED_COMMUNITY_REPOSITORIES_KEY, Array.from(dismissed));
+}
 let runningExecutions = 0;
 let runtimeReadyPromise = null;
 let reconcileTail = Promise.resolve();
@@ -70,6 +112,7 @@ function withReconcileLock(task) {
 
 function currentState(profileId = null) {
   const targetProfileId = profileId == null ? undefined : profileId;
+  const dismissed = dismissedCommunityIdentities();
   const state = normalizePluginState(
     targetProfileId == null ? PluginStore.get() : PluginStore.get(targetProfileId)
   );
@@ -95,6 +138,9 @@ function currentState(profileId = null) {
   );
   COMMUNITY_PLUGIN_REPOSITORIES.forEach((community) => {
     const url = canonicalizePluginUrl(community.url);
+    if (dismissed.has(repositoryIdentity(url))) {
+      return;
+    }
     if (repositories.some((entry) => repositoryIdentity(entry.url) === repositoryIdentity(url))) {
       return;
     }
@@ -108,6 +154,15 @@ function currentState(profileId = null) {
     );
     changed = true;
   });
+  const filtered = repositories.filter((entry) => {
+    if (!isCommunityRepositoryUrl(entry.url)) return true;
+    return !dismissed.has(repositoryIdentity(entry.url));
+  });
+  if (filtered.length !== repositories.length) {
+    repositories.length = 0;
+    repositories.push(...filtered);
+    changed = true;
+  }
   if (!changed) return state;
   const next = normalizePluginState({ ...state, repositories });
   PluginStore.replace(next, targetProfileId);
@@ -1322,6 +1377,10 @@ export const PluginManager = {
       throw new Error(`Failed to resolve short code: ${rawInput}`);
     }
     if (!rawUrl) throw new Error("Repository URL is empty");
+    // Re-adding a previously dismissed community repository clears the
+    // dismissal so the row stays after the next state read.
+    undismissCommunityRepository(rawUrl);
+    undismissCommunityRepository(canonicalizePluginUrl(rawUrl, { manifest: true }));
     if (/\.cs3(?:$|[?#])/i.test(rawUrl)) {
       const urlValidation = validatePluginUrl(rawUrl);
       if (!urlValidation.ok) throw new Error(urlValidation.reason);
@@ -1593,6 +1652,13 @@ export const PluginManager = {
     const state = currentState(targetProfileId);
     const repository = state.repositories.find((entry) => entry.id === repositoryId);
     if (!repository || repository.type === PLUGIN_REPOSITORY_TYPES.UNKNOWN) return false;
+    // Community repositories are auto-injected by currentState(); without a
+    // persistent dismissal the row would reappear on the next read, making
+    // "Remove repository" look broken. Re-adding via the input clears it.
+    if (isCommunityRepositoryUrl(repository.url)) {
+      dismissCommunityRepository(repository.url);
+      communityHydrationAttempted.add(repository.id);
+    }
     const removedCacheIds = new Set();
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const current = currentState(targetProfileId);
