@@ -12,14 +12,12 @@ import { MODERN_HOME_CONSTANTS } from "../home/modernHomeLayout.js";
 import { allowDpadRepeat, resetDpadRepeat } from "../../navigation/dpadRepeatThrottle.js";
 import {
   activateLegacySidebarAction,
-  bindRootSidebarEvents,
   focusWithoutAutoScroll,
   getRootSidebarNodes,
   getRootSidebarSelectedNode,
   getSidebarProfileState,
   isSelectedSidebarAction,
   isRootSidebarNode,
-  renderRootSidebar,
   setModernSidebarExpanded,
   setModernSidebarPillIconOnly,
   setLegacySidebarExpanded
@@ -538,16 +536,16 @@ export const SearchScreen = {
 
   renderLoading() {
     this.container.innerHTML = `
-      <div class="home-shell search-screen-shell${this.searchRouteEnterPending ? " search-route-enter" : ""}">
-        ${renderRootSidebar({
-          selectedRoute: "search",
-          profile: this.sidebarProfile,
-          layout: this.layoutPrefs,
-          expanded: Boolean(this.sidebarExpanded),
-          pillIconOnly: Boolean(this.pillIconOnly)
-        })}
-        <main class="home-main search-content search-loading-shell">
-          <div class="search-loading">
+      <div class="search-screen-shell nuvio-page nuvio-search-page${this.searchRouteEnterPending ? " search-route-enter" : ""}">
+        <main class="search-content nuvio-search-main search-loading-shell">
+          <section class="search-header nuvio-search-header nuvio-search-header--loading">
+            <div class="nuvio-page-heading">
+              <span class="nuvio-eyebrow">CATÁLOGO NUVIO</span>
+              <h1>${escapeHtml(t("search_title", {}, "Buscar"))}</h1>
+              <p>Encuentra películas, series, personas y contenido de tus fuentes instaladas.</p>
+            </div>
+          </section>
+          <div class="search-loading nuvio-state-panel">
             ${renderLoadingIndicator()}
             <span>${escapeHtml(t("discover_loading", {}, "Loading..."))}</span>
           </div>
@@ -839,15 +837,15 @@ export const SearchScreen = {
     if (!Array.isArray(this.rows) || !this.rows.length) {
       if (this.mode === "search") {
         return `
-          <div class="search-empty-state search-empty-state-results">
-            <span class="search-empty-icon material-icons" aria-hidden="true">search</span>
+          <section class="search-empty-state search-empty-state-results nuvio-state-panel" aria-live="polite">
+            <span class="search-empty-icon material-icons" aria-hidden="true">search_off</span>
             <h2>${escapeHtml(t("search_no_results_title", {}, "No Results"))}</h2>
             <p>${escapeHtml(t("search_no_results_subtitle", {}, "Try searching with different keywords"))}</p>
-          </div>
+          </section>
         `;
       }
       return `
-        <div class="search-empty-state">
+        <section class="search-empty-state nuvio-state-panel" aria-live="polite">
           <span class="search-empty-icon material-icons" aria-hidden="true">search</span>
           <h2>${escapeHtml(t("search_start_title", {}, "Start Searching"))}</h2>
           <p>${escapeHtml(
@@ -859,11 +857,11 @@ export const SearchScreen = {
                   "Discover is disabled. Enter at least 2 characters"
                 )
           )}</p>
-        </div>
+        </section>
       `;
     }
 
-    return this.rows
+    return `<div class="nuvio-search-results">${this.rows
       .map((row, rowIndex) => {
         const rowKey = row.stateKey || buildRowStateKey(row, rowIndex);
         const seeAllLabel = t("action_see_all", {}, "See All");
@@ -871,109 +869,120 @@ export const SearchScreen = {
         const seeAllItems = Array.isArray(row.initialItems) ? row.initialItems : row.items || [];
         const hasEnoughForSeeAll = seeAllItems.length >= 15;
         return `
-      <section class="search-results-row" data-row-key="${escapeHtml(rowKey)}">
-        <h3 class="search-results-title">${row.title}</h3>
-        ${row.subtitle ? `<div class="search-results-subtitle">${row.subtitle}</div>` : ""}
-        <div class="search-results-track">
-          ${(row.items || [])
-            .map(
-              (item) => `
-            <article class="search-result-card focusable"
-                     data-action="openDetail"
-                     data-item-id="${item.id || ""}"
-                     data-item-type="${item.type || row.type || "movie"}"
-                     data-item-title="${item.name || "Untitled"}"
-                     data-poster-src="${escapeHtml(item.poster || "")}"
-                     data-backdrop-src="${escapeHtml(item.background || item.backdrop || item.landscapePoster || "")}"
-                     data-addon-base-url="${escapeHtml(row.addonBaseUrl || item.addonBaseUrl || "")}"
-                     data-addon-id="${escapeHtml(row.addonId || item.addonId || "")}"
-                     data-addon-name="${escapeHtml(row.addonName || item.addonName || "")}"
-                     data-catalog-type="${escapeHtml(row.type || item.catalogType || "")}"
-                     data-row-key="${escapeHtml(rowKey)}">
-              <div class="search-result-poster-wrap">
-                ${item.poster ? `<img class="search-result-poster" src="${item.poster}" alt="${item.name || "content"}" loading="lazy" decoding="async" />` : `<div class="search-result-poster placeholder"></div>`}
-                ${isTitleItemWatched(item, this.watchedTitleIds) ? renderTitleWatchedBadge() : ""}
+          <section class="search-results-row nuvio-search-group" data-row-key="${escapeHtml(rowKey)}">
+            <header class="nuvio-section-heading">
+              <div>
+                <span class="nuvio-eyebrow">${escapeHtml(row.addonName || "CATÁLOGO")}</span>
+                <h2 class="search-results-title">${row.title}</h2>
+                ${row.subtitle ? `<p class="search-results-subtitle">${row.subtitle}</p>` : ""}
               </div>
-              <div class="search-result-name" dir="auto">${item.name || "Untitled"}</div>
-              <div class="search-result-date">${formatReleaseYear(item)}</div>
-            </article>
-          `
-            )
-            .join("")}
-          ${
-            hasEnoughForSeeAll
-              ? `
-            <article class="search-result-card search-seeall-card focusable"
-                     data-action="openCatalogSeeAll"
-                     data-addon-base-url="${row.addonBaseUrl || ""}"
-                     data-addon-id="${row.addonId || ""}"
-                     data-addon-name="${row.addonName || ""}"
-                     data-catalog-id="${row.catalogId || ""}"
-                     data-catalog-name="${row.catalogName || ""}"
-                     data-catalog-type="${row.type || "movie"}"
-                     data-row-index="${rowIndex}"
-                     data-row-key="${escapeHtml(rowKey)}">
-              <div class="search-seeall-inner">
-                <div class="search-seeall-arrow${seeAllArrowClass}" aria-hidden="true">&#8594;</div>
-                <div class="search-seeall-label">${escapeHtml(seeAllLabel)}</div>
-              </div>
-            </article>
-          `
-              : ""
-          }
-        </div>
-      </section>
-    `;
+            </header>
+            <div class="search-results-track nuvio-poster-grid">
+              ${(row.items || [])
+                .map(
+                  (item) => `
+                <article class="search-result-card nuvio-poster-card focusable"
+                         data-action="openDetail"
+                         data-item-id="${item.id || ""}"
+                         data-item-type="${item.type || row.type || "movie"}"
+                         data-item-title="${item.name || "Untitled"}"
+                         data-poster-src="${escapeHtml(item.poster || "")}"
+                         data-backdrop-src="${escapeHtml(item.background || item.backdrop || item.landscapePoster || "")}"
+                         data-addon-base-url="${escapeHtml(row.addonBaseUrl || item.addonBaseUrl || "")}"
+                         data-addon-id="${escapeHtml(row.addonId || item.addonId || "")}"
+                         data-addon-name="${escapeHtml(row.addonName || item.addonName || "")}"
+                         data-catalog-type="${escapeHtml(row.type || item.catalogType || "")}"
+                         data-row-key="${escapeHtml(rowKey)}">
+                  <div class="search-result-poster-wrap nuvio-poster-media">
+                    ${item.poster ? `<img class="search-result-poster" src="${item.poster}" alt="${item.name || "content"}" loading="lazy" decoding="async" />` : `<div class="search-result-poster placeholder"></div>`}
+                    <div class="nuvio-card-scrim" aria-hidden="true"></div>
+                    ${isTitleItemWatched(item, this.watchedTitleIds) ? renderTitleWatchedBadge() : ""}
+                    ${item.imdbRating || item.rating ? `<span class="search-result-rating-badge nuvio-rating-badge">★ ${escapeHtml(String(item.imdbRating || item.rating).slice(0, 3))}</span>` : ""}
+                    <div class="search-result-play-hover nuvio-card-play" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+                    </div>
+                  </div>
+                  <div class="nuvio-card-copy">
+                    <div class="search-result-name nuvio-card-title" dir="auto">${item.name || "Untitled"}</div>
+                    <div class="search-result-date nuvio-card-meta">${formatReleaseYear(item)}</div>
+                  </div>
+                </article>
+              `
+                )
+                .join("")}
+              ${
+                hasEnoughForSeeAll
+                  ? `
+                <article class="search-result-card search-seeall-card nuvio-seeall-card focusable"
+                         data-action="openCatalogSeeAll"
+                         data-addon-base-url="${row.addonBaseUrl || ""}"
+                         data-addon-id="${row.addonId || ""}"
+                         data-addon-name="${row.addonName || ""}"
+                         data-catalog-id="${row.catalogId || ""}"
+                         data-catalog-name="${row.catalogName || ""}"
+                         data-catalog-type="${row.type || "movie"}"
+                         data-row-index="${rowIndex}"
+                         data-row-key="${escapeHtml(rowKey)}">
+                  <div class="search-seeall-inner">
+                    <div class="search-seeall-arrow${seeAllArrowClass}" aria-hidden="true">&#8594;</div>
+                    <div class="search-seeall-label">${escapeHtml(seeAllLabel)}</div>
+                  </div>
+                </article>
+              `
+                  : ""
+              }
+            </div>
+          </section>
+        `;
       })
-      .join("");
+      .join("")}</div>`;
   },
 
   render() {
     this.cancelScheduledRender();
     const queryText = this.query || "";
     this.container.innerHTML = `
-      <div class="home-shell search-screen-shell${this.searchRouteEnterPending ? " search-route-enter" : ""}">
-        ${renderRootSidebar({
-          selectedRoute: "search",
-          profile: this.sidebarProfile,
-          layout: this.layoutPrefs,
-          expanded: Boolean(this.sidebarExpanded),
-          pillIconOnly: Boolean(this.pillIconOnly)
-        })}
-        <main class="home-main search-content">
-          <section class="search-header${this.layoutPrefs?.discoverLocation === "in_search" ? "" : " no-discover"}${this.voiceSearchSupported ? "" : " no-voice"}">
-            ${
-              this.layoutPrefs?.discoverLocation === "in_search"
-                ? `
-              <button class="search-discover-btn focusable" data-action="openDiscover" aria-label="Discover">
-                <span class="search-action-icon material-icons" aria-hidden="true">explore</span>
-              </button>
-            `
-                : ""
-            }
-            ${
-              this.voiceSearchSupported
-                ? `<button
-              class="search-voice-btn focusable${this.voiceSearchActive ? " listening" : ""}"
-              data-action="openVoice"
-              aria-label="Voice search"
-            >
-              <span class="search-action-icon material-icons" aria-hidden="true">mic</span>
-            </button>`
-                : ""
-            }
-            <input
-              id="searchInput"
-              aria-label="${escapeHtml(t("search_placeholder", {}, "Search movies & series"))}"
-              class="search-input-field focusable"
-              type="text"
-              data-action="searchInput"
-              autocomplete="off"
-              autocapitalize="off"
-              spellcheck="false"
-              placeholder="${escapeHtml(t("search_placeholder", {}, "Search movies & series"))}"
-              value="${escapeHtml(queryText)}"
-            />
+      <div class="search-screen-shell nuvio-page nuvio-search-page${this.searchRouteEnterPending ? " search-route-enter" : ""}">
+        <main class="search-content nuvio-search-main">
+          <section class="search-header nuvio-search-header">
+            <div class="nuvio-page-heading nuvio-search-heading">
+              <span class="nuvio-eyebrow">CATÁLOGO NUVIO</span>
+              <h1>${escapeHtml(t("search_title", {}, "Buscar"))}</h1>
+              <p>Encuentra películas, series, personas y contenido de tus fuentes instaladas.</p>
+            </div>
+            <div class="search-command-zone nuvio-search-command">
+              <label class="search-input-wrap nuvio-search-field" for="searchInput">
+                <svg class="search-input-icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+                  <path d="M10.5 3a7.5 7.5 0 1 0 4.73 13.32l4.72 4.73 1.42-1.42-4.73-4.72A7.5 7.5 0 0 0 10.5 3Zm0 2a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11Z" fill="currentColor"/>
+                </svg>
+                <input
+                  id="searchInput"
+                  aria-label="${escapeHtml(t("search_placeholder", {}, "Buscar películas, series, personas o fuentes..."))}"
+                  class="search-input-field focusable"
+                  type="text"
+                  data-action="searchInput"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  placeholder="${escapeHtml(t("search_placeholder", {}, "Buscar películas, series, personas o fuentes..."))}"
+                  value="${escapeHtml(queryText)}"
+                />
+                ${queryText ? `<button type="button" class="search-clear-btn" aria-label="Limpiar búsqueda"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/></svg></button>` : ""}
+                <kbd class="search-esc-shortcut">ESC</kbd>
+              </label>
+              <div class="nuvio-search-toolbar">
+                ${
+                  this.layoutPrefs?.discoverLocation === "in_search"
+                    ? `<button type="button" class="search-discover-chip nuvio-chip focusable" data-action="openDiscover"><span class="material-icons" aria-hidden="true">explore</span><span>Explorar catálogo</span></button>`
+                    : ""
+                }
+                ${
+                  queryText
+                    ? `<span class="search-results-count nuvio-result-summary">${escapeHtml(t("search_results_for", {}, "Resultados para"))} <strong>“${escapeHtml(queryText)}”</strong></span>`
+                    : `<span class="nuvio-result-summary">Busca en todos tus catálogos conectados</span>`
+                }
+              </div>
+            </div>
           </section>
           ${this.renderRows()}
         </main>
@@ -983,11 +992,6 @@ export const SearchScreen = {
 
     ScreenUtils.indexFocusables(this.container);
     this.buildNavigationModel();
-    bindRootSidebarEvents(this.container, {
-      currentRoute: "search",
-      onSelectedAction: () => this.closeSidebarToContent(),
-      onExpandSidebar: () => this.openSidebar()
-    });
     this.bindSearchInputEvents();
     this.bindActionEvents();
     const input = this.container.querySelector("#searchInput");
@@ -996,11 +1000,8 @@ export const SearchScreen = {
     const shouldFocusResults = Boolean(
       this.pendingAutoFocusResults && this.navModel?.rows?.[0]?.[0]
     );
-    if (this.focusZone === "sidebar") {
-      this.focusSidebarNode();
-    } else {
-      this.restoreContentFocus(shouldFocusResults);
-    }
+    this.focusZone = "content";
+    this.restoreContentFocus(shouldFocusResults);
     this.pendingAutoFocusResults = false;
   },
 
@@ -1746,10 +1747,35 @@ export const SearchScreen = {
     });
 
     input.addEventListener("keydown", async (event) => {
+      if (event.keyCode === 27) {
+        event.preventDefault();
+        input.value = "";
+        this.query = "";
+        this.scheduleSearchFromInput(input);
+        return;
+      }
       if (event.keyCode !== 13) return;
       event.preventDefault();
       this.cancelScheduledInputSearch();
       await this.runSearchFromInput(input, { autoFocusResults: true });
+    });
+
+    const clearBtn = this.container?.querySelector(".search-clear-btn");
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        input.value = "";
+        this.query = "";
+        input.focus();
+        this.scheduleSearchFromInput(input);
+      };
+    }
+
+    const typePills = Array.from(this.container?.querySelectorAll(".search-filter-pill") || []);
+    typePills.forEach((pill) => {
+      pill.onclick = () => {
+        typePills.forEach((p) => p.classList.remove("is-active"));
+        pill.classList.add("is-active");
+      };
     });
   },
 

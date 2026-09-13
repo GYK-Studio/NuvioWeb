@@ -2172,18 +2172,30 @@ export const SettingsScreen = {
       return;
     }
     this.container.innerHTML = `
-      <div class="home-shell settings-shell">
-        <div class="settings-root-sidebar-slot" data-settings-root-sidebar></div>
-        <div class="settings-workspace">
-          <div class="settings-sidebar-frame">
-            <aside class="settings-sidebar" data-settings-nav></aside>
-            ${settingsScrollIndicatorMarkup("vertical")}
+      <div class="settings-shell nuvio-page nuvio-settings-page">
+        <main class="settings-workspace nuvio-settings-workspace">
+          <header class="settings-page-heading nuvio-page-heading nuvio-settings-heading">
+            <span class="nuvio-eyebrow">PREFERENCIAS</span>
+            <div class="nuvio-page-heading-row">
+              <div>
+                <h1>Ajustes</h1>
+                <p>Personaliza Nuvio, la reproducción, tus integraciones y la experiencia de esta cuenta.</p>
+              </div>
+              <span class="nuvio-source-badge"><span class="material-icons" aria-hidden="true">tune</span>Configuración</span>
+            </div>
+          </header>
+          <div class="nuvio-settings-grid">
+            <div class="settings-sidebar-frame nuvio-settings-nav-frame">
+              <div class="nuvio-settings-nav-label">SECCIONES</div>
+              <aside class="settings-sidebar nuvio-settings-nav" data-settings-nav></aside>
+              ${settingsScrollIndicatorMarkup("vertical")}
+            </div>
+            <div class="settings-content-frame nuvio-settings-content-frame">
+              <section class="settings-content nuvio-settings-content" data-settings-content></section>
+              ${settingsScrollIndicatorMarkup("vertical")}
+            </div>
           </div>
-          <div class="settings-content-frame">
-            <section class="settings-content" data-settings-content></section>
-            ${settingsScrollIndicatorMarkup("vertical")}
-          </div>
-        </div>
+        </main>
         <div data-settings-dialog></div>
       </div>
     `;
@@ -2455,7 +2467,7 @@ export const SettingsScreen = {
     return this.visibleSections
       .map(
         (item, index) => `
-      <button class="settings-nav-item focusable${this.activeSection === item.id ? " selected" : ""}"
+      <button class="settings-nav-item nuvio-settings-nav-item focusable${this.activeSection === item.id ? " selected" : ""}"
               data-zone="nav"
               data-nav-index="${index}"
               data-focus-key="nav:${item.id}"
@@ -2476,7 +2488,8 @@ export const SettingsScreen = {
   renderSectionHeader(section) {
     const copy = translateSectionCopy(section);
     return `
-      <header class="settings-content-header">
+      <header class="settings-content-header nuvio-settings-section-header">
+        <span class="nuvio-eyebrow">AJUSTES</span>
         <h1 class="settings-title">${escapeHtml(copy.label)}</h1>
         <p class="settings-subtitle">${escapeHtml(copy.subtitle)}</p>
       </header>

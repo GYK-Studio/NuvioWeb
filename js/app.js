@@ -1,5 +1,3 @@
-/* global __NUVIO_APP_VERSION__ */
-
 import "./core/diagnostics/consoleDebugBuffer.js";
 import { detailWatchedEnrichmentService } from "./data/repository/detailWatchedEnrichmentService.js";
 import { Router } from "./ui/navigation/router.js";
@@ -23,6 +21,8 @@ import { LocalStore } from "./core/storage/localStore.js";
 import { I18n } from "./i18n/index.js";
 import { resolveExperienceRoute } from "./core/profile/experienceModeRouting.js";
 import { PluginRuntime } from "./core/player/pluginRuntime.js";
+
+globalThis.Router = Router;
 
 const GUEST_QR_BYPASS_KEY = "skipAuthQrGate";
 const SIGNED_OUT_ALLOWED_ROUTES = new Set(["trakt"]);

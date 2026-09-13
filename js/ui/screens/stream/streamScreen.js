@@ -2654,20 +2654,26 @@ export const StreamScreen = {
         ? ` style="margin-bottom:${virtualLast ? 0 : Math.max(0, Number(virtualRowGap))}px"`
         : "";
     return `
-      <div class="stream-route-card-row" data-stream-key="${escapeHtml(streamKey)}" data-stream-row="${index}"${virtualRowStyle}>
-        <article class="stream-route-card stream-route-card-action focusable${this.isCardActionFocused(index, "play") ? " focused" : ""}"
+      <div class="stream-route-card-row nuvio-stream-row" data-stream-key="${escapeHtml(streamKey)}" data-stream-row="${index}"${virtualRowStyle}>
+        <article class="stream-route-card stream-route-card-action nuvio-stream-card focusable${this.isCardActionFocused(index, "play") ? " focused" : ""}"
                  data-action="playStream"
                  data-card-action="play"
                  data-stream-id="${escapeHtml(stream.id)}"
                  data-stream-row="${index}">
-          <div class="stream-route-card-copy">
-            <div class="stream-route-card-heading">${escapeHtml(headline)}</div>
+          <div class="nuvio-stream-card-leading">
+            <span class="material-icons" aria-hidden="true">play_arrow</span>
+          </div>
+          <div class="stream-route-card-copy nuvio-stream-card-copy">
+            <div class="nuvio-stream-card-topline">
+              <div class="stream-route-card-heading">${escapeHtml(headline)}</div>
+              ${!badges ? `<span class="stream-route-card-quality nuvio-quality-badge">${escapeHtml(quality)}</span>` : ""}
+            </div>
             ${topBadges || ""}
-            ${!badges ? `<div class="stream-route-card-quality">${escapeHtml(quality)}</div>` : ""}
-            ${descriptionLines.map((line, lineIndex) => `<div class="stream-route-card-line${lineIndex > 0 ? " secondary" : ""}">${escapeHtml(line)}</div>`).join("")}
+            <div class="nuvio-stream-description">${descriptionLines.map((line, lineIndex) => `<div class="stream-route-card-line${lineIndex > 0 ? " secondary" : ""}">${escapeHtml(line)}</div>`).join("")}</div>
             ${bottomBadges || ""}
           </div>
           ${addonIdentity}
+          <span class="material-icons nuvio-stream-chevron" aria-hidden="true">chevron_right</span>
         </article>
       </div>
     `;
@@ -2819,37 +2825,49 @@ export const StreamScreen = {
     } else if (hasPendingForFilter || hasPendingForAllSources) {
       body = this.renderLoadingCards();
     } else if (this.error) {
-      body = `<div class="stream-route-empty">${escapeHtml(this.error)}</div>`;
+      body = `<div class="stream-route-empty nuvio-state-panel">${escapeHtml(this.error)}</div>`;
     } else if (!filtered.length) {
-      body = `<div class="stream-route-empty">${escapeHtml(t("sources_no_streams", {}, "No streams found"))}</div>`;
+      body = `<div class="stream-route-empty nuvio-state-panel"><span class="material-icons" aria-hidden="true">signal_wifi_off</span><strong>${escapeHtml(t("sources_no_streams", {}, "No streams found"))}</strong><span>Prueba otra fuente o vuelve a intentarlo más tarde.</span></div>`;
     }
 
     const routeContent = this.autoResumeUiActive
       ? ""
       : `
-        <div class="stream-route-content">
-          <section class="stream-route-left">
+        <main class="stream-route-content nuvio-stream-layout">
+          <section class="stream-route-left nuvio-stream-title-panel">
             <div class="stream-route-left-inner">
+              <span class="nuvio-eyebrow">LISTO PARA REPRODUCIR</span>
               ${logo ? `<img src="${logo}" class="stream-route-logo" alt="${escapeHtml(title)}" />` : `<h1 class="stream-route-title">${escapeHtml(title)}</h1>`}
-              ${episodeLabel ? `<div class="stream-route-episode-code">${escapeHtml(episodeLabel)}</div>` : ""}
-              ${subtitle ? `<div class="stream-route-subtitle">${escapeHtml(subtitle)}</div>` : ""}
-              ${detailLine ? `<div class="stream-route-detail-line">${escapeHtml(detailLine)}</div>` : !isSeries && subtitle ? `<div class="stream-route-detail-line">${escapeHtml(subtitle)}</div>` : ""}
+              <div class="nuvio-stream-meta-line">
+                ${episodeLabel ? `<span class="stream-route-episode-code">${escapeHtml(episodeLabel)}</span>` : ""}
+                ${subtitle ? `<span class="stream-route-subtitle">${escapeHtml(subtitle)}</span>` : ""}
+              </div>
+              ${detailLine ? `<p class="stream-route-detail-line">${escapeHtml(detailLine)}</p>` : !isSeries && subtitle ? `<p class="stream-route-detail-line">${escapeHtml(subtitle)}</p>` : ""}
+              <div class="nuvio-stream-art-note"><span class="material-icons" aria-hidden="true">tune</span><span>Elige la fuente que prefieras. Nuvio mantendrá tu progreso.</span></div>
             </div>
           </section>
-          <section class="stream-route-right">
-            <div class="stream-route-chip-wrap">
+          <section class="stream-route-right nuvio-stream-source-panel">
+            <header class="stream-route-heading nuvio-section-heading">
+              <div>
+                <span class="stream-route-eyebrow nuvio-eyebrow">REPRODUCCIÓN</span>
+                <h2>Fuentes disponibles</h2>
+                <p>Ordenadas por tus preferencias y disponibilidad actual.</p>
+              </div>
+              <span class="stream-route-count nuvio-source-count">${allStreams.length}</span>
+            </header>
+            <div class="stream-route-chip-wrap nuvio-filter-bar">
               <div class="stream-route-chip-track">${chips}</div>
             </div>
             <div class="stream-route-panel-shell">
-              <div class="stream-route-panel">
+              <div class="stream-route-panel nuvio-stream-list-panel">
                 <div class="stream-route-list">${body}</div>
               </div>
             </div>
           </section>
-        </div>`;
+        </main>`;
 
     const nextMarkup = `
-      <div class="stream-route-shell${shellStableClass}">
+      <div class="stream-route-shell nuvio-stream-page${shellStableClass}">
         <div class="stream-route-backdrop"${backdrop ? ` style="background-image:url('${String(backdrop).replace(/'/g, "%27")}')"` : ""}></div>
         <div class="stream-route-backdrop-dim"></div>
         <div class="stream-route-left-gradient"></div>

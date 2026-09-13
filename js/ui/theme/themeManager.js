@@ -5,6 +5,8 @@ import { resolveThemeName } from "./themeAccess.js";
 import { ThemeColors } from "./themeColors.js";
 
 const FONT_STACKS = {
+  MANROPE: '"Manrope", system-ui, -apple-system, sans-serif',
+  SPACE_GROTESK: '"Space Grotesk", system-ui, -apple-system, sans-serif',
   INTER: '"Inter", "Segoe UI", Arial, sans-serif',
   DM_SANS: '"DM Sans", "Segoe UI", Arial, sans-serif',
   OPEN_SANS: '"Open Sans", "Segoe UI", Arial, sans-serif'

@@ -433,23 +433,22 @@ export const Router = {
     }
   },
 
-  beginRouteReturnBackGuard(isBackNavigation = false) {
+  beginRouteReturnBackGuard() {
     this.routeReturnBackGuardNavigationId += 1;
     const navigationId = this.routeReturnBackGuardNavigationId;
-    const shouldGuard = false;
-    this.routeReturnBackGuardActive = shouldGuard;
-    this.routeReturnBackGuardUntil = shouldGuard ? Number.POSITIVE_INFINITY : 0;
+    // The active runtime is browser-only, so the legacy Tizen return guard
+    // remains disabled while the compatibility methods stay available.
+    this.routeReturnBackGuardActive = false;
+    this.routeReturnBackGuardUntil = 0;
     return navigationId;
   },
 
   completeRouteReturnBackGuard(navigationId) {
-    if (
-      navigationId !== this.routeReturnBackGuardNavigationId ||
-      !this.routeReturnBackGuardActive
-    ) {
+    if (navigationId !== this.routeReturnBackGuardNavigationId) {
       return;
     }
-    this.routeReturnBackGuardUntil = Date.now() + TIZEN_ROUTE_RETURN_BACK_GUARD_MS;
+    this.routeReturnBackGuardActive = false;
+    this.routeReturnBackGuardUntil = 0;
   },
 
   consumeRouteReturnBackGuard() {

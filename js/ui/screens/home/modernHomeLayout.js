@@ -62,9 +62,7 @@ export function renderModernHomeLayout({
     const items = Array.isArray(rowData?.result?.data?.items) ? rowData.result.data.items : [];
     const isLoading = rowData?.result?.status === "loading";
     const rowItems = items.length ? items : rowData.loadingItems || [];
-    if (!rowItems.length) {
-      return;
-    }
+    if (!rowItems.length) return;
 
     const rowKey = String(rowData?.homeCatalogKey || buildModernRowKey(rowData));
     const seeAllId = `${rowData.addonId || "addon"}_${rowData.catalogId || "catalog"}_${rowData.type || "movie"}`;
@@ -118,12 +116,31 @@ export function renderModernHomeLayout({
       )
       .join("");
 
+    const hasSeeAll = !isCollectionRow && catalogSeeAllMap.has(seeAllId);
     sectionsMarkup.push(`
-      <section class="home-row home-modern-row home-row-enter" data-row-key="${escapeHtml(rowKey)}" data-row-index="${rowIndex}">
-        <div class="home-row-head">
-          <h2 class="home-row-title">${escapeHtml(rowTitle)}</h2>
+      <section class="home-row home-modern-row nuvio-home-row home-row-enter" data-row-key="${escapeHtml(rowKey)}" data-row-index="${rowIndex}">
+        <div class="home-row-head nuvio-row-head">
+          <div class="home-row-title-wrap">
+            <h2 class="home-row-title">${escapeHtml(rowTitle)}</h2>
+          </div>
+          <div class="home-row-controls">
+            ${
+              hasSeeAll
+                ? `<button type="button" class="home-row-seeall-link focusable" data-action="openCatalogSeeAll" data-see-all-id="${escapeHtml(seeAllId)}" aria-label="Ver todo">
+                     <span data-i18n="action_see_all">Ver todo</span>
+                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor"/></svg>
+                   </button>`
+                : ""
+            }
+            <button type="button" class="home-rail-arrow home-rail-prev focusable" data-action="scrollRailLeft" aria-label="Desplazar a la izquierda">
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor"/></svg>
+            </button>
+            <button type="button" class="home-rail-arrow home-rail-next focusable" data-action="scrollRailRight" aria-label="Desplazar a la derecha">
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor"/></svg>
+            </button>
+          </div>
         </div>
-        <div class="home-track" data-track-row-key="${escapeHtml(rowKey)}">
+        <div class="home-track nuvio-media-rail" data-track-row-key="${escapeHtml(rowKey)}">
           ${cardsMarkup}
         </div>
       </section>
@@ -133,7 +150,7 @@ export function renderModernHomeLayout({
   return {
     catalogSeeAllMap,
     markup: `
-      <section class="home-modern-stage">
+      <section class="home-modern-stage nuvio-home-stage">
         ${
           showHeroSection
             ? renderModernHeroMarkup({
@@ -148,8 +165,8 @@ export function renderModernHomeLayout({
               ? renderModernHeroSkeletonMarkup()
               : ""
         }
-        <div class="home-modern-rows-viewport">
-          <div class="home-modern-rows-scroll">
+        <div class="home-modern-rows-viewport nuvio-home-rows-viewport">
+          <div class="home-modern-rows-scroll nuvio-home-rows">
             ${renderContinueWatchingSection(continueWatchingItems, {
               rowKey: "continue_watching",
               loading: continueWatchingLoading,
@@ -169,7 +186,7 @@ export function renderModernHomeLayout({
               blurNextUp: blurContinueWatchingNextUp,
               cardStyle: continueWatchingCardStyle
             })}
-            <div class="home-modern-catalogs">
+            <div class="home-modern-catalogs nuvio-home-catalogs">
               ${sectionsMarkup.join("")}
             </div>
           </div>
@@ -188,23 +205,16 @@ export function buildModernNavigationRows(container) {
     const continueNodes = Array.from(
       continueTrack.querySelectorAll(".home-content-card.focusable")
     );
-    if (continueNodes.length) {
-      rows.push(continueNodes);
-    }
+    if (continueNodes.length) rows.push(continueNodes);
   });
 
   const rowSections = Array.from(container?.querySelectorAll(".home-modern-row") || []);
   rowSections.forEach((section) => {
     const track = section.querySelector(".home-track");
-    if (!track) {
-      return;
-    }
+    if (!track) return;
     const cards = Array.from(track.querySelectorAll(".home-content-card.focusable"));
-    if (cards.length) {
-      rows.push(cards);
-    }
+    if (cards.length) rows.push(cards);
   });
-
   return rows;
 }
 
@@ -213,16 +223,13 @@ export function buildModernRowKey(rowData = {}) {
 }
 
 function buildHeroIndicators(items = [], activeItem = null) {
-  if (!Array.isArray(items) || items.length <= 1) {
-    return "";
-  }
+  if (!Array.isArray(items) || items.length <= 1) return "";
   const activeId = String(activeItem?.id || "");
   const activeIndex = items.findIndex((item) => String(item?.id || "") === activeId);
   return items
     .map(
       (_, index) => `
-    <span class="home-hero-indicator${index === activeIndex ? " is-active" : ""}"></span>
-  `
+      <span class="home-hero-indicator${index === activeIndex ? " is-active" : ""}"></span>`
     )
     .join("");
 }
@@ -236,99 +243,71 @@ function renderModernHeroMarkup({
   escapeAttribute
 }) {
   const display = buildModernHeroPresentation(heroItem);
-  if (!display) {
-    return "";
-  }
-  const primaryLeft = display.leadingMeta
-    .map((token) => `<span>${escapeHtml(token)}</span>`)
-    .join('<span class="home-hero-dot">•</span>');
-  const primaryRightParts = display.trailingMeta.map(
-    (token) => `<span>${escapeHtml(token)}</span>`
-  );
-  if (display.showImdbPrimary) {
-    primaryRightParts.push(`
-      <span class="home-hero-imdb">
-        <img src="assets/icons/imdb_logo_2016.svg" alt="IMDb" />
-        <span>${escapeHtml(display.imdbText)}</span>
-      </span>
-    `);
-  }
-  const hasPrimaryRight = primaryRightParts.length > 0;
-  const secondaryParts = [];
-  if (display.secondaryHighlightText) {
-    secondaryParts.push(
-      `<span class="home-modern-hero-highlight">${escapeHtml(display.secondaryHighlightText)}</span>`
-    );
-  }
-  display.badges.forEach((badge) => {
-    secondaryParts.push(`<span class="home-modern-hero-badge">${escapeHtml(badge)}</span>`);
-  });
-  if (display.showImdbSecondary) {
-    secondaryParts.push(`
-      <span class="home-hero-imdb">
-        <img src="assets/icons/imdb_logo_2016.svg" alt="IMDb" />
-        <span>${escapeHtml(display.imdbText)}</span>
-      </span>
-    `);
-  }
-  if (display.languageText) {
-    secondaryParts.push(
-      `<span class="home-modern-hero-secondary-detail">${escapeHtml(display.languageText)}</span>`
-    );
-  }
+  if (!display) return "";
+
+  const meta = [...(display.leadingMeta || []), ...(display.trailingMeta || [])].filter(Boolean);
+  const badges = Array.isArray(display.badges) ? display.badges.filter(Boolean) : [];
+
   return `
-    <section class="home-hero home-hero-modern">
-      <article class="home-hero-card home-modern-hero-card${heroItem?.heroMetaEnriching ? " is-hero-meta-enriching" : ""}"
-               data-item-id="${escapeAttribute(heroItem?.id || "")}"
-               data-item-type="${escapeAttribute(heroItem?.type || "movie")}"
-               data-item-title="${escapeAttribute(heroItem?.name || "Untitled")}">
-        <div class="home-modern-hero-media">
+    <section class="home-hero home-hero-modern nuvio-hero">
+      <div class="home-hero-visual nuvio-hero-visual" aria-hidden="true">
+        <div class="home-modern-hero-media nuvio-hero-media">
           <div class="home-hero-backdrop-wrap">
-          ${
-            typeof renderHeroBackdropImage === "function"
-              ? renderHeroBackdropImage(display)
-              : display.backdrop
-                ? `<img class="home-hero-backdrop" src="${escapeAttribute(display.backdrop)}" alt="${escapeAttribute(display.title)}" decoding="async" fetchpriority="high" />`
-                : '<div class="home-hero-backdrop placeholder"></div>'
-          }
+            ${
+              typeof renderHeroBackdropImage === "function"
+                ? renderHeroBackdropImage(display)
+                : display.backdrop
+                  ? `<img class="home-hero-backdrop" src="${escapeAttribute(display.backdrop)}" alt="" decoding="async" fetchpriority="high" />`
+                  : '<div class="home-hero-backdrop placeholder"></div>'
+            }
           </div>
           <div class="home-hero-trailer-layer"></div>
         </div>
-        <div class="home-hero-copy home-modern-hero-copy">
-          <div class="home-hero-brand">
-            ${display.logo ? `<img class="home-hero-logo" src="${escapeAttribute(display.logo)}" alt="${escapeAttribute(display.title)}" decoding="async" fetchpriority="high" />` : ""}
-            <h1 class="home-hero-title-text${display.logo ? " is-hidden" : ""}">${escapeHtml(display.title)}</h1>
-          </div>
-          <div class="home-modern-hero-meta-line${display.leadingMeta.length || display.trailingMeta.length || display.showImdbPrimary ? "" : " is-empty"}">
-            <div class="home-modern-hero-meta-group home-modern-hero-meta-group-leading">
-              ${primaryLeft}
+      </div>
+      <article class="home-hero-card home-modern-hero-card nuvio-hero-card${heroItem?.heroMetaEnriching ? " is-hero-meta-enriching" : ""}"
+               data-item-id="${escapeAttribute(heroItem?.id || "")}"
+               data-item-type="${escapeAttribute(heroItem?.type || "movie")}"
+               data-item-title="${escapeAttribute(heroItem?.name || "Untitled")}">
+        <div class="home-hero-content-grid">
+          <div class="home-hero-copy home-modern-hero-copy nuvio-hero-copy">
+            <div class="home-hero-eyebrow"><span class="home-hero-eyebrow-pill">Estreno destacado · Nuvio Premiere</span></div>
+            <div class="home-hero-brand">
+              ${display.logo ? `<img class="home-hero-logo" src="${escapeAttribute(display.logo)}" alt="${escapeAttribute(display.title)}" decoding="async" fetchpriority="high" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='block';" />` : ""}
+              <h1 class="home-hero-title-text" style="${display.logo ? "display:none;" : "display:block;"}">${escapeHtml(display.title)}</h1>
             </div>
-            ${primaryLeft && hasPrimaryRight ? '<span class="home-hero-dot">•</span>' : ""}
-            <div class="home-modern-hero-meta-group home-modern-hero-meta-group-trailing">
-              ${primaryRightParts.join('<span class="home-hero-dot">•</span>')}
+            <div class="home-modern-hero-meta-line${meta.length || display.showImdbPrimary ? "" : " is-empty"}">
+              ${meta.map((token) => `<span>${escapeHtml(token)}</span>`).join('<span class="home-hero-dot">•</span>')}
+              ${display.showImdbPrimary ? `${meta.length ? '<span class="home-hero-dot">•</span>' : ""}<span class="home-hero-imdb"><img src="assets/icons/imdb_logo_2016.svg" alt="IMDb"><span>${escapeHtml(display.imdbText)}</span></span>` : ""}
+            </div>
+            <div class="home-modern-hero-secondary${display.secondaryHighlightText || badges.length || display.showImdbSecondary || display.languageText ? "" : " is-empty"}">
+              ${display.secondaryHighlightText ? `<span class="home-modern-hero-highlight">${escapeHtml(display.secondaryHighlightText)}</span>` : ""}
+              ${badges.map((badge) => `<span class="home-modern-hero-badge">${escapeHtml(badge)}</span>`).join("")}
+              ${display.showImdbSecondary ? `<span class="home-hero-imdb"><img src="assets/icons/imdb_logo_2016.svg" alt="IMDb"><span>${escapeHtml(display.imdbText)}</span></span>` : ""}
+              ${display.languageText ? `<span class="home-modern-hero-secondary-detail">${escapeHtml(display.languageText)}</span>` : ""}
+            </div>
+            <p class="home-hero-description${display.description ? "" : " is-empty"}">${escapeHtml(display.description)}</p>
+            <div class="home-hero-actions nuvio-hero-actions">
+              <button type="button" class="home-hero-action home-hero-action-primary focusable" data-action="heroPlay" data-item-id="${escapeAttribute(heroItem?.id || "")}" data-item-type="${escapeAttribute(heroItem?.type || "movie")}" data-item-title="${escapeAttribute(heroItem?.name || "Untitled")}">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg><span>Reanudar</span>
+              </button>
+              <button type="button" class="home-hero-action home-hero-action-secondary focusable" data-action="heroList" data-item-id="${escapeAttribute(heroItem?.id || "")}" data-item-type="${escapeAttribute(heroItem?.type || "movie")}">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/></svg><span>Mi Lista</span>
+              </button>
+              <button type="button" class="home-hero-action home-hero-action-ghost focusable" data-action="heroInfo" data-item-id="${escapeAttribute(heroItem?.id || "")}" data-item-type="${escapeAttribute(heroItem?.type || "movie")}" data-item-title="${escapeAttribute(heroItem?.name || "Untitled")}">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" fill="currentColor"/></svg><span>Más información</span>
+              </button>
             </div>
           </div>
-          <div class="home-modern-hero-secondary${display.secondaryHighlightText || display.badges.length || display.showImdbSecondary || display.languageText ? "" : " is-empty"}">
-            ${secondaryParts.join('<span class="home-hero-dot">•</span>')}
-          </div>
-          <p class="home-hero-description${display.description ? "" : " is-empty"}">${escapeHtml(display.description)}</p>
         </div>
         <div class="home-hero-indicators">${buildHeroIndicators(heroCandidates, heroItem)}</div>
       </article>
-    </section>
-  `;
+    </section>`;
 }
 
 function renderModernHeroSkeletonMarkup() {
   return `
-    <section class="home-hero home-hero-modern home-hero-modern-loading" aria-hidden="true">
-      <article class="home-hero-card home-modern-hero-card home-modern-hero-card-loading">
-        <div class="home-modern-hero-media home-modern-hero-media-loading">
-          <div class="home-hero-backdrop-wrap">
-            <div class="home-hero-backdrop placeholder home-hero-backdrop-loading"></div>
-          </div>
-        </div>
-      </article>
-    </section>
-  `;
+    <section class="home-hero home-hero-modern nuvio-hero home-hero-modern-loading" aria-hidden="true">
+      <div class="home-hero-visual"><div class="home-modern-hero-media home-modern-hero-media-loading"><div class="home-hero-backdrop-wrap"><div class="home-hero-backdrop placeholder home-hero-backdrop-loading"></div></div></div></div>
+      <article class="home-hero-card home-modern-hero-card home-modern-hero-card-loading"></article>
+    </section>`;
 }

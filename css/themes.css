@@ -1,0 +1,49 @@
+/* Nuvio Web design system Design Tokens & Shared Surface System */
+:root {
+  --nuvio-canvas: #090b10;
+  --nuvio-bg-rgb: 9, 11, 16;
+  --nuvio-surface: #11141d;
+  --nuvio-surface-rgb: 17, 20, 29;
+  --nuvio-surface-raised: #191e2b;
+  --nuvio-surface-hover: #202637;
+  --nuvio-surface-glass: rgba(17, 20, 29, 0.72);
+  --nuvio-surface-overlay: rgba(9, 11, 16, 0.85);
+
+  --nuvio-accent: #3b82f6;
+  --nuvio-accent-rgb: 59, 130, 246;
+  --nuvio-accent-hover: #60a5fa;
+  --nuvio-accent-deep: #1d4ed8;
+  --nuvio-accent-glow: 0 8px 32px -4px rgba(59, 130, 246, 0.35);
+
+  --nuvio-online: #10b981;
+  --nuvio-warning: #f59e0b;
+  --nuvio-danger: #ef4444;
+
+  --nuvio-text-primary: #f8fafc;
+  --nuvio-text-secondary: #94a3b8;
+  --nuvio-text-tertiary: #64748b;
+
+  --nuvio-border-subtle: rgba(255, 255, 255, 0.08);
+  --nuvio-border-medium: rgba(255, 255, 255, 0.16);
+  --nuvio-border-focus: #3b82f6;
+
+  --nuvio-font-display: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --nuvio-font-body: "Manrope", system-ui, -apple-system, sans-serif;
+  --nuvio-font-mono: "JetBrains Mono", monospace;
+
+  --nuvio-radius-xs: 4px;
+  --nuvio-radius-sm: 8px;
+  --nuvio-radius-md: 10px;
+  --nuvio-radius-lg: 16px;
+  --nuvio-radius-xl: 24px;
+  --nuvio-radius-pill: 9999px;
+
+  --nuvio-shadow-card: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --nuvio-shadow-hover: 0 12px 32px -4px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(59, 130, 246, 0.45);
+  --nuvio-shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.5);
+
+  --nuvio-glass-blur: blur(24px) saturate(180%);
+  --nuvio-header-height: 64px;
+  --nuvio-gutter: clamp(16px, 3.5vw, 56px);
+  --nuvio-max-width: 1720px;
+}

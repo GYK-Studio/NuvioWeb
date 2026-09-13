@@ -1,0 +1,4053 @@
+/*
+ * Nuvio Web — Nuvio Web UI
+ * Rebuilt presentation layer based on the approved Stitch Direction A screens.
+ * This file styles the new live screen structures; it is not a cosmetic theme shim.
+ */
+
+:root {
+  --nuvio-canvas: #090b10;
+  --nuvio-canvas-2: #0c0e13;
+  --nuvio-surface-0: #0c0e13;
+  --nuvio-surface-1: #111318;
+  --nuvio-surface-2: #1a1b21;
+  --nuvio-surface-3: #1e1f25;
+  --nuvio-surface-4: #282a2f;
+  --nuvio-surface-5: #33353a;
+  --nuvio-line: rgba(194, 198, 214, 0.16);
+  --nuvio-line-strong: rgba(194, 198, 214, 0.28);
+  --nuvio-text: #e2e2e9;
+  --nuvio-text-soft: #c2c6d6;
+  --nuvio-text-dim: #8c909f;
+  --nuvio-primary: #adc6ff;
+  --nuvio-primary-strong: #4d8eff;
+  --nuvio-primary-deep: #0267b8;
+  --nuvio-focus: #8bb7ff;
+  --nuvio-danger: #ffb4ab;
+  --nuvio-success: #76d5a3;
+  --nuvio-shadow: 0 18px 60px rgba(0, 0, 0, 0.36);
+  --nuvio-shadow-soft: 0 12px 36px rgba(0, 0, 0, 0.26);
+  --nuvio-glow: 0 0 0 1px rgba(77, 142, 255, 0.7), 0 10px 34px rgba(77, 142, 255, 0.22);
+  --nuvio-radius-xs: 6px;
+  --nuvio-radius-sm: 10px;
+  --nuvio-radius-md: 14px;
+  --nuvio-radius-lg: 18px;
+  --nuvio-radius-xl: 24px;
+  --nuvio-header-h: 64px;
+  --nuvio-page-x: clamp(18px, 3.5vw, 56px);
+  --nuvio-page-max: 1600px;
+  --nuvio-ease: cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+html,
+body {
+  background: var(--nuvio-canvas);
+  color: var(--nuvio-text);
+  font-family: var(--nuvio-font-body, "Manrope", system-ui, sans-serif);
+}
+
+body.web-with-header {
+  background:
+    radial-gradient(circle at 76% -18%, rgba(77, 142, 255, 0.11), transparent 34rem),
+    var(--nuvio-canvas);
+}
+
+body.web-with-header #app {
+  padding-top: var(--nuvio-header-h);
+}
+
+body.web-with-header .screen {
+  background: transparent;
+}
+
+::selection {
+  background: rgba(173, 198, 255, 0.95);
+  color: #001a42;
+}
+
+/* ---------- shared focus ---------- */
+.focusable {
+  outline: none;
+}
+
+.focusable.focused,
+.focusable:focus-visible {
+  outline: none !important;
+}
+
+/* ---------- global top navigation ---------- */
+.nuvio-topbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 1000;
+  height: var(--nuvio-header-h);
+  border-bottom: 1px solid rgba(66, 71, 84, 0.4);
+  background: rgba(12, 14, 19, 0.84);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+}
+
+.nuvio-topbar[hidden] {
+  display: none !important;
+}
+
+.nuvio-topbar-inner {
+  width: 100%;
+  height: 100%;
+  max-width: 1760px;
+  margin: 0 auto;
+  padding: 0 var(--nuvio-page-x);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.nuvio-topbar-left,
+.nuvio-topbar-tools,
+.nuvio-brand,
+.nuvio-primary-nav,
+.nuvio-search-trigger {
+  display: flex;
+  align-items: center;
+}
+
+.nuvio-topbar-left {
+  gap: clamp(22px, 3vw, 42px);
+  min-width: 0;
+}
+
+.nuvio-brand {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--nuvio-text);
+  gap: 8px;
+  padding: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nuvio-brand-word {
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.nuvio-brand-badge {
+  min-width: 31px;
+  height: 19px;
+  padding: 0 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  border: 1px solid rgba(173, 198, 255, 0.38);
+  background: rgba(77, 142, 255, 0.12);
+  color: var(--nuvio-primary);
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.nuvio-primary-nav {
+  height: 100%;
+  gap: clamp(18px, 2.2vw, 30px);
+}
+
+.nuvio-nav-link {
+  position: relative;
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--nuvio-text-soft);
+  padding: 0;
+  height: 100%;
+  cursor: pointer;
+  font: 600 14px/1 var(--nuvio-font-body, "Manrope", sans-serif);
+  transition: color 160ms ease;
+}
+
+.nuvio-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  width: 0;
+  height: 2px;
+  transform: translateX(-50%);
+  border-radius: 99px;
+  background: var(--nuvio-primary);
+  transition: width 180ms var(--nuvio-ease);
+}
+
+.nuvio-nav-link:hover,
+.nuvio-nav-link[aria-current="page"] {
+  color: var(--nuvio-text);
+}
+
+.nuvio-nav-link[aria-current="page"]::after {
+  width: 28px;
+}
+
+.nuvio-topbar-tools {
+  gap: 10px;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.nuvio-search-trigger {
+  width: clamp(220px, 24vw, 330px);
+  height: 38px;
+  gap: 9px;
+  padding: 0 10px 0 12px;
+  border: 1px solid rgba(66, 71, 84, 0.7);
+  border-radius: 9px;
+  background: rgba(26, 27, 33, 0.75);
+  color: var(--nuvio-text-soft);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.nuvio-search-trigger:hover,
+.nuvio-search-trigger:focus-visible {
+  border-color: rgba(173, 198, 255, 0.5);
+  background: rgba(30, 31, 37, 0.95);
+  box-shadow: 0 0 0 3px rgba(77, 142, 255, 0.08);
+}
+
+.nuvio-search-trigger svg,
+.nuvio-icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.nuvio-search-trigger-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  text-align: left;
+  font-size: 12px;
+}
+
+.nuvio-search-trigger kbd {
+  padding: 2px 6px;
+  border-radius: 5px;
+  border: 1px solid rgba(140, 144, 159, 0.25);
+  background: rgba(51, 53, 58, 0.65);
+  color: var(--nuvio-text-dim);
+  font: 600 10px/1.4 var(--nuvio-font-mono, monospace);
+}
+
+.nuvio-icon-button,
+.nuvio-avatar-button {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--nuvio-text-soft);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.nuvio-icon-button:hover,
+.nuvio-icon-button:focus-visible,
+.nuvio-avatar-button:hover,
+.nuvio-avatar-button:focus-visible {
+  color: var(--nuvio-text);
+  background: rgba(51, 53, 58, 0.65);
+  border-color: rgba(140, 144, 159, 0.18);
+}
+
+.nuvio-avatar-button {
+  position: relative;
+  padding: 2px;
+}
+
+.nuvio-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: linear-gradient(135deg, #25304a, #11141d);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.nuvio-avatar-status {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--nuvio-success);
+  box-shadow: 0 0 0 2px var(--nuvio-surface-0);
+}
+
+.web-back-navigation {
+  z-index: 900;
+  top: calc(var(--nuvio-header-h) + 10px);
+  left: var(--nuvio-page-x);
+}
+
+.web-back-navigation button {
+  border-radius: 999px !important;
+  border: 1px solid var(--nuvio-line) !important;
+  background: rgba(12, 14, 19, 0.84) !important;
+  backdrop-filter: blur(16px);
+}
+
+/* ---------- shared page primitives ---------- */
+.nuvio-page {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background:
+    radial-gradient(circle at 72% -10%, rgba(77, 142, 255, 0.06), transparent 28rem),
+    var(--nuvio-canvas);
+  color: var(--nuvio-text);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(140, 144, 159, 0.4) transparent;
+}
+
+.nuvio-page-inner {
+  width: min(100%, var(--nuvio-page-max));
+  margin: 0 auto;
+  padding: 34px var(--nuvio-page-x) 72px;
+}
+
+.nuvio-page-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.nuvio-page-title {
+  margin: 0;
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(32px, 3.2vw, 46px);
+  line-height: 1.03;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+  color: var(--nuvio-text);
+}
+
+.nuvio-page-subtitle {
+  margin: 6px 0 0;
+  color: var(--nuvio-text-dim);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.nuvio-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 9px;
+  color: var(--nuvio-primary);
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.nuvio-kicker::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nuvio-primary);
+  box-shadow: 0 0 14px rgba(173, 198, 255, 0.5);
+}
+
+.nuvio-panel {
+  border: 1px solid var(--nuvio-line);
+  border-radius: var(--nuvio-radius-md);
+  background: rgba(30, 31, 37, 0.72);
+  box-shadow: var(--nuvio-shadow-soft);
+}
+
+.nuvio-btn {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 9px;
+  border: 1px solid var(--nuvio-line);
+  background: rgba(40, 42, 47, 0.85);
+  color: var(--nuvio-text);
+  font: 700 12px/1 var(--nuvio-font-body, "Manrope", sans-serif);
+  cursor: pointer;
+}
+
+.nuvio-btn-primary {
+  border-color: rgba(173, 198, 255, 0.8);
+  background: var(--nuvio-primary);
+  color: #001a42;
+}
+
+.nuvio-btn-ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--nuvio-text-soft);
+}
+
+.nuvio-chip {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--nuvio-line);
+  background: rgba(30, 31, 37, 0.7);
+  color: var(--nuvio-text-soft);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.nuvio-chip.is-active,
+.nuvio-chip.selected,
+.nuvio-chip.focused {
+  border-color: rgba(173, 198, 255, 0.62);
+  background: rgba(77, 142, 255, 0.15);
+  color: var(--nuvio-primary);
+}
+
+/* ---------- home ---------- */
+.home-screen-shell {
+  background: var(--nuvio-canvas) !important;
+}
+
+.home-screen-main,
+.home-route-content,
+.home-modern-stage,
+.home-modern-rows-viewport,
+.home-modern-rows-scroll {
+  width: 100%;
+  height: 100%;
+}
+
+.home-screen-main {
+  overflow: auto !important;
+  padding: 0 !important;
+  scrollbar-width: none;
+}
+
+.home-screen-main::-webkit-scrollbar,
+.home-modern-rows-viewport::-webkit-scrollbar,
+.home-track::-webkit-scrollbar {
+  display: none;
+}
+
+.nuvio-home-stage {
+  min-height: 100%;
+  background: var(--nuvio-canvas);
+}
+
+.home-hero-modern.nuvio-hero {
+  position: relative;
+  height: clamp(540px, 69vh, 760px);
+  min-height: 520px;
+  margin: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.nuvio-hero .home-hero-visual,
+.nuvio-hero .home-modern-hero-media,
+.nuvio-hero .home-hero-backdrop-wrap {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.nuvio-hero .home-hero-backdrop,
+.nuvio-hero .home-hero-backdrop-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+  filter: saturate(0.93) contrast(1.02) brightness(0.73);
+}
+
+.nuvio-hero::before,
+.nuvio-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.nuvio-hero::before {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(9, 11, 16, 0.97) 0%,
+      rgba(9, 11, 16, 0.72) 34%,
+      rgba(9, 11, 16, 0.12) 68%,
+      rgba(9, 11, 16, 0.08) 100%
+    ),
+    linear-gradient(
+      0deg,
+      var(--nuvio-canvas) 0%,
+      rgba(9, 11, 16, 0.88) 8%,
+      rgba(9, 11, 16, 0.18) 37%,
+      rgba(9, 11, 16, 0.1) 100%
+    );
+}
+
+.nuvio-hero::after {
+  background: radial-gradient(circle at 78% 15%, rgba(77, 142, 255, 0.08), transparent 34rem);
+}
+
+.nuvio-hero .home-modern-hero-card {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 var(--nuvio-page-x) clamp(76px, 9vh, 108px);
+  max-width: 1760px;
+  margin: 0 auto;
+  background: none;
+  border: 0;
+}
+
+.nuvio-hero .home-hero-content-grid {
+  width: min(660px, 70vw);
+}
+
+.nuvio-hero .home-hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.nuvio-hero-eyebrow {
+  margin-bottom: 2px;
+}
+
+.nuvio-hero .home-hero-eyebrow-pill {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--nuvio-primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.nuvio-hero .home-hero-eyebrow-pill::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  vertical-align: 1px;
+  border-radius: 50%;
+  background: var(--nuvio-primary);
+}
+
+.nuvio-hero .home-hero-logo {
+  width: auto;
+  max-width: min(520px, 60vw);
+  max-height: 112px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.nuvio-hero .home-hero-title-text {
+  margin: 0;
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(40px, 5.2vw, 74px);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+  font-weight: 700;
+  color: #f7f8fb;
+  text-wrap: balance;
+}
+
+.nuvio-hero .home-modern-hero-meta-line,
+.nuvio-hero .home-modern-hero-secondary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  color: #d2d5de;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.nuvio-hero .home-modern-hero-badge,
+.nuvio-hero .home-modern-hero-highlight,
+.nuvio-hero .home-hero-imdb {
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 7px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(22, 24, 30, 0.76);
+  color: #f4f5f8;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.nuvio-hero .home-hero-imdb img {
+  height: 11px;
+  width: auto;
+}
+
+.nuvio-hero .home-hero-description {
+  max-width: 610px;
+  margin: 5px 0 6px;
+  color: #d1d4dc;
+  font-size: clamp(13px, 1.2vw, 16px);
+  line-height: 1.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+}
+
+.nuvio-hero .home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.nuvio-hero .home-hero-action {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 7px;
+  border: 1px solid var(--nuvio-line);
+  background: rgba(40, 42, 47, 0.76);
+  color: var(--nuvio-text);
+  font: 700 12px/1 var(--nuvio-font-body, "Manrope", sans-serif);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition:
+    transform 150ms var(--nuvio-ease),
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.nuvio-hero .home-hero-action-primary {
+  background: var(--nuvio-primary);
+  color: #001a42;
+  border-color: var(--nuvio-primary);
+}
+
+.nuvio-hero .home-hero-action-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--nuvio-text-soft);
+}
+
+.nuvio-hero .home-hero-action.focused,
+.nuvio-hero .home-hero-action:hover {
+  transform: translateY(-1px);
+  border-color: rgba(173, 198, 255, 0.68);
+  box-shadow: var(--nuvio-glow);
+}
+
+.nuvio-hero .home-hero-indicators {
+  position: absolute;
+  right: var(--nuvio-page-x);
+  bottom: 58px;
+  display: flex;
+  gap: 6px;
+}
+
+.nuvio-hero .home-hero-indicator {
+  width: 18px;
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.nuvio-hero .home-hero-indicator.is-active {
+  width: 34px;
+  background: var(--nuvio-primary);
+}
+
+.nuvio-home-rows {
+  position: relative;
+  z-index: 3;
+  margin-top: -48px;
+  padding: 0 var(--nuvio-page-x) 72px;
+}
+
+.home-row,
+.home-modern-row {
+  margin: 0 0 34px;
+}
+
+.home-row-head {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 12px;
+}
+
+.home-row-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.home-row-title {
+  margin: 0;
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(18px, 1.6vw, 24px);
+  line-height: 1.25;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  color: var(--nuvio-text);
+}
+
+.home-row-subtitle,
+.home-row-count {
+  color: var(--nuvio-text-dim);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.home-row-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.home-row-seeall-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--nuvio-text-soft);
+  font: 700 11px/1 var(--nuvio-font-body, "Manrope", sans-serif);
+  cursor: pointer;
+}
+
+.home-row-seeall-link svg {
+  width: 15px;
+  height: 15px;
+}
+
+.home-rail-arrow {
+  width: 30px;
+  height: 30px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--nuvio-line);
+  background: rgba(17, 19, 24, 0.72);
+  color: var(--nuvio-text-soft);
+  cursor: pointer;
+}
+
+.home-rail-arrow:hover,
+.home-rail-arrow.focused {
+  border-color: rgba(173, 198, 255, 0.48);
+  color: var(--nuvio-primary);
+  background: rgba(40, 42, 47, 0.9);
+}
+
+.home-track,
+.home-track-continue {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 3px 3px 9px;
+  scroll-snap-type: x proximity;
+}
+
+.home-content-card {
+  flex: 0 0 clamp(154px, 13vw, 205px);
+  scroll-snap-align: start;
+  border-radius: var(--nuvio-radius-sm);
+  color: inherit;
+  transition:
+    transform 170ms var(--nuvio-ease),
+    box-shadow 170ms ease;
+}
+
+.home-content-card.focused,
+.home-content-card:hover {
+  transform: translateY(-4px) scale(1.012);
+  z-index: 3;
+}
+
+.home-content-card.focused .home-poster-wrap,
+.home-content-card:hover .home-poster-wrap,
+.home-content-card.focused .home-continue-media,
+.home-content-card:hover .home-continue-media {
+  border-color: rgba(173, 198, 255, 0.7) !important;
+  box-shadow: var(--nuvio-glow);
+}
+
+.home-poster-wrap,
+.home-continue-media {
+  position: relative;
+  overflow: hidden;
+  border-radius: 9px;
+  border: 1px solid var(--nuvio-line);
+  background: var(--nuvio-surface-2);
+}
+
+.home-poster-wrap {
+  aspect-ratio: 2 / 3;
+}
+
+.home-poster,
+.home-poster-wrap > img,
+.home-continue-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.home-poster-label,
+.home-poster-title,
+.home-content-title,
+.home-card-title {
+  margin-top: 8px;
+  color: var(--nuvio-text);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.home-poster-subtitle,
+.home-card-subtitle {
+  margin-top: 3px;
+  color: var(--nuvio-text-dim);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.home-row-continue .home-content-card {
+  flex-basis: clamp(260px, 27vw, 370px);
+}
+
+.home-continue-media {
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+}
+
+.home-continue-copy {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 38px 12px 13px;
+  background: linear-gradient(0deg, rgba(10, 11, 15, 0.97), rgba(10, 11, 15, 0));
+}
+
+.home-continue-title {
+  font: 700 14px/1.3 var(--nuvio-font-display, "Space Grotesk", sans-serif);
+}
+
+.home-continue-kicker,
+.home-continue-subtitle,
+.home-continue-time-pill,
+.home-continue-badge {
+  font-size: 9px;
+}
+
+.home-continue-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.home-continue-progress span {
+  display: block;
+  height: 100%;
+  background: var(--nuvio-primary);
+}
+
+/* ---------- Search ---------- */
+.search-screen-shell,
+.discover-shell,
+.library-shell,
+.settings-shell {
+  background: var(--nuvio-canvas) !important;
+}
+
+.search-content {
+  width: 100% !important;
+  height: 100% !important;
+  overflow: auto !important;
+  padding: 36px var(--nuvio-page-x) 70px !important;
+}
+
+.search-page-heading {
+  display: none !important;
+}
+
+.search-command-zone {
+  width: min(920px, 100%);
+  margin: 8px auto 24px;
+}
+
+.search-input-wrap {
+  position: relative;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  border-radius: 11px;
+  border: 1px solid rgba(140, 144, 159, 0.24);
+  background: rgba(30, 31, 37, 0.9);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+.search-input-wrap:focus-within {
+  border-color: rgba(173, 198, 255, 0.62);
+  box-shadow:
+    0 0 0 3px rgba(77, 142, 255, 0.1),
+    0 14px 46px rgba(0, 0, 0, 0.25);
+}
+
+.search-input-icon {
+  margin-left: 15px;
+  color: var(--nuvio-text-dim);
+  flex: 0 0 auto;
+}
+
+.search-input-field {
+  flex: 1;
+  height: 100%;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  color: var(--nuvio-text) !important;
+  padding: 0 12px !important;
+  font: 500 14px/1 var(--nuvio-font-body, "Manrope", sans-serif) !important;
+}
+
+.search-input-field::placeholder {
+  color: #747989;
+}
+
+.search-clear-btn {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(51, 53, 58, 0.72);
+  color: var(--nuvio-text-soft);
+  display: grid;
+  place-items: center;
+}
+
+.search-esc-shortcut {
+  margin: 0 10px 0 8px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--nuvio-line);
+  color: var(--nuvio-text-dim);
+  font: 600 9px/1.2 var(--nuvio-font-mono, monospace);
+}
+
+.search-filters-bar,
+.search-results-meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.search-discover-chip,
+.search-filter-pill {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 11px;
+  border: 1px solid var(--nuvio-line);
+  border-radius: 999px;
+  background: rgba(30, 31, 37, 0.75);
+  color: var(--nuvio-text-soft);
+  font: 700 10px/1 var(--nuvio-font-body, "Manrope", sans-serif);
+}
+
+.search-results-meta-bar {
+  color: var(--nuvio-text-dim);
+  font-size: 11px;
+}
+
+.search-results-row {
+  width: min(100%, 1500px);
+  margin: 0 auto 32px;
+}
+
+.search-results-title {
+  margin: 0 0 3px;
+  font: 650 18px/1.25 var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  color: var(--nuvio-text);
+}
+
+.search-results-subtitle {
+  margin-bottom: 11px;
+  color: var(--nuvio-text-dim);
+  font-size: 10px;
+}
+
+.search-results-track {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+  gap: 18px 14px;
+}
+
+.search-result-card {
+  min-width: 0;
+  border-radius: 9px;
+  transition: transform 160ms var(--nuvio-ease);
+}
+
+.search-result-card.focused,
+.search-result-card:hover {
+  transform: translateY(-3px);
+}
+
+.search-result-poster-wrap {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  border: 1px solid var(--nuvio-line);
+  background: var(--nuvio-surface-2);
+}
+
+.search-result-card.focused .search-result-poster-wrap,
+.search-result-card:hover .search-result-poster-wrap {
+  border-color: rgba(173, 198, 255, 0.7);
+  box-shadow: var(--nuvio-glow);
+}
+
+.search-result-poster {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.search-result-rating-badge {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  border-radius: 5px;
+  background: rgba(9, 11, 16, 0.82);
+  color: #f7dc78;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.search-result-play-hover {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  background: rgba(4, 6, 10, 0.45);
+  transition: opacity 160ms ease;
+}
+
+.search-result-card:hover .search-result-play-hover,
+.search-result-card.focused .search-result-play-hover {
+  opacity: 1;
+}
+
+.search-result-name {
+  margin-top: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--nuvio-text);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.search-result-date {
+  margin-top: 2px;
+  color: var(--nuvio-text-dim);
+  font-size: 9px;
+}
+
+.search-empty-state,
+.library-empty-state,
+.plugins-empty-card,
+.stream-route-empty {
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  margin: 32px auto;
+  padding: 32px;
+  border: 1px solid var(--nuvio-line);
+  border-radius: var(--nuvio-radius-md);
+  background: rgba(30, 31, 37, 0.55);
+  color: var(--nuvio-text-dim);
+}
+
+.search-empty-state h2,
+.library-empty-title,
+.plugins-empty-card h3 {
+  margin: 0;
+  color: var(--nuvio-text);
+  font: 650 18px/1.2 var(--nuvio-font-display, "Space Grotesk", sans-serif);
+}
+
+/* ---------- Discover ---------- */
+.discover-main {
+  height: 100% !important;
+  overflow: auto !important;
+  padding: 34px var(--nuvio-page-x) 70px !important;
+}
+
+.discover-seeall-shell {
+  width: min(100%, var(--nuvio-page-max));
+  margin: 0 auto;
+}
+
+.discover-header {
+  margin-bottom: 18px;
+}
+
+.discover-header .seeall-title {
+  margin: 0;
+  font: 700 clamp(30px, 3vw, 44px)/1.06 var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  letter-spacing: -0.035em;
+  color: var(--nuvio-text);
+}
+
+.discover-header .seeall-subtitle {
+  margin-top: 6px;
+  color: var(--nuvio-text-dim);
+  font-size: 11px;
+}
+
+.discover-picker-row,
+.library-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.library-picker {
+  position: relative;
+}
+
+.library-picker-anchor,
+.discover-filter {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 13px;
+  border-radius: 8px;
+  border: 1px solid var(--nuvio-line);
+  background: rgba(30, 31, 37, 0.82);
+  color: var(--nuvio-text-soft);
+  font: 650 11px/1 var(--nuvio-font-body, "Manrope", sans-serif);
+}
+
+.library-picker-anchor.focused,
+.library-picker.open .library-picker-anchor,
+.discover-filter.focused {
+  border-color: rgba(173, 198, 255, 0.58);
+  color: var(--nuvio-primary);
+  box-shadow: 0 0 0 3px rgba(77, 142, 255, 0.08);
+}
+
+.library-picker-menu {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 210px;
+  max-height: 320px;
+  overflow: auto;
+  padding: 7px;
+  border: 1px solid var(--nuvio-line-strong);
+  border-radius: 10px;
+  background: rgba(17, 19, 24, 0.98);
+  box-shadow: var(--nuvio-shadow);
+}
+
+.library-picker-option {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--nuvio-text-soft);
+  text-align: left;
+  font-size: 11px;
+}
+
+.library-picker-option.focused,
+.library-picker-option:hover {
+  background: rgba(77, 142, 255, 0.12);
+  color: var(--nuvio-primary);
+}
+
+.discover-grid,
+.seeall-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px 14px !important;
+}
+
+.discover-card,
+.seeall-card {
+  min-width: 0 !important;
+  border-radius: 9px;
+  color: var(--nuvio-text);
+  transition: transform 160ms var(--nuvio-ease);
+}
+
+.discover-card.focused,
+.discover-card:hover,
+.seeall-card.focused,
+.seeall-card:hover {
+  transform: translateY(-3px);
+}
+
+.discover-card img,
+.seeall-card img,
+.seeall-poster,
+.discover-poster {
+  border-radius: 8px;
+}
+
+/* ---------- Details ---------- */
+.series-detail-shell,
+.movie-detail-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: auto !important;
+  background: var(--nuvio-canvas) !important;
+  color: var(--nuvio-text);
+}
+
+.series-detail-backdrop {
+  position: fixed !important;
+  inset: var(--nuvio-header-h) 0 auto 0 !important;
+  height: min(62vh, 720px) !important;
+  background-position: center 24% !important;
+  background-size: cover !important;
+  filter: saturate(0.88) brightness(0.72);
+  opacity: 0.76;
+}
+
+.series-detail-vignette,
+.detail-bottom-shadow {
+  position: fixed !important;
+  inset: var(--nuvio-header-h) 0 auto 0 !important;
+  height: min(64vh, 760px) !important;
+  pointer-events: none;
+}
+
+.series-detail-vignette {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(9, 11, 16, 0.98) 0%,
+      rgba(9, 11, 16, 0.82) 34%,
+      rgba(9, 11, 16, 0.32) 68%,
+      rgba(9, 11, 16, 0.15) 100%
+    ),
+    linear-gradient(0deg, var(--nuvio-canvas) 0%, rgba(9, 11, 16, 0.75) 20%, transparent 58%);
+}
+
+.detail-bottom-shadow {
+  background: linear-gradient(0deg, var(--nuvio-canvas) 0%, transparent 55%);
+}
+
+.series-detail-content,
+.movie-detail-content {
+  position: relative;
+  z-index: 5;
+  width: min(100%, var(--nuvio-page-max));
+  margin: 0 auto;
+  padding: clamp(110px, 14vh, 150px) var(--nuvio-page-x) 80px !important;
+}
+
+.detail-hero-section {
+  display: grid;
+  grid-template-columns: clamp(170px, 17vw, 245px) minmax(0, 1fr);
+  align-items: end;
+  gap: clamp(24px, 3vw, 44px);
+  min-height: clamp(360px, 47vh, 500px);
+}
+
+.detail-hero-poster-wrap {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--nuvio-surface-2);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.48);
+}
+
+.detail-hero-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-hero-body {
+  max-width: 820px;
+  padding-bottom: 4px;
+}
+
+.detail-hero-tag {
+  margin-bottom: 9px;
+}
+
+.detail-hero-tag-pill {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--nuvio-primary);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.11em;
+}
+
+.series-detail-logo {
+  max-width: min(460px, 55vw);
+  max-height: 92px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.series-detail-title {
+  margin: 0;
+  font: 700 clamp(38px, 5vw, 66px)/0.98 var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  letter-spacing: -0.045em;
+  color: #f5f6f9;
+}
+
+.detail-meta-stack {
+  margin-top: 12px;
+}
+
+.detail-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  color: var(--nuvio-text-soft);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.detail-meta-row.secondary {
+  margin-top: 5px;
+  color: var(--nuvio-text-dim);
+}
+
+.detail-meta-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(194, 198, 214, 0.5);
+}
+
+.detail-meta-badge,
+.detail-rating-item {
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 6px;
+  border: 1px solid var(--nuvio-line);
+  border-radius: 5px;
+  background: rgba(17, 19, 24, 0.65);
+  color: var(--nuvio-text-soft);
+}
+
+.series-detail-description {
+  max-width: 760px;
+  margin: 14px 0 0;
+  color: #c9ccd6;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.series-detail-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 19px;
+}
+
+.series-primary-btn,
+.series-secondary-btn,
+.series-circle-btn {
+  min-height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--nuvio-line);
+  font: 750 11px/1 var(--nuvio-font-body, "Manrope", sans-serif);
+  cursor: pointer;
+}
+
+.series-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-color: var(--nuvio-primary);
+  background: var(--nuvio-primary);
+  color: #001a42;
+}
+
+.series-secondary-btn {
+  padding: 0 14px;
+  background: rgba(40, 42, 47, 0.72);
+  color: var(--nuvio-text);
+}
+
+.series-circle-btn {
+  width: 40px;
+  display: inline-grid;
+  place-items: center;
+  background: rgba(40, 42, 47, 0.58);
+  color: var(--nuvio-text-soft);
+}
+
+.series-primary-btn.focused,
+.series-secondary-btn.focused,
+.series-circle-btn.focused,
+.series-primary-btn:hover,
+.series-secondary-btn:hover,
+.series-circle-btn:hover {
+  box-shadow: var(--nuvio-glow);
+  border-color: rgba(173, 198, 255, 0.75);
+}
+
+#detailSeasonRowMount,
+#detailEpisodeTrackMount,
+#detailInsightSectionMount,
+#detailCommentsSectionMount,
+#detailCompanySectionsMount {
+  position: relative;
+  margin-top: 34px;
+}
+
+.series-season-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.series-season-btn {
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--nuvio-line);
+  background: rgba(30, 31, 37, 0.75);
+  color: var(--nuvio-text-soft);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.series-season-btn.selected,
+.series-season-btn.focused {
+  border-color: rgba(173, 198, 255, 0.6);
+  background: var(--nuvio-primary);
+  color: #001a42;
+}
+
+.series-episode-track {
+  display: grid !important;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  overflow: visible !important;
+}
+
+.series-episode-card {
+  display: grid !important;
+  grid-template-columns: clamp(150px, 19vw, 250px) minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  min-height: 116px;
+  padding: 10px;
+  border: 1px solid var(--nuvio-line);
+  border-radius: 10px;
+  background: rgba(30, 31, 37, 0.72);
+}
+
+.series-episode-card.focused,
+.series-episode-card:hover {
+  border-color: rgba(173, 198, 255, 0.58);
+  background: rgba(40, 42, 47, 0.88);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.26);
+}
+
+/* ---------- Library ---------- */
+.library-main {
+  width: 100% !important;
+  height: 100% !important;
+  overflow: auto !important;
+  padding: 34px var(--nuvio-page-x) 72px !important;
+}
+
+.library-page {
+  width: min(100%, var(--nuvio-page-max));
+  margin: 0 auto;
+}
+
+.library-page-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.library-page-title {
+  margin: 0;
+  font: 700 clamp(32px, 3.2vw, 46px)/1.04 var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  letter-spacing: -0.035em;
+}
+
+.library-page-source {
+  color: var(--nuvio-text-dim);
+  font-size: 10px;
+}
+
+.library-view-mode-row,
+.library-actions-row,
+.library-cloud-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.library-view-mode-button,
+.library-action-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--nuvio-line);
+  background: rgba(30, 31, 37, 0.7);
+  color: var(--nuvio-text-soft);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.library-view-mode-button.selected,
+.library-view-mode-button.focused,
+.library-action-button.library-primary,
+.library-action-button.focused {
+  border-color: rgba(173, 198, 255, 0.55);
+  background: rgba(77, 142, 255, 0.14);
+  color: var(--nuvio-primary);
+}
+
+.library-picker-groups {
+  margin: 0 0 18px;
+}
+
+.library-grid-wrap {
+  width: 100%;
+}
+
+.library-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 20px 14px !important;
+}
+
+.library-grid-card {
+  min-width: 0 !important;
+  width: auto !important;
+  transition: transform 160ms var(--nuvio-ease);
+}
+
+.library-grid-card.focused,
+.library-grid-card:hover {
+  transform: translateY(-3px);
+}
+
+.library-grid-poster {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 2 / 3;
+  border: 1px solid var(--nuvio-line);
+  border-radius: 8px !important;
+  background-size: cover !important;
+  background-position: center !important;
+  box-shadow: none !important;
+}
+
+.library-grid-card.focused .library-grid-poster,
+.library-grid-card:hover .library-grid-poster {
+  border-color: rgba(173, 198, 255, 0.68);
+  box-shadow: var(--nuvio-glow) !important;
+}
+
+.library-grid-title {
+  margin-top: 8px;
+  color: var(--nuvio-text);
+  font-size: 11px;
+  font-weight: 750;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Sources / Plugins ---------- */
+.plugins-route-shell {
+  width: 100%;
+  height: 100%;
+  overflow: auto !important;
+  background: var(--nuvio-canvas) !important;
+}
+
+.plugins-route-content {
+  width: min(100%, 1280px);
+  margin: 0 auto;
+  padding: 34px var(--nuvio-page-x) 70px !important;
+}
+
+.plugins-content-header {
+  margin-bottom: 22px;
+}
+
+.plugins-title {
+  margin: 0;
+  font: 700 clamp(32px, 3.2vw, 46px)/1.04 var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  letter-spacing: -0.035em;
+}
+
+.plugins-main,
+.plugins-panel {
+  width: 100%;
+}
+
+.plugins-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.plugins-settings-card,
+.plugins-repository-card,
+.plugins-readonly-card,
+.plugins-provider-card,
+.plugins-confirm-dialog {
+  border: 1px solid var(--nuvio-line) !important;
+  border-radius: 10px !important;
+  background: rgba(30, 31, 37, 0.72) !important;
+  box-shadow: none !important;
+}
+
+.plugins-settings-card,
+.plugins-readonly-card {
+  padding: 18px !important;
+}
+
+.plugins-section-heading h2,
+.plugins-section-label h2 {
+  margin: 0;
+  color: var(--nuvio-text);
+  font: 650 16px/1.3 var(--nuvio-font-display, "Space Grotesk", sans-serif);
+}
+
+.plugins-repository-input {
+  min-height: 40px;
+  border: 1px solid var(--nuvio-line) !important;
+  border-radius: 8px !important;
+  background: rgba(12, 14, 19, 0.78) !important;
+  color: var(--nuvio-text) !important;
+}
+
+.plugins-focusable.focused {
+  border-color: rgba(173, 198, 255, 0.58) !important;
+  box-shadow: 0 0 0 3px rgba(77, 142, 255, 0.08) !important;
+}
+
+/* ---------- Stream selection ---------- */
+.stream-route-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--nuvio-canvas);
+}
+
+.stream-route-backdrop {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 46% !important;
+  height: 100% !important;
+  background-size: cover !important;
+  background-position: center !important;
+  opacity: 0.72;
+  filter: saturate(0.86) brightness(0.68);
+}
+
+.stream-route-backdrop-dim,
+.stream-route-left-gradient,
+.stream-route-right-gradient {
+  position: absolute !important;
+  inset: 0;
+  pointer-events: none;
+}
+
+.stream-route-backdrop-dim {
+  background: linear-gradient(
+    90deg,
+    rgba(9, 11, 16, 0.3),
+    rgba(9, 11, 16, 0.78) 38%,
+    var(--nuvio-canvas) 52%
+  );
+}
+
+.stream-route-left-gradient,
+.stream-route-right-gradient {
+  background: linear-gradient(0deg, rgba(9, 11, 16, 0.95), transparent 34%, rgba(9, 11, 16, 0.2));
+}
+
+.stream-route-content {
+  position: relative;
+  z-index: 5;
+  width: min(100%, 1720px);
+  height: 100%;
+  margin: 0 auto;
+  padding: 26px var(--nuvio-page-x) 34px;
+  display: grid !important;
+  grid-template-columns: minmax(260px, 0.78fr) minmax(540px, 1.55fr);
+  gap: clamp(34px, 5vw, 82px);
+}
+
+.stream-route-left {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 28px;
+}
+
+.stream-route-left-inner {
+  width: 100%;
+  max-width: 440px;
+}
+
+.stream-route-logo {
+  max-width: 320px;
+  max-height: 90px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.stream-route-title {
+  margin: 0;
+  font: 700 clamp(32px, 4vw, 52px)/1 var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  letter-spacing: -0.04em;
+}
+
+.stream-route-episode-code {
+  margin-top: 12px;
+  color: var(--nuvio-primary);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.stream-route-subtitle,
+.stream-route-detail-line {
+  margin-top: 7px;
+  color: var(--nuvio-text-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.stream-route-right {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
+}
+
+.stream-route-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.stream-route-eyebrow {
+  color: var(--nuvio-primary);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.11em;
+}
+
+.stream-route-heading h2 {
+  margin: 4px 0 0;
+  font: 650 20px/1.2 var(--nuvio-font-display, "Space Grotesk", sans-serif);
+}
+
+.stream-route-count {
+  min-width: 30px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(77, 142, 255, 0.12);
+  color: var(--nuvio-primary);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.stream-route-chip-wrap {
+  margin-bottom: 10px;
+}
+
+.stream-route-chip-track {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.stream-route-chip-track::-webkit-scrollbar {
+  display: none;
+}
+
+.stream-route-chip {
+  min-height: 28px !important;
+  padding: 0 10px !important;
+  border: 1px solid var(--nuvio-line) !important;
+  border-radius: 999px !important;
+  background: rgba(30, 31, 37, 0.72) !important;
+  color: var(--nuvio-text-soft) !important;
+  font-size: 9px !important;
+}
+
+.stream-route-chip.focused,
+.stream-route-chip.active,
+.stream-route-chip.selected {
+  border-color: rgba(173, 198, 255, 0.62) !important;
+  background: var(--nuvio-primary) !important;
+  color: #001a42 !important;
+}
+
+.stream-route-panel-shell {
+  min-height: 0;
+  flex: 1;
+  border: 1px solid var(--nuvio-line);
+  border-radius: 11px;
+  background: rgba(17, 19, 24, 0.76);
+  overflow: hidden;
+}
+
+.stream-route-panel,
+.stream-route-list {
+  height: 100%;
+  min-height: 0;
+}
+
+.stream-route-list {
+  overflow-y: auto;
+  padding: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(140, 144, 159, 0.38) transparent;
+}
+
+.stream-route-card-row {
+  margin-bottom: 8px !important;
+}
+
+.stream-route-card {
+  min-height: 86px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 12px 14px !important;
+  border: 1px solid var(--nuvio-line) !important;
+  border-radius: 9px !important;
+  background: rgba(30, 31, 37, 0.72) !important;
+  box-shadow: none !important;
+}
+
+.stream-route-card.focused,
+.stream-route-card:hover {
+  border-color: rgba(173, 198, 255, 0.6) !important;
+  background: rgba(40, 42, 47, 0.92) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22) !important;
+}
+
+.stream-route-card-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+/* ---------- Player ---------- */
+#player,
+.player-ui-root {
+  background: #05070a !important;
+}
+
+#videoPlayer {
+  object-fit: contain;
+  background: #05070a;
+}
+
+.player-controls-overlay {
+  pointer-events: none;
+}
+
+.player-controls-gradient-top {
+  background: linear-gradient(180deg, rgba(5, 7, 10, 0.78), transparent 90%) !important;
+}
+
+.player-controls-gradient-bottom {
+  background: linear-gradient(
+    0deg,
+    rgba(5, 7, 10, 0.92) 0%,
+    rgba(5, 7, 10, 0.48) 48%,
+    transparent 100%
+  ) !important;
+}
+
+.player-controls-bottom {
+  padding: 0 clamp(26px, 4vw, 66px) clamp(28px, 4vh, 48px) !important;
+}
+
+.player-meta {
+  max-width: 820px;
+}
+
+.player-title {
+  font: 700 clamp(24px, 2.4vw, 38px)/1.08 var(--nuvio-font-display, "Space Grotesk", sans-serif) !important;
+  letter-spacing: -0.03em;
+  color: #f4f5f8 !important;
+}
+
+.player-subtitle,
+.player-meta-tertiary,
+.player-time-label,
+.player-clock,
+.player-ends-at {
+  color: #c2c6d6 !important;
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif) !important;
+}
+
+.player-transport-panel {
+  margin-top: 14px;
+  padding: 11px 13px !important;
+  border: 1px solid rgba(194, 198, 214, 0.16) !important;
+  border-radius: 12px !important;
+  background: rgba(12, 14, 19, 0.58) !important;
+  backdrop-filter: blur(16px);
+}
+
+.player-progress-track,
+.player-seek-overlay-track {
+  height: 4px !important;
+  border-radius: 99px !important;
+  background: rgba(226, 226, 233, 0.18) !important;
+}
+
+.player-progress-buffered {
+  background: rgba(226, 226, 233, 0.34) !important;
+}
+
+.player-progress-fill,
+.player-seek-fill {
+  background: var(--nuvio-primary) !important;
+  border-radius: 99px !important;
+}
+
+.player-control-button,
+.player-control-btn,
+.player-controls-row button,
+.web-player-toolbar button {
+  border-color: transparent !important;
+  background: transparent !important;
+  color: #f1f3f8 !important;
+}
+
+.player-control-button.focused,
+.player-control-btn.focused,
+.player-controls-row button:focus-visible,
+.player-controls-row button:hover {
+  background: rgba(226, 226, 233, 0.11) !important;
+  color: var(--nuvio-primary) !important;
+  box-shadow: 0 0 0 1px rgba(173, 198, 255, 0.35) !important;
+}
+
+.player-modal,
+.player-sources-panel,
+.player-episode-panel {
+  border: 1px solid var(--nuvio-line-strong) !important;
+  background: rgba(12, 14, 19, 0.96) !important;
+  backdrop-filter: blur(24px);
+  box-shadow: var(--nuvio-shadow) !important;
+}
+
+.player-loading-overlay {
+  background: #07090d !important;
+}
+
+.player-loading-gradient {
+  background: linear-gradient(
+    0deg,
+    rgba(7, 9, 13, 0.96),
+    rgba(7, 9, 13, 0.2) 58%,
+    rgba(7, 9, 13, 0.52)
+  ) !important;
+}
+
+.player-loading-title {
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif) !important;
+  font-weight: 700 !important;
+}
+
+/* ---------- Settings ---------- */
+.settings-shell {
+  width: 100%;
+  height: 100%;
+}
+
+.settings-workspace {
+  width: min(100%, 1320px) !important;
+  height: 100% !important;
+  margin: 0 auto !important;
+  padding: 32px var(--nuvio-page-x) 52px !important;
+  display: grid !important;
+  grid-template-columns: 230px minmax(0, 1fr) !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+  column-gap: 18px !important;
+  row-gap: 18px !important;
+}
+
+.settings-page-heading {
+  grid-column: 1 / -1;
+  margin: 0 !important;
+}
+
+.settings-page-heading > span {
+  color: var(--nuvio-primary) !important;
+  font-size: 9px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.11em;
+}
+
+.settings-page-heading h1 {
+  margin: 5px 0 0 !important;
+  font: 700 clamp(30px, 3vw, 42px)/1.08 var(--nuvio-font-display, "Space Grotesk", sans-serif) !important;
+  letter-spacing: -0.035em;
+}
+
+.settings-page-heading p {
+  margin: 7px 0 0 !important;
+  color: var(--nuvio-text-dim) !important;
+  font-size: 11px !important;
+}
+
+.settings-sidebar-frame,
+.settings-content-frame {
+  min-height: 0;
+  border: 1px solid var(--nuvio-line) !important;
+  border-radius: 11px !important;
+  background: rgba(30, 31, 37, 0.66) !important;
+  overflow: hidden;
+}
+
+.settings-sidebar,
+.settings-content {
+  height: 100% !important;
+  overflow: auto !important;
+  padding: 9px !important;
+}
+
+.settings-content {
+  padding: 16px !important;
+}
+
+.settings-nav-item,
+.settings-sidebar-item,
+.settings-section-button {
+  border-radius: 8px !important;
+}
+
+.settings-nav-item.focused,
+.settings-nav-item.selected,
+.settings-sidebar-item.focused,
+.settings-section-button.focused {
+  background: rgba(77, 142, 255, 0.12) !important;
+  color: var(--nuvio-primary) !important;
+}
+
+.settings-card,
+.settings-section-card,
+.settings-group,
+.settings-panel {
+  border: 1px solid var(--nuvio-line) !important;
+  border-radius: 10px !important;
+  background: rgba(17, 19, 24, 0.65) !important;
+  box-shadow: none !important;
+}
+
+.settings-toggle,
+.settings-option,
+.settings-button,
+.settings-action {
+  border-radius: 8px !important;
+}
+
+/* ---------- Profile selection ---------- */
+.profile-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 70px var(--nuvio-page-x) 50px;
+  background:
+    radial-gradient(circle at 50% 15%, rgba(77, 142, 255, 0.12), transparent 34rem),
+    var(--nuvio-canvas) !important;
+}
+
+.profile-screen-background {
+  opacity: 0.1 !important;
+  filter: blur(24px) saturate(0.65) !important;
+}
+
+.profile-main-layer {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 1100px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.profile-brand-lockup {
+  margin-bottom: 22px !important;
+  transform: scale(0.82);
+}
+
+.profile-title {
+  margin: 0 !important;
+  font: 700 clamp(34px, 4vw, 54px)/1.04 var(--nuvio-font-display, "Space Grotesk", sans-serif) !important;
+  letter-spacing: -0.045em !important;
+  color: var(--nuvio-text) !important;
+}
+
+.profile-subtitle {
+  margin: 9px 0 0 !important;
+  color: var(--nuvio-text-dim) !important;
+  font-size: 12px !important;
+}
+
+.profile-grid {
+  width: 100%;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)) !important;
+  gap: 18px !important;
+  margin: 34px 0 24px !important;
+}
+
+.profile-card {
+  min-width: 0;
+  padding: 10px 8px 13px !important;
+  border: 1px solid transparent;
+  border-radius: 11px !important;
+  background: transparent !important;
+  transition:
+    transform 170ms var(--nuvio-ease),
+    background 170ms ease,
+    border-color 170ms ease;
+}
+
+.profile-card.focused,
+.profile-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(173, 198, 255, 0.48) !important;
+  background: rgba(30, 31, 37, 0.76) !important;
+  box-shadow: var(--nuvio-glow);
+}
+
+.profile-avatar-ring {
+  width: 100% !important;
+  aspect-ratio: 0.78 !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+  background: var(--nuvio-surface-2);
+  border: 1px solid var(--nuvio-line) !important;
+}
+
+.profile-avatar {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+  font-size: clamp(34px, 4vw, 60px) !important;
+}
+
+.profile-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-name {
+  margin-top: 9px !important;
+  color: var(--nuvio-text) !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+}
+
+.profile-badge,
+.profile-badge-slot {
+  margin-top: 3px !important;
+  color: var(--nuvio-text-dim) !important;
+  font-size: 8px !important;
+  letter-spacing: 0.08em;
+}
+
+.profile-hint {
+  color: var(--nuvio-text-dim) !important;
+  font-size: 10px !important;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 960px) {
+  :root {
+    --nuvio-page-x: clamp(16px, 4vw, 28px);
+  }
+
+  .nuvio-primary-nav {
+    gap: 16px;
+  }
+
+  .nuvio-search-trigger {
+    width: 44px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .nuvio-search-trigger-label,
+  .nuvio-search-trigger kbd {
+    display: none;
+  }
+
+  .home-hero-modern.nuvio-hero {
+    height: 590px;
+  }
+
+  .nuvio-hero .home-modern-hero-card {
+    padding-bottom: 78px;
+  }
+
+  .nuvio-home-rows {
+    margin-top: -30px;
+  }
+
+  .detail-hero-section {
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 22px;
+  }
+
+  .stream-route-content {
+    grid-template-columns: 0.7fr 1.3fr;
+    gap: 26px;
+  }
+
+  .settings-workspace {
+    grid-template-columns: 200px minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --nuvio-header-h: 58px;
+    --nuvio-page-x: 16px;
+  }
+
+  .nuvio-topbar-inner {
+    padding: 0 14px;
+    gap: 12px;
+  }
+
+  .nuvio-brand-word {
+    font-size: 18px;
+  }
+
+  .nuvio-brand-badge {
+    display: none;
+  }
+
+  .nuvio-primary-nav {
+    position: fixed;
+    z-index: 1001;
+    inset: auto 10px 10px;
+    height: 54px;
+    justify-content: space-around;
+    gap: 0;
+    padding: 0 6px;
+    border: 1px solid rgba(66, 71, 84, 0.58);
+    border-radius: 14px;
+    background: rgba(12, 14, 19, 0.94);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+  }
+
+  .nuvio-nav-link {
+    height: 44px;
+    padding: 0 11px;
+    font-size: 10px;
+  }
+
+  .nuvio-nav-link::after {
+    bottom: 2px;
+  }
+
+  .nuvio-topbar-tools {
+    margin-left: auto;
+  }
+
+  .nuvio-search-trigger {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+
+  .nuvio-icon-button,
+  .nuvio-avatar-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  body.web-with-header #app {
+    padding-top: var(--nuvio-header-h);
+    padding-bottom: 70px;
+  }
+
+  .home-hero-modern.nuvio-hero {
+    height: 600px;
+    min-height: 560px;
+  }
+
+  .nuvio-hero::before {
+    background:
+      linear-gradient(
+        0deg,
+        var(--nuvio-canvas) 0%,
+        rgba(9, 11, 16, 0.9) 22%,
+        rgba(9, 11, 16, 0.35) 62%,
+        rgba(9, 11, 16, 0.18) 100%
+      ),
+      linear-gradient(90deg, rgba(9, 11, 16, 0.86), rgba(9, 11, 16, 0.14));
+  }
+
+  .nuvio-hero .home-modern-hero-card {
+    align-items: flex-end;
+    padding: 0 16px 72px;
+  }
+
+  .nuvio-hero .home-hero-content-grid {
+    width: 100%;
+  }
+
+  .nuvio-hero .home-hero-logo {
+    max-width: 72vw;
+    max-height: 82px;
+  }
+
+  .nuvio-hero .home-hero-title-text {
+    font-size: clamp(34px, 11vw, 50px);
+  }
+
+  .nuvio-hero .home-hero-description {
+    font-size: 12px;
+    -webkit-line-clamp: 3;
+  }
+
+  .nuvio-hero .home-hero-action {
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 10px;
+  }
+
+  .nuvio-hero .home-hero-indicators {
+    display: none;
+  }
+
+  .nuvio-home-rows {
+    margin-top: -22px;
+    padding: 0 16px 86px;
+  }
+
+  .home-row {
+    margin-bottom: 26px;
+  }
+
+  .home-row-title {
+    font-size: 18px;
+  }
+
+  .home-row-controls .home-rail-arrow {
+    display: none;
+  }
+
+  .home-content-card {
+    flex-basis: 132px;
+  }
+
+  .home-row-continue .home-content-card {
+    flex-basis: 250px;
+  }
+
+  .search-content,
+  .discover-main,
+  .library-main,
+  .plugins-route-content {
+    padding: 22px 16px 88px !important;
+  }
+
+  .search-command-zone {
+    margin-top: 0;
+  }
+
+  .search-results-track,
+  .discover-grid,
+  .seeall-grid,
+  .library-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 18px 11px !important;
+  }
+
+  .detail-hero-section {
+    min-height: 0;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .detail-hero-poster-wrap {
+    width: 135px;
+  }
+
+  .series-detail-content,
+  .movie-detail-content {
+    padding: 78px 16px 90px !important;
+  }
+
+  .series-detail-title {
+    font-size: 38px;
+  }
+
+  .series-detail-description {
+    font-size: 12px;
+  }
+
+  .series-episode-card {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+
+  .stream-route-shell {
+    overflow: auto;
+  }
+
+  .stream-route-backdrop {
+    width: 100% !important;
+    height: 390px !important;
+  }
+
+  .stream-route-backdrop-dim {
+    background: linear-gradient(
+      0deg,
+      var(--nuvio-canvas) 0%,
+      rgba(9, 11, 16, 0.78) 55%,
+      rgba(9, 11, 16, 0.24) 100%
+    );
+  }
+
+  .stream-route-content {
+    min-height: 100%;
+    height: auto;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 230px 16px 88px;
+  }
+
+  .stream-route-left {
+    padding: 0;
+  }
+
+  .stream-route-right {
+    padding: 0;
+  }
+
+  .stream-route-panel-shell {
+    min-height: 420px;
+  }
+
+  .settings-workspace {
+    height: auto !important;
+    min-height: 100%;
+    padding: 22px 16px 90px !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto minmax(420px, auto) !important;
+  }
+
+  .settings-sidebar-frame {
+    min-height: 0;
+  }
+
+  .settings-sidebar {
+    display: flex !important;
+    gap: 7px;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+
+  .profile-screen {
+    align-items: flex-start;
+    padding: 70px 16px 90px;
+  }
+
+  .profile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ========================================================================== */
+/* Web UI structural components — markup created by the rebuilt live screens */
+/* ========================================================================== */
+
+.nuvio-page-heading {
+  width: 100%;
+  margin: 0 0 28px;
+}
+
+.nuvio-page-heading > .nuvio-eyebrow,
+.nuvio-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 7px;
+  color: var(--nuvio-primary);
+  font: 800 10px/1.2 var(--nuvio-font-body, "Manrope", sans-serif);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.nuvio-page-heading h1,
+.nuvio-page-heading h2 {
+  margin: 0;
+  color: var(--nuvio-text);
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  letter-spacing: -0.04em;
+}
+
+.nuvio-page-heading h1 {
+  font-size: clamp(34px, 4vw, 54px);
+  line-height: 1.02;
+}
+
+.nuvio-page-heading h2 {
+  font-size: clamp(22px, 2.2vw, 30px);
+  line-height: 1.08;
+}
+
+.nuvio-page-heading p {
+  max-width: 720px;
+  margin: 8px 0 0;
+  color: var(--nuvio-text-dim);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.nuvio-page-heading-row,
+.nuvio-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.nuvio-page-kicker,
+.nuvio-source-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 31px;
+  padding: 0 11px;
+  border: 1px solid var(--nuvio-line);
+  border-radius: 999px;
+  background: rgba(30, 31, 37, 0.68);
+  color: var(--nuvio-text-soft);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.nuvio-page-kicker .material-icons,
+.nuvio-source-badge .material-icons {
+  color: var(--nuvio-primary);
+  font-size: 15px;
+}
+
+.nuvio-state-panel {
+  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 38px 24px;
+  border: 1px dashed rgba(173, 198, 255, 0.22);
+  border-radius: var(--nuvio-radius-lg);
+  background:
+    radial-gradient(circle at 50% 10%, rgba(77, 142, 255, 0.07), transparent 56%),
+    rgba(17, 19, 24, 0.58);
+  color: var(--nuvio-text-dim);
+  text-align: center;
+}
+
+.nuvio-state-panel > .material-icons,
+.nuvio-state-icon {
+  color: var(--nuvio-primary);
+  opacity: 0.9;
+  font-size: 34px;
+}
+
+.nuvio-state-panel h2,
+.nuvio-state-panel h3,
+.nuvio-state-panel strong {
+  margin: 0;
+  color: var(--nuvio-text);
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+}
+
+.nuvio-state-panel p,
+.nuvio-state-panel > span:last-child {
+  max-width: 520px;
+  margin: 0;
+  color: var(--nuvio-text-dim);
+  line-height: 1.55;
+}
+
+.nuvio-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.nuvio-chip {
+  appearance: none;
+  min-height: 34px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--nuvio-line);
+  border-radius: 999px;
+  background: rgba(30, 31, 37, 0.72);
+  color: var(--nuvio-text-soft);
+  font: 700 11px/1 var(--nuvio-font-body, "Manrope", sans-serif);
+}
+
+.nuvio-chip:hover,
+.nuvio-chip:focus-visible,
+.nuvio-chip.focused {
+  border-color: rgba(173, 198, 255, 0.54);
+  background: rgba(77, 142, 255, 0.12);
+  color: var(--nuvio-text);
+}
+
+.nuvio-poster-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+  gap: 26px 15px !important;
+  width: 100%;
+}
+
+.nuvio-poster-card {
+  min-width: 0;
+  cursor: pointer;
+  border-radius: var(--nuvio-radius-sm);
+  transition:
+    transform 180ms var(--nuvio-ease),
+    filter 180ms ease;
+}
+
+.nuvio-poster-card:hover,
+.nuvio-poster-card.focused,
+.nuvio-poster-card:focus-visible {
+  transform: translateY(-5px);
+  filter: brightness(1.06);
+}
+
+.nuvio-poster-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border: 1px solid var(--nuvio-line);
+  border-radius: var(--nuvio-radius-sm);
+  background: var(--nuvio-surface-2);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+}
+
+.nuvio-poster-card:hover .nuvio-poster-media,
+.nuvio-poster-card.focused .nuvio-poster-media,
+.nuvio-poster-card:focus-visible .nuvio-poster-media {
+  border-color: rgba(173, 198, 255, 0.58);
+  box-shadow: var(--nuvio-glow);
+}
+
+.nuvio-poster-media img,
+.library-grid-poster.nuvio-poster-media,
+.search-result-poster-wrap.nuvio-poster-media,
+.seeall-card-poster-wrap.nuvio-poster-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-size: cover;
+  background-position: center;
+}
+
+.nuvio-card-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(3, 5, 9, 0.78), transparent 42%);
+  opacity: 0.48;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+}
+
+.nuvio-poster-card:hover .nuvio-card-scrim,
+.nuvio-poster-card.focused .nuvio-card-scrim {
+  opacity: 0.76;
+}
+
+.nuvio-card-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -42%) scale(0.9);
+  border-radius: 50%;
+  background: rgba(236, 241, 255, 0.92);
+  color: #061529;
+  opacity: 0;
+  transition:
+    opacity 180ms ease,
+    transform 180ms var(--nuvio-ease);
+  pointer-events: none;
+}
+
+.nuvio-poster-card:hover .nuvio-card-play,
+.nuvio-poster-card.focused .nuvio-card-play {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.nuvio-card-copy {
+  padding-top: 9px;
+}
+
+.nuvio-card-title {
+  overflow: hidden;
+  color: var(--nuvio-text) !important;
+  font-size: 12px !important;
+  font-weight: 720 !important;
+  line-height: 1.35 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nuvio-card-meta {
+  margin-top: 3px;
+  color: var(--nuvio-text-dim) !important;
+  font-size: 9px !important;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+}
+
+.nuvio-rating-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 6px;
+  background: rgba(5, 7, 10, 0.78);
+  color: #ffd66b;
+  font-size: 9px;
+  font-weight: 800;
+  backdrop-filter: blur(10px);
+}
+
+/* ---------- Search rebuilt structure ---------- */
+.nuvio-search-main,
+.nuvio-discover-main,
+.nuvio-library-main,
+.nuvio-sources-content {
+  width: min(100%, var(--nuvio-page-max));
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 42px var(--nuvio-page-x) 80px;
+}
+
+.nuvio-search-header {
+  max-width: 1180px;
+  margin: 0 auto 32px;
+}
+
+.nuvio-search-heading {
+  text-align: center;
+  margin-bottom: 26px;
+}
+
+.nuvio-search-heading p {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.nuvio-search-command {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.nuvio-search-field {
+  position: relative;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 15px 0 20px;
+  border: 1px solid rgba(173, 198, 255, 0.2);
+  border-radius: 16px;
+  background: rgba(17, 19, 24, 0.92);
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.28);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.nuvio-search-field:focus-within {
+  border-color: rgba(173, 198, 255, 0.62);
+  box-shadow:
+    0 0 0 3px rgba(77, 142, 255, 0.08),
+    0 22px 64px rgba(0, 0, 0, 0.34);
+}
+
+.nuvio-search-field .search-input-icon {
+  flex: 0 0 auto;
+  color: var(--nuvio-primary);
+}
+
+.nuvio-search-field .search-input-field {
+  min-width: 0;
+  flex: 1;
+  height: 62px;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--nuvio-text) !important;
+  font: 600 clamp(15px, 1.5vw, 19px)/1 var(--nuvio-font-body, "Manrope", sans-serif) !important;
+  box-shadow: none !important;
+}
+
+.nuvio-search-field .search-input-field::placeholder {
+  color: rgba(140, 144, 159, 0.78);
+}
+
+.nuvio-search-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 13px;
+}
+
+.nuvio-result-summary {
+  margin-left: auto;
+  color: var(--nuvio-text-dim);
+  font-size: 10px;
+}
+
+.nuvio-result-summary strong {
+  color: var(--nuvio-text-soft);
+}
+
+.nuvio-search-results {
+  display: grid;
+  gap: 38px;
+}
+
+.nuvio-search-group {
+  min-width: 0;
+}
+
+.nuvio-search-group .nuvio-section-heading {
+  margin-bottom: 15px;
+}
+
+.nuvio-search-group .search-results-title {
+  margin: 0;
+  color: var(--nuvio-text);
+  font: 650 20px/1.2 var(--nuvio-font-display, "Space Grotesk", sans-serif);
+}
+
+.nuvio-search-group .search-results-subtitle {
+  margin-top: 4px;
+  color: var(--nuvio-text-dim);
+  font-size: 10px;
+}
+
+.nuvio-seeall-card {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(173, 198, 255, 0.28);
+  border-radius: var(--nuvio-radius-sm);
+  background: rgba(30, 31, 37, 0.42);
+}
+
+/* ---------- Explore rebuilt structure ---------- */
+.nuvio-discover-heading {
+  margin-bottom: 18px;
+}
+
+.nuvio-discover-main > .nuvio-filter-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 10px 0 15px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  background: linear-gradient(180deg, var(--nuvio-canvas) 72%, transparent);
+  scrollbar-width: none;
+}
+
+.nuvio-discover-main > .nuvio-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.nuvio-discover-grid {
+  padding-bottom: 50px;
+}
+
+/* ---------- Details rebuilt structure ---------- */
+.nuvio-detail-page {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--nuvio-canvas);
+}
+
+.nuvio-detail-backdrop {
+  inset: 0 !important;
+  width: 100% !important;
+  height: min(76vh, 760px) !important;
+  background-position: center 20% !important;
+  background-size: cover !important;
+  opacity: 0.66 !important;
+  filter: saturate(0.88) contrast(1.04);
+}
+
+.nuvio-detail-vignette {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(9, 11, 16, 0.98) 0%,
+      rgba(9, 11, 16, 0.74) 32%,
+      rgba(9, 11, 16, 0.2) 70%,
+      rgba(9, 11, 16, 0.42) 100%
+    ),
+    linear-gradient(0deg, var(--nuvio-canvas) 0%, rgba(9, 11, 16, 0.84) 17%, transparent 64%) !important;
+}
+
+.nuvio-detail-content {
+  position: relative;
+  z-index: 5;
+  width: min(100%, var(--nuvio-page-max));
+  height: 100%;
+  margin: 0 auto;
+  padding: clamp(34px, 5vh, 70px) var(--nuvio-page-x) 86px !important;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.nuvio-detail-hero {
+  min-height: min(66vh, 650px);
+  display: grid !important;
+  grid-template-columns: minmax(170px, 230px) minmax(0, 760px) !important;
+  align-items: center !important;
+  gap: clamp(28px, 4vw, 60px) !important;
+  padding: 26px 0 48px !important;
+}
+
+.nuvio-detail-art-column {
+  align-self: center;
+}
+
+.nuvio-detail-poster-wrap {
+  width: 100% !important;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border: 1px solid rgba(226, 226, 233, 0.17);
+  border-radius: 12px !important;
+  background: var(--nuvio-surface-2);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
+}
+
+.nuvio-detail-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nuvio-detail-poster-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--nuvio-text-dim);
+}
+
+.nuvio-detail-poster-placeholder .material-icons {
+  font-size: 44px;
+}
+
+.nuvio-detail-copy {
+  min-width: 0;
+  max-width: 760px;
+}
+
+.nuvio-detail-kicker {
+  margin-bottom: 13px;
+}
+
+.nuvio-detail-kicker .detail-hero-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid rgba(173, 198, 255, 0.34);
+  border-radius: 5px;
+  background: rgba(77, 142, 255, 0.1);
+  color: var(--nuvio-primary);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+}
+
+.nuvio-detail-brand {
+  max-width: 680px;
+}
+
+.nuvio-detail-title {
+  margin: 0 !important;
+  color: #f1f3f8 !important;
+  font-size: clamp(42px, 5.2vw, 74px) !important;
+  font-weight: 700 !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.055em !important;
+}
+
+.nuvio-detail-logo {
+  max-width: min(100%, 520px) !important;
+  max-height: 135px !important;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.nuvio-detail-meta-block {
+  margin-top: 17px;
+}
+
+.nuvio-detail-description {
+  max-width: 680px !important;
+  margin: 17px 0 0 !important;
+  color: var(--nuvio-text-soft) !important;
+  font-size: 13px !important;
+  line-height: 1.65 !important;
+}
+
+.nuvio-detail-actions {
+  display: flex !important;
+  align-items: center;
+  gap: 9px !important;
+  margin-top: 22px !important;
+}
+
+.nuvio-primary-action,
+.nuvio-secondary-action {
+  min-height: 42px !important;
+  padding: 0 17px !important;
+  border-radius: 8px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+.nuvio-primary-action {
+  background: #e9efff !important;
+  color: #07162b !important;
+}
+
+.nuvio-secondary-action {
+  border: 1px solid var(--nuvio-line-strong) !important;
+  background: rgba(30, 31, 37, 0.72) !important;
+  color: var(--nuvio-text) !important;
+}
+
+.nuvio-detail-actions .nuvio-icon-button {
+  width: 42px !important;
+  height: 42px !important;
+  border: 1px solid var(--nuvio-line-strong) !important;
+  background: rgba(30, 31, 37, 0.72) !important;
+}
+
+.nuvio-detail-supporting-info {
+  margin-top: 16px;
+}
+
+.nuvio-detail-episodes-block,
+.nuvio-detail-information {
+  margin-top: 18px;
+  padding-top: 24px;
+  border-top: 1px solid var(--nuvio-line);
+}
+
+.nuvio-detail-section-heading {
+  margin-bottom: 12px;
+}
+
+.nuvio-season-tabs-wrap {
+  margin-bottom: 13px;
+}
+
+.nuvio-detail-information {
+  display: grid;
+  gap: 22px;
+}
+
+/* ---------- Library rebuilt structure ---------- */
+.nuvio-library-heading {
+  margin-bottom: 17px;
+}
+
+.nuvio-library-controls {
+  display: grid;
+  gap: 11px;
+  padding: 13px;
+  margin-bottom: 26px;
+  border: 1px solid var(--nuvio-line);
+  border-radius: 12px;
+  background: rgba(17, 19, 24, 0.72);
+}
+
+.nuvio-library-controls .library-view-mode-row {
+  margin: 0 !important;
+}
+
+.nuvio-library-controls .library-picker-groups {
+  margin: 0 !important;
+}
+
+.nuvio-library-grid-wrap {
+  padding-bottom: 48px;
+}
+
+.nuvio-library-grid .library-grid-card {
+  width: auto !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.nuvio-library-grid .library-grid-poster {
+  height: auto !important;
+}
+
+.nuvio-library-empty {
+  margin-top: 32px;
+}
+
+/* ---------- Sources rebuilt structure ---------- */
+.nuvio-sources-workspace {
+  min-height: 0;
+}
+
+.nuvio-sources-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.nuvio-surface-card {
+  border: 1px solid var(--nuvio-line) !important;
+  border-radius: 12px !important;
+  background: rgba(17, 19, 24, 0.74) !important;
+  box-shadow: none !important;
+}
+
+.nuvio-source-add-card {
+  padding: 20px !important;
+}
+
+.nuvio-source-add-row {
+  margin-top: 14px;
+}
+
+.nuvio-input {
+  min-height: 42px !important;
+  border: 1px solid var(--nuvio-line-strong) !important;
+  border-radius: 8px !important;
+  background: rgba(9, 11, 16, 0.82) !important;
+  color: var(--nuvio-text) !important;
+}
+
+.nuvio-source-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.nuvio-source-settings-grid .plugins-setting-card {
+  min-height: 108px;
+  padding: 18px !important;
+}
+
+.nuvio-source-settings-grid .plugins-setting-row > div:first-child {
+  display: grid;
+  gap: 5px;
+}
+
+.nuvio-source-repositories {
+  display: grid;
+  gap: 13px;
+}
+
+.nuvio-repository-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px !important;
+}
+
+.nuvio-repository-grid .plugins-repository-card {
+  margin: 0 !important;
+  border: 1px solid var(--nuvio-line) !important;
+  border-radius: 12px !important;
+  background: rgba(17, 19, 24, 0.76) !important;
+}
+
+.nuvio-notice-card {
+  border-radius: 10px !important;
+}
+
+.nuvio-dialog-backdrop {
+  background: rgba(4, 6, 9, 0.76) !important;
+  backdrop-filter: blur(10px);
+}
+
+.nuvio-dialog {
+  border: 1px solid var(--nuvio-line-strong) !important;
+  border-radius: 14px !important;
+  background: rgba(17, 19, 24, 0.97) !important;
+  box-shadow: var(--nuvio-shadow) !important;
+}
+
+/* ---------- Stream selection rebuilt structure ---------- */
+.nuvio-stream-page {
+  background: var(--nuvio-canvas);
+}
+
+.nuvio-stream-layout {
+  position: relative;
+  z-index: 3;
+  display: grid !important;
+  grid-template-columns: minmax(0, 0.82fr) minmax(520px, 1.18fr) !important;
+  gap: clamp(34px, 5vw, 82px) !important;
+  width: min(100%, 1500px) !important;
+  margin: 0 auto;
+  padding: clamp(40px, 6vh, 76px) var(--nuvio-page-x) 58px !important;
+}
+
+.nuvio-stream-title-panel {
+  align-items: flex-end !important;
+  padding: 0 0 30px !important;
+}
+
+.nuvio-stream-title-panel .stream-route-left-inner {
+  max-width: 610px;
+}
+
+.nuvio-stream-meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-top: 13px;
+}
+
+.nuvio-stream-art-note {
+  max-width: 480px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 22px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(226, 226, 233, 0.12);
+  color: var(--nuvio-text-dim);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.nuvio-stream-art-note .material-icons {
+  color: var(--nuvio-primary);
+  font-size: 17px;
+}
+
+.nuvio-stream-source-panel {
+  min-height: 0;
+  padding: 0 !important;
+}
+
+.nuvio-stream-source-panel .stream-route-heading {
+  align-items: flex-end;
+}
+
+.nuvio-stream-source-panel .stream-route-heading p {
+  margin: 5px 0 0;
+  color: var(--nuvio-text-dim);
+  font-size: 10px;
+}
+
+.nuvio-source-count {
+  min-width: 34px;
+}
+
+.nuvio-stream-list-panel {
+  background: rgba(12, 14, 19, 0.72) !important;
+}
+
+.nuvio-stream-row {
+  margin-bottom: 7px !important;
+}
+
+.nuvio-stream-card {
+  position: relative;
+  min-height: 78px !important;
+  display: grid !important;
+  grid-template-columns: 38px minmax(0, 1fr) auto 20px;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 10px 12px !important;
+}
+
+.nuvio-stream-card-leading {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(77, 142, 255, 0.12);
+  color: var(--nuvio-primary);
+}
+
+.nuvio-stream-card-leading .material-icons {
+  font-size: 18px;
+}
+
+.nuvio-stream-card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.nuvio-stream-card .stream-route-card-heading {
+  color: var(--nuvio-text) !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+.nuvio-quality-badge {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  border: 1px solid rgba(173, 198, 255, 0.24);
+  border-radius: 5px;
+  color: var(--nuvio-primary) !important;
+  font-size: 8px !important;
+}
+
+.nuvio-stream-description {
+  margin-top: 4px;
+}
+
+.nuvio-stream-chevron {
+  color: var(--nuvio-text-dim);
+  font-size: 18px;
+}
+
+.nuvio-stream-card.focused .nuvio-stream-chevron,
+.nuvio-stream-card:hover .nuvio-stream-chevron {
+  color: var(--nuvio-primary);
+}
+
+/* ---------- Player rebuilt structure ---------- */
+.nuvio-player-ui {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: var(--nuvio-text);
+}
+
+.nuvio-player-loading-center {
+  max-width: 680px;
+  text-align: center;
+}
+
+.nuvio-player-loading-kicker {
+  display: block;
+  margin: 14px 0 6px;
+  color: var(--nuvio-primary);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+}
+
+.nuvio-player-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.nuvio-player-topbar {
+  position: absolute !important;
+  inset: 0 0 auto !important;
+  min-height: 130px;
+  padding: clamp(28px, 5vh, 56px) clamp(28px, 4vw, 66px) 24px !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 24px;
+  background: transparent !important;
+}
+
+.nuvio-player-now-playing {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.nuvio-player-live-dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  margin-top: 9px;
+  border-radius: 50%;
+  background: var(--nuvio-primary);
+  box-shadow: 0 0 12px rgba(173, 198, 255, 0.7);
+}
+
+.nuvio-player-topbar .player-title {
+  font-size: clamp(17px, 1.8vw, 26px) !important;
+  letter-spacing: -0.025em !important;
+}
+
+.nuvio-player-inline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 4px;
+}
+
+.nuvio-player-inline-meta > * + *::before {
+  content: "·";
+  margin-right: 7px;
+  color: var(--nuvio-text-dim);
+}
+
+.nuvio-player-status-cluster {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.nuvio-player-clock-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid rgba(226, 226, 233, 0.13);
+  border-radius: 999px;
+  background: rgba(5, 7, 10, 0.46);
+  backdrop-filter: blur(14px);
+}
+
+.nuvio-player-clock-wrap .player-clock,
+.nuvio-player-clock-wrap .player-ends-at {
+  font-size: 9px !important;
+}
+
+.nuvio-player-bottom {
+  position: absolute !important;
+  inset: auto 0 0 !important;
+  padding: 0 clamp(28px, 4vw, 66px) clamp(28px, 5vh, 58px) !important;
+}
+
+.nuvio-player-transport {
+  width: 100%;
+  max-width: none;
+  margin: 0 !important;
+  padding: 12px 14px 10px !important;
+  border-radius: 11px !important;
+}
+
+.nuvio-player-controls-row {
+  min-height: 42px;
+}
+
+.nuvio-player-error {
+  border: 0 !important;
+}
+
+/* ---------- Settings rebuilt structure ---------- */
+.nuvio-settings-page {
+  overflow: hidden;
+}
+
+.nuvio-settings-workspace {
+  width: min(100%, 1360px) !important;
+  height: 100% !important;
+  margin: 0 auto !important;
+  padding: 38px var(--nuvio-page-x) 54px !important;
+  display: flex !important;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.nuvio-settings-heading {
+  flex: 0 0 auto;
+  margin: 0 !important;
+}
+
+.nuvio-settings-grid {
+  min-height: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.nuvio-settings-nav-frame,
+.nuvio-settings-content-frame {
+  height: 100%;
+  min-height: 0;
+}
+
+.nuvio-settings-nav-label {
+  padding: 14px 14px 5px;
+  color: var(--nuvio-text-dim);
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+}
+
+.nuvio-settings-nav {
+  height: calc(100% - 28px) !important;
+}
+
+.nuvio-settings-nav-item {
+  min-height: 44px !important;
+  margin-bottom: 3px;
+  border: 1px solid transparent !important;
+}
+
+.nuvio-settings-nav-item.selected,
+.nuvio-settings-nav-item.focused,
+.nuvio-settings-nav-item:hover {
+  border-color: rgba(173, 198, 255, 0.18) !important;
+}
+
+.nuvio-settings-content {
+  padding: 21px !important;
+}
+
+.nuvio-settings-section-header {
+  padding: 3px 3px 18px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--nuvio-line);
+}
+
+.nuvio-settings-section-header .nuvio-eyebrow {
+  margin-bottom: 6px;
+}
+
+/* ---------- Profile selection rebuilt structure ---------- */
+.nuvio-profile-page {
+  position: relative;
+  display: block !important;
+  padding: 0 !important;
+  overflow: auto;
+  background:
+    radial-gradient(circle at 50% 14%, rgba(77, 142, 255, 0.15), transparent 35rem),
+    radial-gradient(circle at 12% 84%, rgba(80, 102, 155, 0.08), transparent 30rem),
+    var(--nuvio-canvas) !important;
+}
+
+.nuvio-profile-background {
+  position: fixed !important;
+  inset: 0 !important;
+  opacity: 0.12 !important;
+  filter: blur(32px) saturate(0.7) !important;
+  pointer-events: none;
+}
+
+.nuvio-profile-topbar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 20;
+  height: 64px;
+  padding: 0 var(--nuvio-page-x);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(66, 71, 84, 0.38);
+  background: rgba(12, 14, 19, 0.78);
+  backdrop-filter: blur(22px);
+}
+
+.nuvio-profile-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+}
+
+.nuvio-profile-brand strong {
+  font-size: 20px;
+  letter-spacing: -0.04em;
+}
+
+.nuvio-profile-brand span {
+  padding: 3px 6px;
+  border: 1px solid rgba(173, 198, 255, 0.34);
+  border-radius: 5px;
+  color: var(--nuvio-primary);
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.nuvio-profile-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--nuvio-text-soft);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.nuvio-profile-mode .material-icons {
+  color: var(--nuvio-primary);
+  font-size: 16px;
+}
+
+.nuvio-profile-main {
+  width: min(100%, 1160px) !important;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 118px var(--nuvio-page-x) 80px;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.nuvio-profile-brand-lockup {
+  min-height: 28px;
+  margin-bottom: 12px;
+}
+
+.nuvio-profile-heading {
+  max-width: 680px;
+}
+
+.nuvio-profile-grid {
+  width: min(100%, 960px) !important;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+  gap: 18px !important;
+  margin: 38px auto 22px !important;
+}
+
+.nuvio-profile-card {
+  position: relative;
+  padding: 0 0 14px !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.nuvio-profile-avatar-ring {
+  position: relative;
+  aspect-ratio: 0.88 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+.nuvio-profile-avatar {
+  border-radius: 0 !important;
+}
+
+.nuvio-profile-card .nuvio-profile-enter {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(236, 241, 255, 0.92);
+  color: #061529;
+  font-size: 16px;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms var(--nuvio-ease);
+}
+
+.nuvio-profile-card.focused .nuvio-profile-enter,
+.nuvio-profile-card:hover .nuvio-profile-enter {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.nuvio-profile-primary {
+  z-index: 3;
+}
+
+.nuvio-profile-avatar-add {
+  display: grid !important;
+  place-items: center;
+  background: rgba(30, 31, 37, 0.82) !important;
+  color: var(--nuvio-primary) !important;
+}
+
+.nuvio-profile-avatar-add .material-icons {
+  font-size: 38px;
+}
+
+.nuvio-profile-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nuvio-profile-hint .material-icons {
+  color: var(--nuvio-primary);
+  font-size: 14px;
+}
+
+@media (max-width: 960px) {
+  .nuvio-poster-grid {
+    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)) !important;
+  }
+
+  .nuvio-detail-hero {
+    grid-template-columns: 150px minmax(0, 1fr) !important;
+    gap: 26px !important;
+  }
+
+  .nuvio-stream-layout {
+    grid-template-columns: minmax(0, 0.68fr) minmax(480px, 1.32fr) !important;
+    gap: 28px !important;
+  }
+
+  .nuvio-settings-grid {
+    grid-template-columns: 205px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .nuvio-page-heading {
+    margin-bottom: 20px;
+  }
+
+  .nuvio-page-heading h1 {
+    font-size: 34px;
+  }
+
+  .nuvio-page-heading-row {
+    align-items: flex-start;
+  }
+
+  .nuvio-page-kicker,
+  .nuvio-source-badge {
+    display: none;
+  }
+
+  .nuvio-poster-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 20px 10px !important;
+  }
+
+  .nuvio-search-main,
+  .nuvio-discover-main,
+  .nuvio-library-main,
+  .nuvio-sources-content {
+    padding: 24px 16px 88px !important;
+  }
+
+  .nuvio-search-heading {
+    text-align: left;
+  }
+
+  .nuvio-search-field {
+    min-height: 54px;
+    padding-left: 14px;
+    border-radius: 12px;
+  }
+
+  .nuvio-search-field .search-input-field {
+    height: 52px;
+    font-size: 14px !important;
+  }
+
+  .nuvio-search-toolbar {
+    align-items: flex-start;
+  }
+
+  .nuvio-result-summary {
+    display: none;
+  }
+
+  .nuvio-discover-main > .nuvio-filter-bar {
+    top: -1px;
+  }
+
+  .nuvio-detail-content {
+    padding: 26px 16px 88px !important;
+  }
+
+  .nuvio-detail-hero {
+    min-height: 0;
+    grid-template-columns: 1fr !important;
+    align-items: end !important;
+    padding-top: 190px !important;
+  }
+
+  .nuvio-detail-art-column {
+    display: none;
+  }
+
+  .nuvio-detail-title {
+    font-size: clamp(38px, 12vw, 54px) !important;
+  }
+
+  .nuvio-detail-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .nuvio-detail-actions {
+    flex-wrap: wrap;
+  }
+
+  .nuvio-source-settings-grid,
+  .nuvio-repository-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .nuvio-stream-layout {
+    min-height: 100% !important;
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    padding: 230px 16px 88px !important;
+  }
+
+  .nuvio-stream-title-panel {
+    padding: 0 !important;
+  }
+
+  .nuvio-stream-art-note {
+    display: none;
+  }
+
+  .nuvio-stream-card {
+    grid-template-columns: 32px minmax(0, 1fr) 16px;
+    gap: 9px !important;
+  }
+
+  .nuvio-stream-card .stream-route-card-side {
+    display: none;
+  }
+
+  .nuvio-player-topbar {
+    padding: 22px 18px !important;
+  }
+
+  .nuvio-player-topbar .player-title {
+    font-size: 16px !important;
+  }
+
+  .nuvio-player-inline-meta .player-meta-tertiary {
+    display: none;
+  }
+
+  .nuvio-player-clock-wrap {
+    display: none;
+  }
+
+  .nuvio-player-bottom {
+    padding: 0 18px 22px !important;
+  }
+
+  .nuvio-player-transport {
+    padding: 10px !important;
+  }
+
+  .nuvio-settings-workspace {
+    height: auto !important;
+    min-height: 100%;
+    padding: 24px 16px 88px !important;
+  }
+
+  .nuvio-settings-grid {
+    min-height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .nuvio-settings-nav-frame {
+    height: auto;
+  }
+
+  .nuvio-settings-nav-label {
+    display: none;
+  }
+
+  .nuvio-settings-nav {
+    height: auto !important;
+    display: flex !important;
+    gap: 6px;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 8px !important;
+    scrollbar-width: none;
+  }
+
+  .nuvio-settings-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nuvio-settings-nav-item {
+    flex: 0 0 auto;
+  }
+
+  .nuvio-settings-content-frame {
+    min-height: 520px;
+  }
+
+  .nuvio-profile-topbar {
+    height: 58px;
+    padding: 0 16px;
+  }
+
+  .nuvio-profile-main {
+    padding: 96px 16px 86px;
+    justify-content: flex-start;
+  }
+
+  .nuvio-profile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    margin-top: 28px !important;
+  }
+}

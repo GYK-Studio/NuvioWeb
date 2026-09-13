@@ -63,9 +63,20 @@ export function RangeControl({
   );
 }
 const s = StyleSheet.create({
-  wrap: { gap: 4 },
-  label: { color: "#B7BAC5", fontSize: 13, fontWeight: "600" },
-  target: { minHeight: 48, justifyContent: "center" },
-  track: { height: 7, backgroundColor: "#30333D", borderRadius: 4, overflow: "hidden" },
-  fill: { height: 7, backgroundColor: "#FF735F", borderRadius: 4 }
+  wrap: { gap: 8 },
+  label: {
+    color: "#A6ADBB",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.35,
+    textTransform: "uppercase"
+  },
+  target: { minHeight: 44, justifyContent: "center" },
+  track: {
+    height: 5,
+    backgroundColor: "rgba(255,255,255,0.11)",
+    borderRadius: 999,
+    overflow: "hidden"
+  },
+  fill: { height: 5, backgroundColor: "#3B82F6", borderRadius: 999 }
 });

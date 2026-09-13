@@ -6522,12 +6522,12 @@ export const PlayerScreen = {
 
     const root = document.createElement("div");
     root.id = "playerUiRoot";
-    root.className = "player-ui-root";
+    root.className = "player-ui-root nuvio-player-ui";
     root.tabIndex = -1;
 
     if (this.isExternalFrameMode()) {
       root.innerHTML = `
-        <div class="player-external-frame-shell">
+        <div class="player-external-frame-shell nuvio-player-external-shell">
           <iframe
             class="player-external-frame"
             src="${escapeHtml(this.externalFrameUrl)}"
@@ -6544,10 +6544,10 @@ export const PlayerScreen = {
       const loadingMeta = this.getLoadingOverlayMeta();
       const osdClockEnabled = Boolean(PlayerSettingsStore.get().osdClockEnabled);
       root.innerHTML = `
-        <div id="playerLoadingOverlay" class="player-loading-overlay">
+        <div id="playerLoadingOverlay" class="player-loading-overlay nuvio-player-loading">
           <div class="player-loading-backdrop"${loadingMeta.backdropUrl ? ` style="background-image:url('${loadingMeta.backdropUrl}')"` : ""}></div>
           <div class="player-loading-gradient"></div>
-          <div class="player-loading-center">
+          <div class="player-loading-center nuvio-player-loading-center">
             <div class="player-loading-identity${loadingMeta.logoUrl ? " has-logo" : ""}">
               ${
                 loadingMeta.logoUrl
@@ -6561,6 +6561,7 @@ export const PlayerScreen = {
               `
                   : ""
               }
+              <span class="nuvio-player-loading-kicker">PREPARANDO REPRODUCCIÓN</span>
               <div class="player-loading-title">${escapeHtml(loadingMeta.title || this.params.playerTitle || this.params.itemId || "Nuvio")}</div>
             </div>
             <div class="player-loading-subtitle${loadingMeta.subtitle ? "" : " hidden"}">${escapeHtml(loadingMeta.subtitle || "")}</div>
@@ -6573,7 +6574,7 @@ export const PlayerScreen = {
           <div class="player-loading-status player-loading-spinner-status hidden"></div>
         </div>
 
-        <div id="playerStartupErrorOverlay" class="player-startup-error-overlay hidden" aria-hidden="true"></div>
+        <div id="playerStartupErrorOverlay" class="player-startup-error-overlay nuvio-player-error hidden" aria-hidden="true"></div>
 
         <div id="playerTorrentOverlay" class="player-torrent-overlay hidden" aria-hidden="true">
           <div class="player-torrent-overlay-row">
@@ -6585,14 +6586,13 @@ export const PlayerScreen = {
 
         <div id="playerParentalGuide" class="player-parental-guide hidden"></div>
         <div id="playerSkipIntro" class="player-skip-intro hidden"></div>
-
         <div id="playerAspectToast" class="player-aspect-toast hidden"></div>
 
         <div id="playerHtmlSubtitles" class="player-html-subtitles hidden" aria-hidden="true"></div>
         <canvas id="playerBitmapSubtitles" class="player-bitmap-subtitles hidden" aria-hidden="true"></canvas>
         <div id="playerAssSubtitles" class="player-ass-subtitles hidden" aria-hidden="true"></div>
 
-        <div id="playerSeekOverlay" class="player-seek-overlay hidden">
+        <div id="playerSeekOverlay" class="player-seek-overlay nuvio-player-seek hidden">
           <div class="player-seek-overlay-track"><div id="playerSeekFill" class="player-seek-fill"></div></div>
           <div class="player-seek-overlay-bottom">
             <span id="playerSeekDirection" class="player-seek-direction"></span>
@@ -6601,9 +6601,7 @@ export const PlayerScreen = {
         </div>
 
         <div id="playerPauseOverlay" class="player-pause-overlay hidden"></div>
-
         <div id="playerNextEpisodeCard" class="player-next-episode-card hidden"></div>
-
         <div id="playerPostPlayRecommendation" class="player-post-play-recommendation" aria-hidden="true"></div>
 
         <div id="playerModalBackdrop" class="player-modal-backdrop hidden"></div>
@@ -6612,33 +6610,43 @@ export const PlayerScreen = {
         <div id="playerSpeedDialog" class="player-modal player-speed-modal hidden"></div>
         <div id="playerSourcesPanel" class="player-sources-panel hidden"></div>
 
-        <div id="playerControlsOverlay" class="player-controls-overlay">
+        <div id="playerControlsOverlay" class="player-controls-overlay nuvio-player-hud">
           <div class="player-controls-gradient player-controls-gradient-top"></div>
           <div class="player-controls-gradient player-controls-gradient-bottom"></div>
 
-          <div class="player-controls-top${osdClockEnabled ? "" : " hidden"}">
-            <div id="playerClock" class="player-clock">--:--</div>
-            <div id="playerEndsAt" class="player-ends-at">${escapeHtml(t("player_ends_at", ["--:--"], "Ends at %1$s"))}</div>
-          </div>
-
-          <div class="player-controls-bottom">
-            <div class="player-meta">
-              <div class="player-title">${escapeHtml(header.title)}</div>
-              ${header.subtitle ? `<div class="player-subtitle">${escapeHtml(header.subtitle)}</div>` : ""}
-              ${header.meta ? `<div class="player-meta-tertiary">${escapeHtml(header.meta)}</div>` : ""}
-            </div>
-
-            <div class="player-controls-bar">
-              <div id="playerProgressShell" class="player-progress-shell focusable" tabindex="-1" data-player-pointer-action="progress">
-                <div class="player-progress-track">
-                  <div id="playerProgressBuffered" class="player-progress-buffered"></div>
-                  <div id="playerProgressFill" class="player-progress-fill"></div>
+          <header class="player-controls-top nuvio-player-topbar${osdClockEnabled ? "" : " no-clock"}">
+            <div class="player-controls-context nuvio-player-now-playing">
+              <span class="nuvio-player-live-dot" aria-hidden="true"></span>
+              <div class="player-meta">
+                <div class="player-title">${escapeHtml(header.title)}</div>
+                <div class="nuvio-player-inline-meta">
+                  ${header.subtitle ? `<span class="player-subtitle">${escapeHtml(header.subtitle)}</span>` : ""}
+                  ${header.meta ? `<span class="player-meta-tertiary">${escapeHtml(header.meta)}</span>` : ""}
                 </div>
               </div>
+            </div>
+            <div class="nuvio-player-status-cluster">
+              <div class="nuvio-player-clock-wrap${osdClockEnabled ? "" : " hidden"}">
+                <div id="playerClock" class="player-clock">--:--</div>
+                <div id="playerEndsAt" class="player-ends-at">${escapeHtml(t("player_ends_at", ["--:--"], "Ends at %1$s"))}</div>
+              </div>
+            </div>
+          </header>
 
-              <div class="player-controls-row">
-                <div id="playerControlButtons" class="player-control-buttons"></div>
-                <div id="playerTimeLabel" class="player-time-label">0:00 / 0:00</div>
+          <div class="player-controls-bottom nuvio-player-bottom">
+            <div class="player-transport-panel nuvio-player-transport">
+              <div class="player-controls-bar">
+                <div id="playerProgressShell" class="player-progress-shell focusable" tabindex="-1" data-player-pointer-action="progress">
+                  <div class="player-progress-track">
+                    <div id="playerProgressBuffered" class="player-progress-buffered"></div>
+                    <div id="playerProgressFill" class="player-progress-fill"></div>
+                  </div>
+                </div>
+
+                <div class="player-controls-row nuvio-player-controls-row">
+                  <div id="playerControlButtons" class="player-control-buttons"></div>
+                  <div id="playerTimeLabel" class="player-time-label">0:00 / 0:00</div>
+                </div>
               </div>
             </div>
           </div>

@@ -2452,8 +2452,12 @@ function renderContinueWatchingCard(item, index, options = {}) {
   const continueImageAttrs = cardImage
     ? buildLazyImageAttributes(cardImage, { defer: deferContinueImage })
     : "";
+  const remainingMin =
+    normalized.durationMs && normalized.positionMs
+      ? Math.max(1, Math.round((normalized.durationMs - normalized.positionMs) / 60000))
+      : null;
   return `
-    <article class="home-content-card home-continue-card${blurNextUp ? " home-continue-card-blur-next-up" : ""} focusable"
+    <article class="home-content-card home-continue-card nuvio-continue-card${blurNextUp ? " home-continue-card-blur-next-up" : ""} focusable"
              tabindex="0"
              data-nav-zone="main"
              data-nav-row="0"
@@ -2469,7 +2473,13 @@ function renderContinueWatchingCard(item, index, options = {}) {
              data-item-title="${escapeAttribute(normalized.title || "Untitled")}">
       <div class="home-continue-media">
         ${cardImage ? `<img class="home-continue-bg" ${continueImageAttrs}${fallbackQueue ? ` data-fallback-srcs="${escapeAttribute(fallbackQueue)}"` : ""} alt="" aria-hidden="true" decoding="async" onerror="${buildImageFallbackErrorHandler()}" />` : ""}
-        <span class="home-continue-badge">${escapeHtml(normalized.progressStatus || t("home.continueStatusContinue", {}, "Continue"))}</span>
+        <div class="home-continue-play-hover" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="28" height="28"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+        </div>
+        <div class="home-continue-top-row">
+          <span class="home-continue-badge">${escapeHtml(normalized.progressStatus || t("home.continueStatusContinue", {}, "Continue"))}</span>
+          ${remainingMin ? `<span class="home-continue-time-pill">${remainingMin}m restantes</span>` : ""}
+        </div>
         <div class="home-continue-copy">
           ${normalized.episodeCode ? `<div class="home-continue-kicker">${escapeHtml(normalized.episodeCode)}</div>` : ""}
           <div class="home-continue-title" dir="auto">${escapeHtml(normalized.title)}</div>
@@ -2533,11 +2543,22 @@ export function renderContinueWatchingSection(items = [], options = {}) {
   };
   const renderedItems = getContinueWatchingRenderItems(items, itemLimit);
   return `
-    <section class="home-row home-row-continue home-row-continue-${cardStyle}"${rowKey ? ` data-row-key="${escapeAttribute(rowKey)}"` : ""}>
+    <section class="home-row home-row-continue nuvio-home-row nuvio-continue-row home-row-continue-${cardStyle}"${rowKey ? ` data-row-key="${escapeAttribute(rowKey)}"` : ""}>
       <div class="home-row-head">
-        <h2 class="home-row-title">${escapeHtml(t(options?.titleKey || "home.continueWatching", {}, options?.title || "Continue Watching"))}</h2>
+        <div class="home-row-title-wrap">
+          <h2 class="home-row-title">${escapeHtml(t(options?.titleKey || "home.continueWatching", {}, options?.title || "Continue Watching"))}</h2>
+          ${renderedItems.length ? `<span class="home-row-count">${renderedItems.length} títulos</span>` : ""}
+        </div>
+        <div class="home-row-controls">
+          <button type="button" class="home-rail-arrow home-rail-prev focusable" data-action="scrollRailLeft" aria-label="Desplazar a la izquierda">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor"/></svg>
+          </button>
+          <button type="button" class="home-rail-arrow home-rail-next focusable" data-action="scrollRailRight" aria-label="Desplazar a la derecha">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="home-track home-track-continue"${rowKey ? ` data-track-row-key="${escapeAttribute(rowKey)}"` : ""}>
+      <div class="home-track home-track-continue nuvio-media-rail"${rowKey ? ` data-track-row-key="${escapeAttribute(rowKey)}"` : ""}>
         ${
           renderedItems.length
             ? renderedItems
@@ -3064,6 +3085,10 @@ export function createPosterCardMarkup(
         <div class="home-poster-trailer-layer"></div>
         <div class="home-poster-expanded-gradient"></div>
         ${watchedBadge}
+        ${normalized.imdbRating || normalized.rating ? `<span class="home-poster-rating-badge">★ ${escapeHtml(String(normalized.imdbRating || normalized.rating).slice(0, 3))}</span>` : ""}
+        <div class="home-poster-play-hover" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+        </div>
         <div class="home-poster-expanded-brand">
           ${
             !isLoading && normalized.logo
@@ -8832,6 +8857,35 @@ export const HomeScreen = {
         }
         this.markUserInteractionSinceHomePaint();
         const action = String(target.dataset.action || "");
+        if (action === "heroPlay" || action === "heroInfo") {
+          const heroCard =
+            target.closest(".home-hero-card") || this.container?.querySelector(".home-hero-card");
+          if (heroCard) {
+            this.openDetailFromNode(heroCard);
+          }
+          return;
+        }
+        if (action === "heroList") {
+          const heroItem = this.heroItem || this.heroCandidates?.[0];
+          if (heroItem) {
+            void this.togglePosterLibrary(heroItem);
+          }
+          return;
+        }
+        if (action === "scrollRailLeft") {
+          const track = target.closest(".home-row")?.querySelector(".home-track");
+          if (track) {
+            track.scrollBy({ left: -Math.max(280, track.clientWidth * 0.75), behavior: "smooth" });
+          }
+          return;
+        }
+        if (action === "scrollRailRight") {
+          const track = target.closest(".home-row")?.querySelector(".home-track");
+          if (track) {
+            track.scrollBy({ left: Math.max(280, track.clientWidth * 0.75), behavior: "smooth" });
+          }
+          return;
+        }
         if (action === "openDetail" || action === "openCollectionFolder") {
           this.openDetailFromNode(target);
           return;
@@ -10267,15 +10321,19 @@ export const HomeScreen = {
 
     const nextMarkup = `
       <div class="home-shell home-screen-shell ${layoutClass}"${sizingStyle ? ` style="${escapeAttribute(sizingStyle)}"` : ""}>
-        ${renderRootSidebar({
-          selectedRoute: "home",
-          profile: this.sidebarProfile,
-          layout: this.layoutPrefs,
-          expanded: Boolean(this.sidebarExpanded),
-          pillIconOnly: Boolean(this.pillIconOnly)
-        })}
+        ${
+          this.layoutMode === "modern"
+            ? ""
+            : renderRootSidebar({
+                selectedRoute: "home",
+                profile: this.sidebarProfile,
+                layout: this.layoutPrefs,
+                expanded: Boolean(this.sidebarExpanded),
+                pillIconOnly: Boolean(this.pillIconOnly)
+              })
+        }
 
-        <main class="home-main home-screen-main">
+        <main class="home-main home-screen-main nuvio-home-main">
           <div class="home-route-content${routeEnterClass}">
             ${mainContentMarkup}
           </div>

@@ -2,7 +2,12 @@ AGENTS.md
 /self-host/
 .roo
 favicon.svg
-
+.claude
+.agents
+.opencode
+.stitch
+agent
+self-host/
 nuvio.env.js
 local.properties
 local.example.properties
@@ -20,3 +25,4 @@ app.bundle.js
 ecosystem.config.cjs
 scripts/commit-build-poller.mjs
 .DS_Store
+skills-lock.json

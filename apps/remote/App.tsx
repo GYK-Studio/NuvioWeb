@@ -304,91 +304,95 @@ export default function App() {
       {button("Página ↓", () => action("navigation.scrollDown"), false, true)}
     </View>
   );
+  const tabBar = (
+    <View style={styles.tabs}>
+      {(
+        [
+          ["remote", "Mando", "⌁"],
+          ["browse", "Explorar", "⌕"],
+          ["keyboard", "Teclado", "⌨"],
+          ["connection", "Conexión", "◎"]
+        ] as const
+      ).map(([id, label, icon]) => (
+        <Pressable
+          key={id}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: tab === id }}
+          onPress={() => {
+            setTab(id);
+            setScan(false);
+            setTorch(false);
+          }}
+          style={[styles.tab, tab === id && styles.tabActive]}
+        >
+          <Text style={[styles.tabIcon, tab === id && styles.tabTextActive]}>{icon}</Text>
+          <Text style={[styles.tabText, tab === id && styles.tabTextActive]}>{label}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
   return (
     <View style={styles.page}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="light-content" backgroundColor="#090B10" />
+
       <View style={styles.header}>
         <View style={styles.brandRow}>
           <View style={styles.brandLockup}>
-            <Image
-              source={require("./assets/icon.png")}
-              style={styles.brandIcon}
-              accessible={false}
-            />
+            <View style={styles.brandIconFrame}>
+              <Image
+                source={require("./assets/icon.png")}
+                style={styles.brandIcon}
+                accessible={false}
+              />
+            </View>
             <View>
               <Text style={styles.brand}>Nuvio Remote</Text>
-              <Text style={styles.version}>Mando para Nuvio Web · {APP_VERSION}</Text>
+              <View style={styles.brandStatusRow}>
+                <View style={[styles.tinyDot, session.online && styles.tinyDotOnline]} />
+                <Text style={styles.version}>
+                  {canControl ? "Sincronizado" : session.paired ? "Vinculado" : `v${APP_VERSION}`}
+                </Text>
+              </View>
             </View>
           </View>
-          <View style={[styles.connectionDot, canControl && styles.connectionDotOnline]} />
-        </View>
-        <View style={styles.tabs}>
-          {(
-            [
-              ["remote", "Mando"],
-              ["browse", "Explorar"],
-              ["keyboard", "Teclado"],
-              ["connection", "Conexión"]
-            ] as const
-          ).map(([id, label]) => (
-            <Pressable
-              key={id}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: tab === id }}
-              onPress={() => {
-                setTab(id);
-                setScan(false);
-                setTorch(false);
-              }}
-              style={[styles.tab, tab === id && styles.tabActive]}
-            >
-              <Text style={[styles.tabText, tab === id && styles.tabTextActive]}>{label}</Text>
-            </Pressable>
-          ))}
+          <View style={[styles.connectionPill, canControl && styles.connectionPillOnline]}>
+            <View style={[styles.connectionDot, canControl && styles.connectionDotOnline]} />
+            <Text style={styles.connectionPillText}>
+              {canControl
+                ? c.grant?.sessionName || "Online"
+                : session.paired
+                  ? "En espera"
+                  : "Sin vincular"}
+            </Text>
+          </View>
         </View>
       </View>
+
       <ScrollView
-        key={tab}
+        key={`${tab}:${session.paired ? "paired" : "pairing"}`}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.heroIntro}>
-          <Text style={styles.eyebrow}>
-            {tab === "browse"
-              ? "TU PRÓXIMA HISTORIA"
-              : tab === "keyboard"
-                ? "ESCRIBE EN LA WEB"
-                : tab === "connection"
-                  ? "TU CONEXIÓN"
-                  : "EN TU PANTALLA"}
-          </Text>
-          <Text accessibilityRole="header" style={styles.title}>
-            {tab === "browse"
-              ? "Encuentra algo para ver"
-              : tab === "keyboard"
-                ? "Teclado del mando"
-                : tab === "connection"
-                  ? "Tus pantallas"
-                  : state.content?.title || "Controla tu pantalla"}
-          </Text>
-          <View style={styles.statusRow}>
-            <View style={[styles.statusDot, session.online && styles.statusDotOnline]} />
-            <Text accessibilityLiveRegion="polite" style={styles.status}>
-              {status}
+        {!!feedback && (
+          <View style={styles.feedbackBanner}>
+            <Text accessibilityLiveRegion="polite" style={styles.feedbackText}>
+              {feedback}
             </Text>
           </View>
-        </View>
-        {!!feedback && (
-          <Text accessibilityLiveRegion="polite" style={styles.copy}>
-            {feedback}
-          </Text>
         )}
+
         {!!updateInfo && (
-          <View style={styles.updateBanner}>
-            <Text style={styles.updateTitle}>Nueva versión disponible: {updateInfo.version}</Text>
-            <Text style={styles.updateCopy}>
-              Estás en {APP_VERSION}. Descarga la APK y reinstálala encima.
+          <View style={[styles.surface, styles.updateBanner]}>
+            <View style={styles.sectionTitleRow}>
+              <View>
+                <Text style={styles.eyebrow}>ACTUALIZACIÓN</Text>
+                <Text style={styles.sectionTitle}>Versión {updateInfo.version} disponible</Text>
+              </View>
+              <Text style={styles.miniBadge}>v{APP_VERSION}</Text>
+            </View>
+            <Text style={styles.copy}>
+              Descarga la nueva APK e instálala encima de esta versión.
             </Text>
             {button("Descargar actualización", () => {
               void Linking.openURL(updateInfo.url).catch(() =>
@@ -397,62 +401,23 @@ export default function App() {
             })}
           </View>
         )}
+
         {!session.paired ? (
-          <View style={styles.card}>
-            <Text style={styles.label}>Conecta tu pantalla</Text>
-            <Text style={styles.copy}>
-              Abre Control desde móvil en los ajustes de Nuvio Web. Escanea su QR o pega el código
-              aquí.
-            </Text>
-            {button(advanced ? "Ocultar servidor" : "Cambiar servidor", () =>
-              setAdvanced(!advanced)
-            )}
-            {advanced && (
-              <>
-                <Text style={styles.label}>URL del servicio de control</Text>
-                <TextInput
-                  accessibilityLabel="URL del servicio de control"
-                  style={styles.input}
-                  value={base}
-                  onChangeText={setBase}
-                  placeholder="https://tu-servicio-remoto"
-                  placeholderTextColor="#aaa"
-                  autoCapitalize="none"
-                  keyboardType="url"
-                />
-              </>
-            )}
-            <Text style={styles.label}>Nombre de este móvil</Text>
-            <TextInput
-              accessibilityLabel="Nombre de este móvil"
-              style={styles.input}
-              value={deviceName}
-              onChangeText={setDeviceName}
-              maxLength={60}
-            />
-            <Text style={styles.label}>Código de la web</Text>
-            <TextInput
-              accessibilityLabel="Código de emparejamiento"
-              style={styles.input}
-              value={code}
-              onChangeText={setCode}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              maxLength={64}
-              placeholder="Pega tu código de conexión"
-              placeholderTextColor="#858d9f"
-            />
-            {button("Escanear QR", () => {
-              void (async () => {
-                const p = permission?.granted ? permission : await requestPermission();
-                if (p.granted) setScan(true);
-                else setStatus("Puedes introducir el código manualmente.");
-              })();
-            })}
-            {scan && (
-              <>
-                <Text style={styles.copy}>Centra el QR de la web dentro del marco.</Text>
-                <View style={styles.qrFrame}>
+          <>
+            <View style={styles.screenHeading}>
+              <Text style={styles.eyebrow}>CONEXIÓN SEGURA</Text>
+              <Text accessibilityRole="header" style={styles.title}>
+                Vincular con Nuvio Web
+              </Text>
+              <Text style={styles.copy}>
+                Abre Ajustes → Control desde móvil en Nuvio Web y escanea el código QR o introduce
+                el token de sincronización.
+              </Text>
+            </View>
+
+            <View style={[styles.surface, styles.pairingCard]}>
+              <View style={styles.pairVisual}>
+                {scan ? (
                   <CameraView
                     style={styles.qrCamera}
                     barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
@@ -462,54 +427,166 @@ export default function App() {
                         setCode(data);
                         setScan(false);
                         setTorch(false);
-                        setStatus("Código leído. Pulsa Solicitar conexión.");
+                        setStatus("Código leído. Pulsa Vincular pantalla.");
                       } else setStatus("Este QR no es un código de Nuvio Remote.");
                     }}
                   />
-                  <View pointerEvents="none" style={styles.qrCornerTopLeft} />
-                  <View pointerEvents="none" style={styles.qrCornerTopRight} />
-                  <View pointerEvents="none" style={styles.qrCornerBottomLeft} />
-                  <View pointerEvents="none" style={styles.qrCornerBottomRight} />
-                </View>
-                <View style={styles.row}>
-                  {button(torch ? "Apagar linterna" : "Encender linterna", () =>
-                    setTorch((value) => !value)
-                  )}
-                  {button("Cerrar cámara", () => {
+                ) : (
+                  <View style={styles.pairVisualCenter}>
+                    <Text style={styles.pairVisualIcon}>⌗</Text>
+                    <Text style={styles.pairVisualText}>Escanear QR</Text>
+                  </View>
+                )}
+                <View pointerEvents="none" style={styles.qrCornerTopLeft} />
+                <View pointerEvents="none" style={styles.qrCornerTopRight} />
+                <View pointerEvents="none" style={styles.qrCornerBottomLeft} />
+                <View pointerEvents="none" style={styles.qrCornerBottomRight} />
+              </View>
+
+              <View style={styles.inlineActions}>
+                {button(scan ? "Cerrar cámara" : "Abrir cámara", () => {
+                  if (scan) {
                     setScan(false);
                     setTorch(false);
-                  })}
+                    return;
+                  }
+                  void (async () => {
+                    const p = permission?.granted ? permission : await requestPermission();
+                    if (p.granted) setScan(true);
+                    else setStatus("Puedes introducir el código manualmente.");
+                  })();
+                })}
+                {scan &&
+                  button(torch ? "Apagar linterna" : "Encender linterna", () =>
+                    setTorch((value) => !value)
+                  )}
+              </View>
+
+              <View style={styles.dividerRow}>
+                <View style={styles.divider} />
+                <Text style={styles.dividerText}>O INTRODUCE EL CÓDIGO MANUAL</Text>
+                <View style={styles.divider} />
+              </View>
+
+              <Text style={styles.fieldLabel}>Código de vinculación</Text>
+              <TextInput
+                accessibilityLabel="Código de emparejamiento"
+                style={[styles.input, styles.codeInput]}
+                value={code}
+                onChangeText={setCode}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                maxLength={64}
+                placeholder="NV-XXXX-XXXX-XXXX"
+                placeholderTextColor="#6F7482"
+              />
+
+              <Text style={styles.fieldLabel}>Nombre de este dispositivo</Text>
+              <TextInput
+                accessibilityLabel="Nombre de este móvil"
+                style={styles.input}
+                value={deviceName}
+                onChangeText={setDeviceName}
+                maxLength={60}
+                placeholder="Mi teléfono"
+                placeholderTextColor="#6F7482"
+              />
+
+              <Pressable
+                accessibilityRole="button"
+                disabled={busy}
+                onPress={() => {
+                  if (!/^[A-F0-9]{32}$/i.test(code.replace(/\s/g, ""))) {
+                    setStatus("Introduce el código de 32 caracteres que aparece en la web.");
+                    return;
+                  }
+                  setBusy(true);
+                  void c
+                    .claim(base.trim(), code.replace(/\s/g, ""), deviceName)
+                    .catch((e) => setStatus(e.message))
+                    .finally(() => setBusy(false));
+                }}
+                style={({ pressed }) => [
+                  styles.primaryButton,
+                  pressed && styles.pressed,
+                  busy && styles.disabled
+                ]}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {busy ? "Vinculando…" : "Vincular pantalla"}
+                </Text>
+                <Text style={styles.primaryButtonArrow}>→</Text>
+              </Pressable>
+
+              <Pressable onPress={() => setAdvanced(!advanced)} style={styles.textAction}>
+                <Text style={styles.textActionLabel}>
+                  {advanced ? "Ocultar servidor" : "Configurar servidor"}
+                </Text>
+              </Pressable>
+
+              {advanced && (
+                <View style={styles.advancedPanel}>
+                  <Text style={styles.fieldLabel}>Servidor de sincronización</Text>
+                  <TextInput
+                    accessibilityLabel="URL del servicio de control"
+                    style={styles.input}
+                    value={base}
+                    onChangeText={setBase}
+                    placeholder="https://tu-servicio-remoto"
+                    placeholderTextColor="#6F7482"
+                    autoCapitalize="none"
+                    keyboardType="url"
+                  />
                 </View>
-              </>
+              )}
+            </View>
+
+            {!!savedSessions.length && (
+              <View style={styles.sectionBlock}>
+                <View style={styles.sectionTitleRow}>
+                  <Text style={styles.sectionTitle}>Mis pantallas guardadas</Text>
+                  <Text style={styles.countBadge}>{savedSessions.length}</Text>
+                </View>
+                {savedSessions.map((link) => (
+                  <View key={link.deviceId} style={[styles.surface, styles.savedScreenCard]}>
+                    <View style={styles.savedScreenIcon}>
+                      <Text style={styles.savedScreenIconText}>▣</Text>
+                    </View>
+                    <View style={styles.savedScreenBody}>
+                      <Text style={styles.mediaTitle}>{link.name}</Text>
+                      <Text style={styles.copySmall}>
+                        {link.online === undefined
+                          ? "Estado sin comprobar"
+                          : link.online
+                            ? "En línea"
+                            : "Desconectada"}
+                      </Text>
+                    </View>
+                    <Pressable
+                      disabled={link.active}
+                      onPress={() =>
+                        void c.selectSaved(link.deviceId).catch((e) => setStatus(e.message))
+                      }
+                      style={[styles.smallAction, link.active && styles.smallActionActive]}
+                    >
+                      <Text style={styles.smallActionText}>
+                        {link.active ? "Conectada" : "Conectar"}
+                      </Text>
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
             )}
-            {button(
-              busy ? "Conectando…" : "Solicitar conexión",
-              () => {
-                if (!/^[A-F0-9]{32}$/i.test(code.replace(/\s/g, ""))) {
-                  setStatus("Introduce el código de 32 caracteres que aparece en la web.");
-                  return;
-                }
-                setBusy(true);
-                void c
-                  .claim(base.trim(), code.replace(/\s/g, ""), deviceName)
-                  .catch((e) => setStatus(e.message))
-                  .finally(() => setBusy(false));
-              },
-              busy
-            )}
-            <Text style={styles.copy}>
-              Abre Ajustes → About → Control desde móvil en la web. Aprueba el teléfono allí. El
-              vínculo dura hasta 30 días con el servicio actualizado.
-            </Text>
-          </View>
+          </>
         ) : !session.approved ? (
-          <View style={styles.card}>
+          <View style={[styles.surface, styles.waitingCard]}>
+            <Text style={styles.eyebrow}>AUTORIZACIÓN PENDIENTE</Text>
             <Text accessibilityRole="header" style={styles.title}>
-              Confirma en tu web
+              Confirma este mando en Nuvio Web
             </Text>
             <Text style={styles.copy}>
-              La solicitud ya se envió. En Ajustes → Control desde móvil, pulsa Aprobar junto a este
-              teléfono. No necesitas introducir otro código.
+              La solicitud ya está enviada. Aprueba este dispositivo desde Ajustes → Control desde
+              móvil.
             </Text>
             {button("Comprobar conexión", () => c.sync())}
           </View>
@@ -517,119 +594,157 @@ export default function App() {
           <>
             {tab === "remote" && (
               <>
-                <View style={styles.card}>
-                  <Text style={styles.label}>{c.grant?.sessionName}</Text>
-                  {!session.online && (
-                    <Text style={styles.copy}>
-                      Abre de nuevo la web. El mando se reconectará sin reenviar órdenes antiguas.
-                    </Text>
-                  )}
-                  {!session.snapshot && (
-                    <Text style={styles.copy}>
-                      El teléfono ya está aprobado. Esperando catálogo y reproductor; puedes usar
-                      Inicio o Buscar.
-                    </Text>
-                  )}
-                  {button("Actualizar estado", () => c.sync())}
-                  <Text style={styles.label}>Navegación</Text>
-                  {dpad}
-                  <Text style={styles.label}>Desplazar la página</Text>
-                  {scrollRow}
-                  <Text style={styles.title}>
-                    {!state.available
-                      ? "Sin vídeo activo"
-                      : state.buffering
-                        ? "Cargando vídeo…"
-                        : state.playing
-                          ? "Reproduciendo"
-                          : "En pausa"}
-                  </Text>
-                  {!!state.content?.title && (
-                    <Text style={styles.mediaTitle}>{state.content.title}</Text>
-                  )}
-                  <Text style={styles.copy}>
-                    {clock(position)} / {clock(state.duration)} · Volumen{" "}
-                    {Math.round((state.volume ?? 1) * 100)} %
-                  </Text>
+                <View style={[styles.surface, styles.nowPlayingCard]}>
+                  <View style={styles.nowPlayingTop}>
+                    <View>
+                      <Text style={styles.eyebrow}>
+                        {state.available ? "REPRODUCIENDO" : "EN TU PANTALLA"}
+                      </Text>
+                      <Text style={styles.mediaTitleLarge}>
+                        {state.content?.title || "Sin vídeo activo"}
+                      </Text>
+                      {!!state.content?.description && (
+                        <Text style={styles.copySmall}>{state.content.description}</Text>
+                      )}
+                    </View>
+                    <View style={[styles.statusBadge, state.available && styles.statusBadgeActive]}>
+                      <Text style={styles.statusBadgeText}>
+                        {state.buffering
+                          ? "Cargando"
+                          : state.playing
+                            ? "Play"
+                            : state.available
+                              ? "Pausa"
+                              : "Idle"}
+                      </Text>
+                    </View>
+                  </View>
+
                   <RangeControl
-                    label="Posición · toca la barra para saltar"
+                    label="Posición"
                     value={position}
                     max={state.duration}
                     disabled={!canControl || !state.available}
                     onChange={(positionSeconds) => action("player.seek", { positionSeconds })}
                   />
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={state.playing ? "Pausar" : "Reproducir"}
-                    accessibilityState={{ disabled: !canControl || !state.available }}
-                    disabled={!canControl || !state.available}
-                    onPress={() => action(state.playing ? "player.pause" : "player.play")}
-                    style={({ pressed }) => [
-                      styles.playButton,
-                      pressed && styles.pressed,
-                      (!canControl || !state.available) && styles.disabled
-                    ]}
-                  >
-                    <Text style={styles.playSymbol}>{state.playing ? "Ⅱ" : "▶"}</Text>
-                    <Text style={styles.playLabel}>{state.playing ? "Pausar" : "Reproducir"}</Text>
-                  </Pressable>
-                  <View style={styles.row}>
-                    {button(
-                      "−10 s",
-                      () =>
-                        action("player.seek", {
-                          positionSeconds: Math.max(0, position - 10)
-                        }),
-                      !state.available || !state.duration,
-                      true
-                    )}
-                    {button(
-                      "+10 s",
-                      () =>
+                  <View style={styles.timeRow}>
+                    <Text style={styles.timeText}>{clock(position)}</Text>
+                    <Text style={styles.timeText}>
+                      -{clock(Math.max(0, state.duration - position))}
+                    </Text>
+                  </View>
+
+                  <View style={styles.playbackControls}>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Retroceder 10 segundos"
+                      disabled={!canControl || !state.available}
+                      onPress={() =>
+                        action("player.seek", { positionSeconds: Math.max(0, position - 10) })
+                      }
+                      style={({ pressed }) => [
+                        styles.circleControl,
+                        pressed && styles.pressed,
+                        (!canControl || !state.available) && styles.disabled
+                      ]}
+                    >
+                      <Text style={styles.circleControlText}>↶</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={state.playing ? "Pausar" : "Reproducir"}
+                      accessibilityState={{ disabled: !canControl || !state.available }}
+                      disabled={!canControl || !state.available}
+                      onPress={() => action(state.playing ? "player.pause" : "player.play")}
+                      style={({ pressed }) => [
+                        styles.mainPlayButton,
+                        pressed && styles.pressed,
+                        (!canControl || !state.available) && styles.disabled
+                      ]}
+                    >
+                      <Text style={styles.mainPlaySymbol}>{state.playing ? "Ⅱ" : "▶"}</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Avanzar 10 segundos"
+                      disabled={!canControl || !state.available}
+                      onPress={() =>
                         action("player.seek", {
                           positionSeconds: Math.min(state.duration, position + 10)
-                        }),
-                      !state.available || !state.duration,
-                      true
-                    )}
+                        })
+                      }
+                      style={({ pressed }) => [
+                        styles.circleControl,
+                        pressed && styles.pressed,
+                        (!canControl || !state.available) && styles.disabled
+                      ]}
+                    >
+                      <Text style={styles.circleControlText}>↷</Text>
+                    </Pressable>
                   </View>
-                  <RangeControl
-                    label="Volumen · toca para ajustar"
-                    value={state.volume}
-                    max={1}
-                    disabled={!canControl || !state.available}
-                    onChange={(volume) => action("player.setVolume", { volume })}
-                  />
-                  <View style={styles.row}>
-                    {button(
-                      "Volumen −",
-                      () => action("player.setVolume", { volume: Math.max(0, state.volume - 0.1) }),
-                      !state.available,
-                      true
-                    )}
-                    {button(
-                      "Volumen +",
-                      () => action("player.setVolume", { volume: Math.min(1, state.volume + 0.1) }),
-                      !state.available,
-                      true
-                    )}
+                </View>
+
+                <View style={styles.remoteQuickActions}>
+                  {button("← Volver", () => action("navigation.back"), false, true)}
+                  {button("Página", () => action("navigation.scrollDown"), false, true)}
+                  {button("⌂ Inicio", () => action("navigation.home"), false, true)}
+                </View>
+                <View style={styles.remoteDestinationActions}>
+                  {button("Biblioteca", () => action("navigation.library"), false, true)}
+                  {button("Explorar", () => action("navigation.discover"), false, true)}
+                </View>
+
+                <View style={[styles.surface, styles.dpadPanel]}>{dpad}</View>
+
+                <View style={[styles.surface, styles.audioPanel]}>
+                  <View style={styles.volumeRow}>
+                    <Text style={styles.volumeIcon}>◀</Text>
+                    <View style={styles.volumeRangeWrap}>
+                      <RangeControl
+                        label="Volumen"
+                        value={state.volume}
+                        max={1}
+                        disabled={!canControl || !state.available}
+                        onChange={(volume) => action("player.setVolume", { volume })}
+                      />
+                    </View>
+                    <Text style={styles.volumePercent}>
+                      {Math.round((state.volume ?? 1) * 100)}%
+                    </Text>
+                    <Pressable
+                      onPress={() => action("player.setMuted", { muted: !state.muted })}
+                      style={styles.muteButton}
+                    >
+                      <Text style={styles.muteButtonText}>{state.muted ? "🔇" : "🔊"}</Text>
+                    </Pressable>
                   </View>
-                  {button(
-                    state.muted ? "Activar sonido" : "Silenciar",
-                    () => action("player.setMuted", { muted: !state.muted }),
-                    !state.available,
-                    true
+                  {!!state.content?.tracks?.length && (
+                    <View style={styles.trackList}>
+                      {state.content.tracks.map((track: any) => (
+                        <Pressable
+                          key={track.key}
+                          onPress={() => action("player.selectTrack", { key: track.key })}
+                          style={[styles.trackPill, track.selected && styles.trackPillSelected]}
+                        >
+                          <Text
+                            style={[
+                              styles.trackPillText,
+                              track.selected && styles.trackPillTextSelected
+                            ]}
+                          >
+                            {track.kind === "audio" ? "Audio" : "Sub"} · {track.label}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
                   )}
-                  <Text style={styles.label}>Velocidad · {state.rate || 1}×</Text>
-                  {button(
-                    "Solicitar pantalla completa",
-                    () => action("player.fullscreen"),
-                    !state.available,
-                    true
-                  )}
-                  <Text style={styles.copy}>
-                    La pantalla completa requiere confirmar el aviso en el navegador.
-                  </Text>
+                </View>
+
+                <View style={[styles.surface, styles.secondaryControls]}>
+                  <View style={styles.sectionTitleRow}>
+                    <Text style={styles.sectionTitle}>Más controles</Text>
+                    <Text style={styles.miniBadge}>{state.rate || 1}×</Text>
+                  </View>
                   <View style={styles.row}>
                     {[0.5, 0.75, 1, 1.25, 1.5, 2].map((rate) => (
                       <View key={rate}>
@@ -642,574 +757,959 @@ export default function App() {
                       </View>
                     ))}
                   </View>
-                </View>
-                <View style={styles.row}>
-                  {button("Inicio en la web", () => action("navigation.home"), false, true)}
-                  {button("Volver en la web", () => action("navigation.back"), false, true)}
+                  {button(
+                    "Pantalla completa",
+                    () => action("player.fullscreen"),
+                    !state.available,
+                    true
+                  )}
+                  {button("Actualizar estado", () => c.sync())}
                 </View>
               </>
             )}
+
             {tab === "browse" && (
               <>
-                <View style={styles.card}>
-                  <Text style={styles.label}>Navegación</Text>
-                  {dpad}
-                  <Text style={styles.label}>Desplazar la página</Text>
-                  {scrollRow}
-                  <View style={styles.row}>
-                    {button("Inicio", () => action("navigation.home"), false, true)}
-                    {button("Biblioteca", () => action("navigation.library"), false, true)}
-                    {button("Descubrir", () => action("navigation.discover"), false, true)}
-                    {button("Volver", () => action("navigation.back"), false, true)}
-                  </View>
-                  <Text style={styles.label}>Buscar en la web</Text>
+                <View style={styles.syncStrip}>
+                  <Text style={styles.syncStripText}>↻ Catálogo sincronizado con Nuvio Web</Text>
+                  <Text style={styles.syncStripTime}>
+                    {new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </Text>
+                </View>
+                <View style={styles.searchRow}>
                   <TextInput
                     accessibilityLabel="Buscar título en la web"
-                    style={styles.input}
+                    style={[styles.input, styles.searchInput]}
                     value={query}
                     onChangeText={setQuery}
-                    placeholder="Película o serie"
-                    placeholderTextColor="#858d9f"
+                    placeholder="Buscar títulos..."
+                    placeholderTextColor="#6F7482"
                     maxLength={120}
                     returnKeyType="search"
                     onSubmitEditing={() =>
                       query.trim().length >= 2 && action("catalog.search", { query: query.trim() })
                     }
                   />
-                  {button(
-                    "Buscar",
-                    () =>
+                  <Pressable
+                    onPress={() =>
                       query.trim().length < 2
                         ? setStatus("Escribe al menos dos caracteres para buscar.")
-                        : action("catalog.search", { query: query.trim() }),
-                    false,
-                    true
-                  )}
-                  <Text style={styles.copy}>
-                    Elige un resultado o una fuente para abrirlo en la web.
-                  </Text>
-                </View>
-              </>
-            )}
-            {tab === "keyboard" && (
-              <View style={styles.card}>
-                <Text style={styles.label}>Escribir en la web</Text>
-                <Text style={styles.copy}>
-                  Toca un campo de texto en la web (o usa Buscar) y envía el texto desde aquí. Lo
-                  escrito sustituye el contenido del campo enfocado.
-                </Text>
-                <TextInput
-                  accessibilityLabel="Texto para enviar a la web"
-                  style={styles.input}
-                  value={keyboardText}
-                  onChangeText={setKeyboardText}
-                  placeholder="Escribe aquí…"
-                  placeholderTextColor="#858d9f"
-                  maxLength={200}
-                  returnKeyType="send"
-                  onSubmitEditing={() => {
-                    if (keyboardText.length >= 1) {
-                      action("keyboard.text", { text: keyboardText.slice(0, 200) });
-                      setKeyboardText("");
+                        : action("catalog.search", { query: query.trim() })
                     }
-                  }}
-                />
-                <View style={styles.row}>
-                  {button(
-                    "Enviar texto",
-                    () => {
-                      if (keyboardText.length < 1) {
-                        setStatus("Escribe algo primero.");
-                        return;
-                      }
-                      action("keyboard.text", { text: keyboardText.slice(0, 200) });
-                      setKeyboardText("");
-                    },
-                    false,
-                    true
-                  )}
-                  {button("Borrar", () => setKeyboardText(""), !keyboardText.length)}
+                    style={styles.searchButton}
+                  >
+                    <Text style={styles.searchButtonText}>Buscar</Text>
+                  </Pressable>
                 </View>
-                <Text style={styles.label}>Teclas especiales</Text>
-                <View style={styles.row}>
-                  {button("Espacio", () => action("keyboard.key", { key: " " }), false, true)}
-                  {button(
-                    "⌫ Borrar",
-                    () => action("keyboard.key", { key: "Backspace" }),
-                    false,
-                    true
-                  )}
-                  {button("Intro", () => action("keyboard.key", { key: "Enter" }), false, true)}
-                </View>
-                <View style={styles.row}>
-                  {button("←", () => action("keyboard.key", { key: "ArrowLeft" }), false, true)}
-                  {button("↑", () => action("keyboard.key", { key: "ArrowUp" }), false, true)}
-                  {button("↓", () => action("keyboard.key", { key: "ArrowDown" }), false, true)}
-                  {button("→", () => action("keyboard.key", { key: "ArrowRight" }), false, true)}
-                </View>
-                <View style={styles.row}>
-                  {button("Esc", () => action("keyboard.key", { key: "Escape" }), false, true)}
-                  {button("Tab", () => action("keyboard.key", { key: "Tab" }), false, true)}
-                </View>
-              </View>
-            )}
-            {tab === "connection" && (
-              <View style={styles.card}>
-                <Text style={styles.label}>Pantalla vinculada</Text>
-                <Text style={styles.mediaTitle}>{c.grant?.sessionName || "Nuvio Web"}</Text>
-                <Text selectable style={styles.copy}>
-                  {c.grant?.base}
-                </Text>
-                <Text style={styles.copy}>
-                  {canControl
-                    ? "Este teléfono tiene el control."
-                    : session.online
-                      ? "Pide el control desde los ajustes de la web."
-                      : "Esperando a que la web vuelva a conectarse."}
-                </Text>
-                <Text style={styles.label}>Tiempo de vínculo restante</Text>
-                <Text style={styles.mediaTitle}>
-                  {Math.max(
-                    0,
-                    Math.ceil(
-                      ((c.grant?.linkExpiresAt || c.grant?.expiresAt || now) - now) / 86400000
-                    )
-                  )}{" "}
-                  días
-                </Text>
-                <Text style={styles.copy}>
-                  El acceso se renueva automáticamente mientras el vínculo siga autorizado. La web
-                  debe seguir abierta. El vídeo se reproduce en la web, no en este teléfono.
-                </Text>
-                {button("Actualizar conexión", () => c.sync())}
-                <Text style={styles.copy}>Nuvio Remote · {APP_VERSION}</Text>
-              </View>
-            )}
-          </>
-        )}
-        {session.approved && state?.content && tab !== "connection" && (
-          <View style={styles.card}>
-            <Text accessibilityRole="header" style={styles.label}>
-              {tab === "remote" ? "Audio y subtítulos" : state.content.title}
-            </Text>
-            {!(tab === "remote" ? state.content.tracks : state.content.items)?.length && (
-              <Text style={styles.copy}>
-                {tab === "remote"
-                  ? "Las pistas disponibles aparecerán aquí cuando cargue el vídeo."
-                  : "Busca un título para ver sus resultados. Las opciones se actualizan al cargar la web."}
-              </Text>
-            )}
-            {tab === "browse" && (
-              <>
-                {!!state.content.description && (
+
+                {!!state.content?.description && (
                   <Text style={styles.copy}>{state.content.description}</Text>
                 )}
-                {!!(state.content.seasons || []).length && (
-                  <Text style={styles.label}>Temporadas</Text>
+                {!!(state.content?.seasons || []).length && (
+                  <View style={styles.trackList}>
+                    {(state.content?.seasons || []).map((season: number) => (
+                      <Pressable
+                        key={season}
+                        onPress={() => action("catalog.season", { season })}
+                        style={[
+                          styles.trackPill,
+                          state.content?.selectedSeason === season && styles.trackPillSelected
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.trackPillText,
+                            state.content?.selectedSeason === season && styles.trackPillTextSelected
+                          ]}
+                        >
+                          T{season}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
                 )}
-                <View style={styles.row}>
-                  {(state.content.seasons || []).map((season: number) => (
-                    <View key={season}>
-                      {button(
-                        `T${season}${state.content.selectedSeason === season ? " ✓" : ""}`,
-                        () => action("catalog.season", { season }),
-                        false,
-                        true
-                      )}
+
+                <View style={styles.resultHeader}>
+                  <Text style={styles.sectionTitle}>
+                    {state.content?.title || "Resultados coincidentes"}
+                  </Text>
+                  <Text style={styles.copySmall}>
+                    {(state.content?.items || []).length} títulos
+                  </Text>
+                </View>
+                {(state.content?.items || []).map((item: any, index: number) => (
+                  <Pressable
+                    key={item.key}
+                    disabled={!canControl}
+                    onPress={() => action("catalog.activate", { key: item.key })}
+                    style={({ pressed }) => [
+                      styles.resultCard,
+                      pressed && styles.pressed,
+                      !canControl && styles.disabled
+                    ]}
+                  >
+                    {!!item.thumbnail ? (
+                      <Image
+                        source={{ uri: item.thumbnail }}
+                        style={styles.poster}
+                        accessible={false}
+                      />
+                    ) : (
+                      <View style={[styles.poster, styles.posterPlaceholder]}>
+                        <Text style={styles.posterPlaceholderText}>▣</Text>
+                      </View>
+                    )}
+                    <View style={styles.resultBody}>
+                      <Text style={styles.mediaTitle}>{item.label}</Text>
+                      <View style={styles.badgeRow}>
+                        {!!kindLabel[String(item.mediaType || "")] && (
+                          <Text style={styles.kindBadge}>
+                            {kindLabel[String(item.mediaType || "")]}
+                          </Text>
+                        )}
+                        {!!item.year && <Text style={styles.year}>{String(item.year)}</Text>}
+                        {!!item.detail && (
+                          <Text numberOfLines={1} style={styles.resultDetail}>
+                            {item.detail}
+                          </Text>
+                        )}
+                      </View>
                     </View>
+                    <View style={styles.resultAction}>
+                      <Text style={styles.resultActionText}>
+                        {state.content?.route === "stream" ? "▶" : "▣"}
+                      </Text>
+                    </View>
+                  </Pressable>
+                ))}
+                {!state.content?.items?.length && (
+                  <View style={[styles.surface, styles.emptyState]}>
+                    <Text style={styles.copy}>
+                      Busca un título para ver resultados sincronizados desde la web.
+                    </Text>
+                  </View>
+                )}
+                {state.content?.pageCount > 1 && (
+                  <View style={styles.pagination}>
+                    {button(
+                      "‹",
+                      () => action("catalog.page", { page: state.content.page - 1 }),
+                      state.content.page === 0,
+                      true
+                    )}
+                    <Text style={styles.pageNumber}>{state.content.page + 1}</Text>
+                    <Text style={styles.copySmall}>de {state.content.pageCount}</Text>
+                    {button(
+                      "›",
+                      () => action("catalog.page", { page: state.content.page + 1 }),
+                      state.content.page + 1 >= state.content.pageCount,
+                      true
+                    )}
+                  </View>
+                )}
+              </>
+            )}
+
+            {tab === "keyboard" && (
+              <>
+                <View style={[styles.surface, styles.infoCard]}>
+                  <Text style={styles.infoIcon}>ⓘ</Text>
+                  <Text style={styles.copy}>
+                    El texto enviado reemplazará el campo activo en Nuvio Web. Usa las teclas de
+                    dirección para colocar el cursor.
+                  </Text>
+                </View>
+                <View style={[styles.surface, styles.keyboardCard]}>
+                  <View style={styles.sectionTitleRow}>
+                    <Text style={styles.eyebrow}>ENTRADA DIRECTA</Text>
+                    <Text style={styles.copySmall}>{keyboardText.length} caracteres</Text>
+                  </View>
+                  <TextInput
+                    accessibilityLabel="Texto para enviar a la web"
+                    style={[styles.input, styles.keyboardInput]}
+                    value={keyboardText}
+                    onChangeText={setKeyboardText}
+                    placeholder="Escribe aquí para enviar al navegador..."
+                    placeholderTextColor="#6F7482"
+                    maxLength={200}
+                    multiline
+                    returnKeyType="send"
+                    onSubmitEditing={() => {
+                      if (keyboardText.length >= 1) {
+                        action("keyboard.text", { text: keyboardText.slice(0, 200) });
+                        setKeyboardText("");
+                      }
+                    }}
+                  />
+                  <View style={styles.inlineActions}>
+                    {button("Borrar", () => setKeyboardText(""), !keyboardText.length)}
+                    <Pressable
+                      onPress={() => {
+                        if (keyboardText.length < 1) return setStatus("Escribe algo primero.");
+                        action("keyboard.text", { text: keyboardText.slice(0, 200) });
+                        setKeyboardText("");
+                      }}
+                      style={styles.primaryButton}
+                    >
+                      <Text style={styles.primaryButtonText}>Enviar texto</Text>
+                      <Text style={styles.primaryButtonArrow}>→</Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                <Text style={styles.groupLabel}>TECLAS DE CONTROL Y NAVEGACIÓN</Text>
+                <View style={styles.keyGrid}>
+                  {[
+                    ["Esc", "Escape"],
+                    ["Tab", "Tab"],
+                    ["Retroceso", "Backspace"],
+                    ["Intro", "Enter"],
+                    ["Espacio", " "]
+                  ].map(([label, key]) => (
+                    <Pressable
+                      key={key}
+                      onPress={() => action("keyboard.key", { key })}
+                      style={styles.keyButton}
+                    >
+                      <Text style={styles.keyButtonText}>{label}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+                <Text style={styles.groupLabel}>MOVER CURSOR EN NUVIO WEB</Text>
+                <View style={[styles.surface, styles.cursorPad]}>
+                  {[
+                    ["↑", "ArrowUp"],
+                    ["←", "ArrowLeft"],
+                    ["↓", "ArrowDown"],
+                    ["→", "ArrowRight"]
+                  ].map(([label, key]) => (
+                    <Pressable
+                      key={key}
+                      onPress={() => action("keyboard.key", { key })}
+                      style={styles.cursorButton}
+                    >
+                      <Text style={styles.cursorButtonText}>{label}</Text>
+                    </Pressable>
                   ))}
                 </View>
               </>
             )}
-            {tab === "browse" && state.content.route === "stream" && (
+
+            {tab === "connection" && (
               <>
-                <Text style={styles.label}>
-                  Fuentes ({(state.content.items || []).length}) · toca ▶ para reproducir en la web
-                </Text>
+                <View style={[styles.surface, styles.currentConnectionCard]}>
+                  <View style={styles.sectionTitleRow}>
+                    <View>
+                      <Text style={styles.eyebrow}>NUVIO WEB</Text>
+                      <Text style={styles.mediaTitleLarge}>
+                        {c.grant?.sessionName || "Pantalla vinculada"}
+                      </Text>
+                    </View>
+                    <Text style={[styles.miniBadge, canControl && styles.miniBadgeOnline]}>
+                      {canControl ? "LOCAL" : "EN ESPERA"}
+                    </Text>
+                  </View>
+                  <Text selectable style={styles.copySmall}>
+                    {c.grant?.base}
+                  </Text>
+                  <View
+                    style={[
+                      styles.connectionNotice,
+                      !session.online && styles.connectionNoticeError
+                    ]}
+                  >
+                    <Text style={styles.connectionNoticeText}>{status}</Text>
+                  </View>
+                  {button("Actualizar conexión", () => c.sync())}
+                </View>
+
+                <View style={[styles.surface, styles.parametersCard]}>
+                  <View style={styles.sectionTitleRow}>
+                    <Text style={styles.sectionTitle}>Parámetros de conexión</Text>
+                    <Text style={styles.copySmall}>v{APP_VERSION}</Text>
+                  </View>
+                  <Text style={styles.fieldLabel}>Servidor de sincronización</Text>
+                  <Text selectable style={styles.readOnlyValue}>
+                    {c.grant?.base || base}
+                  </Text>
+                  <Text style={styles.fieldLabel}>Nombre de este mando</Text>
+                  <Text style={styles.readOnlyValue}>{deviceName}</Text>
+                  <Text style={styles.fieldLabel}>Tiempo de vínculo restante</Text>
+                  <Text style={styles.readOnlyValue}>
+                    {Math.max(
+                      0,
+                      Math.ceil(
+                        ((c.grant?.linkExpiresAt || c.grant?.expiresAt || now) - now) / 86400000
+                      )
+                    )}{" "}
+                    días
+                  </Text>
+                </View>
+
+                <View style={styles.sectionBlock}>
+                  <View style={styles.sectionTitleRow}>
+                    <Text style={styles.sectionTitle}>Mis pantallas guardadas</Text>
+                    <Text style={styles.countBadge}>{savedSessions.length}</Text>
+                  </View>
+                  {savedSessions.map((link) => (
+                    <View key={link.deviceId} style={[styles.surface, styles.savedScreenCard]}>
+                      <View style={styles.savedScreenIcon}>
+                        <Text style={styles.savedScreenIconText}>▣</Text>
+                      </View>
+                      <View style={styles.savedScreenBody}>
+                        <Text style={styles.mediaTitle}>{link.name}</Text>
+                        <Text style={styles.copySmall}>
+                          {link.online ? "Web conectada" : "Web desconectada"}
+                        </Text>
+                      </View>
+                      <Pressable
+                        disabled={link.active}
+                        onPress={() =>
+                          void c.selectSaved(link.deviceId).catch((e) => setStatus(e.message))
+                        }
+                        style={[styles.smallAction, link.active && styles.smallActionActive]}
+                      >
+                        <Text style={styles.smallActionText}>
+                          {link.active ? "Actual" : "Controlar"}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  ))}
+                  {button(
+                    "Vincular otra pantalla",
+                    () => void c.newPairing().catch((e) => setStatus(e.message)),
+                    savedSessions.length >= 5
+                  )}
+                </View>
+
+                {button("Desvincular esta web", () => {
+                  Alert.alert(
+                    "¿Desvincular esta pantalla?",
+                    "Necesitarás otro código para volver a controlarla.",
+                    [
+                      { text: "Cancelar", style: "cancel" },
+                      {
+                        text: "Desvincular",
+                        style: "destructive",
+                        onPress: () => {
+                          void c
+                            .revokeSelected()
+                            .then(() => setStatus("Vínculo eliminado."))
+                            .catch(() => setStatus("No se pudo borrar el vínculo guardado."));
+                        }
+                      }
+                    ]
+                  );
+                })}
               </>
             )}
-            {(tab === "browse" ? state.content.items || [] : []).map((item: any, index: number) => (
-              <View key={item.key} style={styles.resultRow}>
-                {!!item.thumbnail && (
-                  <Image
-                    source={{ uri: item.thumbnail }}
-                    accessibilityIgnoresInvertColors
-                    accessible={false}
-                    style={styles.poster}
-                  />
-                )}
-                <View style={styles.resultBody}>
-                  <View style={styles.badgeRow}>
-                    <Text style={styles.eyebrow}>{String(index + 1).padStart(2, "0")}</Text>
-                    {!!kindLabel[String(item.mediaType || "")] && (
-                      <Text style={styles.kindBadge}>
-                        {kindLabel[String(item.mediaType || "")]}
-                      </Text>
-                    )}
-                    {!!item.year && <Text style={styles.year}>{String(item.year)}</Text>}
-                  </View>
-                  {button(
-                    state.content.route === "stream" ? `▶ ${item.label}` : item.label,
-                    () => action("catalog.activate", { key: item.key }),
-                    false,
-                    true
-                  )}
-                  {!!item.detail && <Text style={styles.copy}>{item.detail}</Text>}
-                </View>
-              </View>
-            ))}
-            {tab === "browse" && state.content.pageCount > 1 && (
-              <View style={styles.row}>
-                {button(
-                  "Anterior",
-                  () => action("catalog.page", { page: state.content.page - 1 }),
-                  state.content.page === 0,
-                  true
-                )}
-                <Text style={styles.copy}>
-                  {state.content.page + 1} / {state.content.pageCount}
-                </Text>
-                {button(
-                  "Siguiente",
-                  () => action("catalog.page", { page: state.content.page + 1 }),
-                  state.content.page + 1 >= state.content.pageCount,
-                  true
-                )}
-              </View>
-            )}
-            {(tab === "remote" ? state.content.tracks || [] : []).map((track: any) => (
-              <View key={track.key}>
-                {button(
-                  `${track.kind === "audio" ? "Audio" : "Subtítulos"}: ${track.label}${track.selected ? " · seleccionado" : ""}`,
-                  () => action("player.selectTrack", { key: track.key }),
-                  false,
-                  true
-                )}
-              </View>
-            ))}
-          </View>
+          </>
         )}
-        {tab === "connection" && (
-          <View style={styles.card}>
-            <Text style={styles.label}>Mis pantallas</Text>
-            {button(
-              busy ? "Comprobando…" : "Consultar estado de las pantallas",
-              () => {
-                setBusy(true);
-                void c
-                  .refreshLinks()
-                  .catch((e) => setStatus(e.message))
-                  .finally(() => setBusy(false));
-              },
-              busy
-            )}
-            {savedSessions.map((link) => (
-              <View key={link.deviceId} style={styles.result}>
-                <Text style={styles.mediaTitle}>
-                  {link.name}
-                  {link.active ? " · seleccionada" : ""}
-                </Text>
-                <Text style={styles.copy}>{link.base}</Text>
-                <Text style={styles.copy}>
-                  {link.online === undefined
-                    ? "Estado sin comprobar"
-                    : link.online
-                      ? "Web conectada"
-                      : "Web desconectada"}
-                  {link.lastSeen
-                    ? ` · Última actividad: ${new Date(link.lastSeen).toLocaleString()}`
-                    : ""}
-                </Text>
-                {button(
-                  link.active ? "Pantalla actual" : "Controlar esta pantalla",
-                  () => {
-                    void c.selectSaved(link.deviceId).catch((e) => setStatus(e.message));
-                  },
-                  link.active
-                )}
-              </View>
-            ))}
-            {button(
-              "Vincular otra pantalla",
-              () => {
-                void c.newPairing().catch((e) => setStatus(e.message));
-              },
-              savedSessions.length >= 5
-            )}
-            <Text style={styles.copy}>
-              Hasta cinco pantallas guardadas. Cada una necesita aprobación en su propia pestaña
-              web.
-            </Text>
-          </View>
-        )}
-        {session.paired &&
-          (tab === "connection" || !session.approved) &&
-          button("Desvincular esta web", () => {
-            Alert.alert(
-              "¿Desvincular esta pantalla?",
-              "Necesitarás otro código para volver a controlarla.",
-              [
-                { text: "Cancelar", style: "cancel" },
-                {
-                  text: "Desvincular",
-                  style: "destructive",
-                  onPress: () => {
-                    void c
-                      .revokeSelected()
-                      .then(() =>
-                        setStatus(
-                          "Vínculo eliminado. Si la web estaba desconectada, revócalo también allí."
-                        )
-                      )
-                      .catch(() =>
-                        setStatus("No se pudo borrar el vínculo guardado. Inténtalo de nuevo.")
-                      );
-                  }
-                }
-              ]
-            );
-          })}
       </ScrollView>
+
+      {session.paired && session.approved && <View style={styles.bottomNavigation}>{tabBar}</View>}
     </View>
   );
 }
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#090A10" },
+  page: { flex: 1, backgroundColor: "#090B10" },
   header: {
-    paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 12 : 56,
-    paddingHorizontal: 18,
-    gap: 18,
-    paddingBottom: 12,
-    backgroundColor: "#090A10",
+    paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 10 : 52,
+    paddingHorizontal: 16,
+    paddingBottom: 11,
+    backgroundColor: "rgba(9,11,16,0.98)",
     borderBottomWidth: 1,
-    borderBottomColor: "#20222B"
+    borderBottomColor: "rgba(194,198,214,0.12)"
   },
-  brandRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  brandLockup: { flexDirection: "row", alignItems: "center", gap: 11 },
-  brandIcon: { width: 42, height: 42, borderRadius: 12 },
-  brand: { color: "#F8F8FB", fontSize: 19, fontWeight: "800", letterSpacing: -0.5 },
-  version: { color: "#858996", fontSize: 11, marginTop: 2 },
-  connectionDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#5A5E6A",
-    borderWidth: 2,
-    borderColor: "#252832"
-  },
-  connectionDotOnline: { backgroundColor: "#4ED69C", borderColor: "#173E31" },
-  tabs: {
+  brandRow: {
     flexDirection: "row",
-    gap: 4,
-    padding: 4,
-    borderRadius: 16,
-    backgroundColor: "#12141B"
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12
   },
-  tab: {
-    flex: 1,
-    minHeight: 44,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+  brandLockup: { flexDirection: "row", alignItems: "center", gap: 10, flexShrink: 1 },
+  brandIconFrame: {
+    width: 34,
+    height: 34,
+    borderRadius: 9,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 12
+    backgroundColor: "#11141D",
+    borderWidth: 1,
+    borderColor: "rgba(173,198,255,0.22)"
   },
-  tabActive: { backgroundColor: "#F3F2F7" },
-  tabText: { color: "#969AA7", fontSize: 14, fontWeight: "600" },
-  tabTextActive: { color: "#111218", fontWeight: "800" },
-  content: {
-    padding: 18,
-    paddingTop: 30,
-    paddingBottom: 64,
-    gap: 18,
-    width: "100%",
-    maxWidth: 720,
-    alignSelf: "center"
-  },
-  heroIntro: { gap: 9, paddingHorizontal: 2, marginBottom: 2 },
-  eyebrow: { color: "#B89AFF", fontSize: 11, fontWeight: "800", letterSpacing: 1.8 },
-  title: {
-    color: "#F8F8FB",
-    fontSize: 34,
+  brandIcon: { width: 26, height: 26, borderRadius: 6 },
+  brand: {
+    color: "#F1F3F8",
+    fontSize: 16,
+    lineHeight: 19,
     fontWeight: "800",
-    lineHeight: 39,
-    letterSpacing: -1.5
+    letterSpacing: -0.35
   },
-  mediaTitle: { color: "#F8F8FB", fontSize: 20, fontWeight: "700", lineHeight: 27 },
-  statusRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  statusDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#777B87" },
-  statusDotOnline: { backgroundColor: "#4ED69C" },
-  status: { flex: 1, color: "#B7BAC5", fontSize: 14, lineHeight: 20 },
-  card: {
-    backgroundColor: "#12141B",
-    padding: 18,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: "#20232C",
-    gap: 16
-  },
-  result: {
-    gap: 9,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#252832"
-  },
-  resultRow: {
+  brandStatusRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 2 },
+  version: { color: "#8C909F", fontSize: 9, lineHeight: 12, fontWeight: "600" },
+  tinyDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: "#616573" },
+  tinyDotOnline: { backgroundColor: "#69D59A" },
+  connectionPill: {
+    maxWidth: 150,
     flexDirection: "row",
-    gap: 12,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#252832"
-  },
-  resultBody: { flex: 1, gap: 8, justifyContent: "center" },
-  poster: { width: 96, height: 144, borderRadius: 10, backgroundColor: "#0D0F15" },
-  badgeRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  kindBadge: {
-    color: "#D9C6FF",
-    backgroundColor: "#2A2138",
-    borderWidth: 1,
-    borderColor: "#4A3A6E",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
     borderRadius: 999,
-    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.13)",
+    backgroundColor: "#11141D"
+  },
+  connectionPillOnline: { borderColor: "rgba(105,213,154,0.18)" },
+  connectionDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#6D7280" },
+  connectionDotOnline: { backgroundColor: "#69D59A" },
+  connectionPillText: { color: "#C2C6D6", fontSize: 8.5, fontWeight: "700", flexShrink: 1 },
+  content: { paddingHorizontal: 12, paddingTop: 14, paddingBottom: 104, gap: 12 },
+
+  screenHeading: { paddingHorizontal: 4, paddingTop: 4, paddingBottom: 2, gap: 5 },
+  eyebrow: {
+    color: "#ADC6FF",
+    fontSize: 8.5,
+    lineHeight: 12,
+    fontWeight: "900",
+    letterSpacing: 1.05
+  },
+  title: { color: "#F1F3F8", fontSize: 25, lineHeight: 29, fontWeight: "800", letterSpacing: -0.8 },
+  sectionTitle: {
+    color: "#E2E2E9",
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "800",
+    letterSpacing: -0.2
+  },
+  mediaTitle: { color: "#F1F3F8", fontSize: 13, lineHeight: 17, fontWeight: "800" },
+  mediaTitleLarge: {
+    color: "#F1F3F8",
+    fontSize: 18,
+    lineHeight: 23,
+    fontWeight: "800",
+    letterSpacing: -0.35
+  },
+  copy: { color: "#AEB3C3", fontSize: 10.5, lineHeight: 16 },
+  copySmall: { color: "#8C909F", fontSize: 9, lineHeight: 13 },
+  fieldLabel: { color: "#AEB3C3", fontSize: 8.5, lineHeight: 12, fontWeight: "800", marginTop: 2 },
+  groupLabel: {
+    color: "#8C909F",
+    fontSize: 8,
+    lineHeight: 11,
+    fontWeight: "900",
+    letterSpacing: 0.9,
+    marginTop: 8,
+    marginBottom: -2
+  },
+  surface: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.12)",
+    backgroundColor: "#111318",
+    padding: 13
+  },
+  sectionBlock: { gap: 9, marginTop: 4 },
+  sectionTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12
+  },
+  miniBadge: {
+    color: "#AEB3C3",
+    fontSize: 7.5,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.14)",
+    backgroundColor: "#1A1B21"
+  },
+  miniBadgeOnline: { color: "#69D59A", borderColor: "rgba(105,213,154,0.22)" },
+  countBadge: {
+    minWidth: 22,
+    textAlign: "center",
+    color: "#ADC6FF",
+    fontSize: 9,
+    fontWeight: "900",
+    paddingHorizontal: 7,
     paddingVertical: 3,
-    fontSize: 12,
-    fontWeight: "700",
-    overflow: "hidden"
+    borderRadius: 999,
+    backgroundColor: "rgba(77,142,255,0.11)"
   },
-  year: { color: "#858996", fontSize: 13, fontWeight: "600" },
-  qrFrame: {
+
+  feedbackBanner: {
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: "rgba(173,198,255,0.15)",
+    backgroundColor: "rgba(77,142,255,0.07)"
+  },
+  feedbackText: { color: "#C2C6D6", fontSize: 9.5, lineHeight: 13 },
+  updateBanner: { gap: 9 },
+
+  button: {
+    minHeight: 36,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.15)",
+    backgroundColor: "#1A1B21",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  buttonText: { color: "#D7DAE5", fontSize: 9.5, lineHeight: 13, fontWeight: "800" },
+  primaryButton: {
+    minHeight: 42,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+    borderRadius: 8,
+    backgroundColor: "#4D8EFF",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginTop: 4
+  },
+  primaryButtonText: { color: "#06152A", fontSize: 10.5, fontWeight: "900" },
+  primaryButtonArrow: { color: "#06152A", fontSize: 16, fontWeight: "900" },
+  pressed: { opacity: 0.74, transform: [{ scale: 0.985 }] },
+  disabled: { opacity: 0.36 },
+  row: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 7 },
+  inlineActions: { flexDirection: "row", gap: 8, alignItems: "center", marginTop: 2 },
+  textAction: { alignSelf: "center", paddingHorizontal: 8, paddingVertical: 6 },
+  textActionLabel: { color: "#ADC6FF", fontSize: 9.5, fontWeight: "700" },
+
+  input: {
+    minHeight: 41,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.14)",
+    backgroundColor: "#0C0E13",
+    color: "#E2E2E9",
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+    fontSize: 10.5
+  },
+  codeInput: {
+    fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }),
+    letterSpacing: 0.7,
+    color: "#C8D8FF"
+  },
+  advancedPanel: { gap: 6, paddingTop: 5 },
+  readOnlyValue: {
+    minHeight: 37,
+    color: "#C2C6D6",
+    fontSize: 9.5,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.11)",
+    backgroundColor: "#0C0E13"
+  },
+
+  pairingCard: { gap: 10 },
+  pairVisual: {
     position: "relative",
-    height: 300,
-    borderRadius: 18,
+    height: 218,
     overflow: "hidden",
-    backgroundColor: "#000"
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(173,198,255,0.18)",
+    backgroundColor: "#080A0F"
   },
-  qrCamera: { flex: 1 },
+  pairVisualCenter: { flex: 1, alignItems: "center", justifyContent: "center", gap: 7 },
+  pairVisualIcon: { color: "#ADC6FF", fontSize: 40, fontWeight: "300" },
+  pairVisualText: { color: "#8C909F", fontSize: 9.5, fontWeight: "700" },
+  qrCamera: { ...StyleSheet.absoluteFillObject },
   qrCornerTopLeft: {
     position: "absolute",
-    top: 24,
-    left: 24,
-    width: 56,
-    height: 56,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderColor: "#4ED69C",
-    borderTopLeftRadius: 12
+    left: 15,
+    top: 15,
+    width: 38,
+    height: 38,
+    borderLeftWidth: 2,
+    borderTopWidth: 2,
+    borderColor: "#4D8EFF"
   },
   qrCornerTopRight: {
     position: "absolute",
-    top: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderTopWidth: 4,
-    borderRightWidth: 4,
-    borderColor: "#4ED69C",
-    borderTopRightRadius: 12
+    right: 15,
+    top: 15,
+    width: 38,
+    height: 38,
+    borderRightWidth: 2,
+    borderTopWidth: 2,
+    borderColor: "#4D8EFF"
   },
   qrCornerBottomLeft: {
     position: "absolute",
-    bottom: 24,
-    left: 24,
-    width: 56,
-    height: 56,
-    borderBottomWidth: 4,
-    borderLeftWidth: 4,
-    borderColor: "#4ED69C",
-    borderBottomLeftRadius: 12
+    left: 15,
+    bottom: 15,
+    width: 38,
+    height: 38,
+    borderLeftWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: "#4D8EFF"
   },
   qrCornerBottomRight: {
     position: "absolute",
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderBottomWidth: 4,
-    borderRightWidth: 4,
-    borderColor: "#4ED69C",
-    borderBottomRightRadius: 12
+    right: 15,
+    bottom: 15,
+    width: 38,
+    height: 38,
+    borderRightWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: "#4D8EFF"
   },
-  playButton: {
-    alignSelf: "center",
-    minWidth: 124,
-    minHeight: 124,
-    borderRadius: 62,
-    padding: 22,
-    backgroundColor: "#FF735F",
+  dividerRow: { flexDirection: "row", alignItems: "center", gap: 7, marginVertical: 3 },
+  divider: { flex: 1, height: 1, backgroundColor: "rgba(194,198,214,0.09)" },
+  dividerText: { color: "#6F7482", fontSize: 6.8, fontWeight: "900", letterSpacing: 0.6 },
+  waitingCard: { minHeight: 260, justifyContent: "center", gap: 10 },
+
+  savedScreenCard: { flexDirection: "row", alignItems: "center", gap: 10, padding: 10 },
+  savedScreenIcon: {
+    width: 36,
+    height: 36,
     alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9,
+    backgroundColor: "#172239",
+    borderWidth: 1,
+    borderColor: "rgba(173,198,255,0.18)"
+  },
+  savedScreenIconText: { color: "#ADC6FF", fontSize: 17 },
+  savedScreenBody: { flex: 1, minWidth: 0 },
+  smallAction: {
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.14)",
+    backgroundColor: "#1A1B21"
+  },
+  smallActionActive: {
+    borderColor: "rgba(77,142,255,0.36)",
+    backgroundColor: "rgba(77,142,255,0.12)"
+  },
+  smallActionText: { color: "#C8D8FF", fontSize: 8, fontWeight: "800" },
+
+  nowPlayingCard: { gap: 9, padding: 12 },
+  nowPlayingTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10
+  },
+  statusBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "#1A1B21",
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.12)"
+  },
+  statusBadgeActive: {
+    backgroundColor: "rgba(77,142,255,0.12)",
+    borderColor: "rgba(77,142,255,0.22)"
+  },
+  statusBadgeText: { color: "#ADC6FF", fontSize: 7.5, fontWeight: "900" },
+  timeRow: { flexDirection: "row", justifyContent: "space-between", marginTop: -6 },
+  timeText: { color: "#7D8290", fontSize: 8, fontVariant: ["tabular-nums"] },
+  playbackControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 18,
+    marginTop: 3
+  },
+  circleControl: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#1A1B21",
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.12)"
+  },
+  circleControlText: { color: "#DDE3F3", fontSize: 18, fontWeight: "700" },
+  mainPlayButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4D8EFF",
+    shadowColor: "#4D8EFF",
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+    elevation: 4
+  },
+  mainPlaySymbol: { color: "#07162B", fontSize: 18, fontWeight: "900" },
+  remoteQuickActions: { flexDirection: "row", justifyContent: "space-between", gap: 7 },
+  remoteDestinationActions: {
+    flexDirection: "row",
     justifyContent: "center",
     gap: 7,
-    borderWidth: 6,
-    borderColor: "#2A191A"
+    marginTop: -2
   },
-  playSymbol: { color: "#150E10", fontSize: 34, fontWeight: "800" },
-  playLabel: { color: "#150E10", fontSize: 13, fontWeight: "800" },
-  pressed: { opacity: 0.76, transform: [{ scale: 0.96 }] },
-  label: { color: "#F4F4F7", fontSize: 15, fontWeight: "700" },
-  input: {
-    backgroundColor: "#0D0F15",
-    color: "#F8F8FB",
-    borderWidth: 1,
-    borderColor: "#363A47",
-    borderRadius: 14,
-    minHeight: 52,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    fontSize: 16
-  },
-  button: {
-    flexGrow: 1,
-    backgroundColor: "#22252F",
-    borderRadius: 14,
-    minHeight: 50,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#303440"
-  },
-  buttonText: { color: "#F5F5F8", fontSize: 15, fontWeight: "600", textAlign: "center" },
-  disabled: { opacity: 0.38 },
-  row: { flexDirection: "row", flexWrap: "wrap", gap: 10, alignItems: "center" },
+
+  dpadPanel: { paddingVertical: 17, paddingHorizontal: 12, alignItems: "center" },
   dpad: {
+    width: 238,
+    height: 238,
+    borderRadius: 119,
     position: "relative",
-    alignSelf: "center",
-    width: 276,
-    height: 276,
-    borderRadius: 138,
-    backgroundColor: "#0D0F15",
+    backgroundColor: "#0C0E13",
     borderWidth: 1,
-    borderColor: "#282B35"
+    borderColor: "rgba(194,198,214,0.12)",
+    shadowColor: "#000",
+    shadowOpacity: 0.42,
+    shadowRadius: 24,
+    elevation: 5
   },
   dpadButton: {
     position: "absolute",
-    width: 84,
-    height: 84,
+    width: 66,
+    height: 56,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 26,
-    backgroundColor: "#1C1F28",
-    borderWidth: 1,
-    borderColor: "#2D303B"
+    borderRadius: 18
   },
-  dpadUp: { top: 8, left: 96 },
-  dpadDown: { bottom: 8, left: 96 },
-  dpadLeft: { top: 96, left: 8 },
-  dpadRight: { top: 96, right: 8 },
-  dpadSelect: { top: 96, left: 96 },
-  dpadSelectButton: { backgroundColor: "#F3F2F7", borderColor: "#F3F2F7" },
-  dpadSymbol: { color: "#EDEDF2", fontSize: 28, fontWeight: "500" },
-  dpadSelectText: { color: "#111218", fontSize: 15, fontWeight: "900", letterSpacing: 0.7 },
-  copy: { color: "#AEB1BC", fontSize: 14, lineHeight: 21 },
-  updateBanner: {
-    backgroundColor: "#173E31",
+  dpadUp: { left: 86, top: 14 },
+  dpadDown: { left: 86, bottom: 14 },
+  dpadLeft: { left: 14, top: 91 },
+  dpadRight: { right: 14, top: 91 },
+  dpadSelect: { left: 75, top: 75 },
+  dpadSelectButton: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: "#111722",
     borderWidth: 1,
-    borderColor: "#2C6B55",
-    borderRadius: 18,
-    padding: 16,
-    gap: 10
+    borderColor: "rgba(173,198,255,0.35)"
   },
-  updateTitle: { color: "#7DE8B6", fontSize: 16, fontWeight: "800" },
-  updateCopy: { color: "#B7D9C9", fontSize: 14, lineHeight: 20 }
+  dpadSymbol: { color: "#C2C6D6", fontSize: 23, fontWeight: "400" },
+  dpadSelectText: { color: "#EAF0FF", fontSize: 12, fontWeight: "900" },
+
+  audioPanel: { gap: 8 },
+  volumeRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  volumeIcon: { color: "#8C909F", fontSize: 12 },
+  volumeRangeWrap: { flex: 1 },
+  volumePercent: {
+    width: 30,
+    color: "#C2C6D6",
+    textAlign: "right",
+    fontSize: 9,
+    fontWeight: "800",
+    fontVariant: ["tabular-nums"]
+  },
+  muteButton: {
+    width: 34,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    backgroundColor: "#1A1B21"
+  },
+  muteButtonText: { fontSize: 14 },
+  trackList: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 4 },
+  trackPill: {
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.12)",
+    backgroundColor: "#1A1B21"
+  },
+  trackPillSelected: {
+    borderColor: "rgba(77,142,255,0.38)",
+    backgroundColor: "rgba(77,142,255,0.14)"
+  },
+  trackPillText: { color: "#AEB3C3", fontSize: 8.5, fontWeight: "700" },
+  trackPillTextSelected: { color: "#C8D8FF" },
+  secondaryControls: { gap: 8 },
+
+  syncStrip: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "#111318",
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.09)"
+  },
+  syncStripText: { color: "#AEB3C3", fontSize: 8.5, fontWeight: "700" },
+  syncStripTime: { color: "#6F7482", fontSize: 8, fontVariant: ["tabular-nums"] },
+  searchRow: { flexDirection: "row", gap: 7 },
+  searchInput: { flex: 1, minWidth: 0 },
+  searchButton: {
+    minWidth: 68,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    backgroundColor: "#4D8EFF",
+    paddingHorizontal: 11
+  },
+  searchButtonText: { color: "#06152A", fontSize: 9.5, fontWeight: "900" },
+  resultHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 5,
+    marginBottom: 1
+  },
+  resultCard: {
+    minHeight: 84,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 8,
+    borderRadius: 10,
+    backgroundColor: "#111318",
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.11)"
+  },
+  poster: { width: 46, height: 66, borderRadius: 6, backgroundColor: "#1A1B21" },
+  posterPlaceholder: { alignItems: "center", justifyContent: "center" },
+  posterPlaceholderText: { color: "#6F7482", fontSize: 18 },
+  resultBody: { flex: 1, minWidth: 0, gap: 4 },
+  badgeRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 5 },
+  kindBadge: {
+    color: "#ADC6FF",
+    fontSize: 7,
+    fontWeight: "900",
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: "rgba(77,142,255,0.1)"
+  },
+  year: { color: "#8C909F", fontSize: 8 },
+  resultDetail: { flex: 1, color: "#7D8290", fontSize: 7.5 },
+  resultAction: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    backgroundColor: "#172239",
+    borderWidth: 1,
+    borderColor: "rgba(173,198,255,0.16)"
+  },
+  resultActionText: { color: "#ADC6FF", fontSize: 12, fontWeight: "900" },
+  emptyState: { minHeight: 120, alignItems: "center", justifyContent: "center" },
+  pagination: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    marginTop: 4
+  },
+  pageNumber: {
+    minWidth: 30,
+    textAlign: "center",
+    color: "#ADC6FF",
+    fontSize: 10,
+    fontWeight: "900",
+    paddingVertical: 7,
+    borderRadius: 7,
+    backgroundColor: "rgba(77,142,255,0.13)"
+  },
+
+  infoCard: { flexDirection: "row", alignItems: "flex-start", gap: 8, backgroundColor: "#111318" },
+  infoIcon: { color: "#ADC6FF", fontSize: 16 },
+  keyboardCard: { gap: 9 },
+  keyboardInput: { minHeight: 112, textAlignVertical: "top", paddingTop: 11 },
+  keyGrid: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
+  keyButton: {
+    minWidth: 74,
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 11,
+    borderRadius: 8,
+    backgroundColor: "#171920",
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.1)"
+  },
+  keyButtonText: { color: "#B9BECC", fontSize: 9, fontWeight: "700" },
+  cursorPad: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 8,
+    padding: 16
+  },
+  cursorButton: {
+    width: 64,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9,
+    backgroundColor: "#1A1B21",
+    borderWidth: 1,
+    borderColor: "rgba(194,198,214,0.11)"
+  },
+  cursorButtonText: { color: "#DDE3F3", fontSize: 18 },
+
+  currentConnectionCard: { gap: 9 },
+  connectionNotice: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 7,
+    backgroundColor: "rgba(77,142,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(77,142,255,0.15)"
+  },
+  connectionNoticeError: {
+    backgroundColor: "rgba(255,180,171,0.06)",
+    borderColor: "rgba(255,180,171,0.14)"
+  },
+  connectionNoticeText: { color: "#B9C9EB", fontSize: 9, lineHeight: 13 },
+  parametersCard: { gap: 7 },
+
+  tabs: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    justifyContent: "space-around",
+    gap: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 6
+  },
+  tab: {
+    flex: 1,
+    minHeight: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: "transparent"
+  },
+  tabActive: { backgroundColor: "rgba(77,142,255,0.12)", borderColor: "rgba(77,142,255,0.16)" },
+  tabIcon: { color: "#7D8290", fontSize: 15, lineHeight: 17 },
+  tabText: { color: "#8C909F", fontSize: 7.5, fontWeight: "700" },
+  tabTextActive: { color: "#ADC6FF" },
+  bottomNavigation: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(12,14,19,0.98)",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(194,198,214,0.12)",
+    paddingBottom: Platform.OS === "ios" ? 18 : 5
+  }
 });

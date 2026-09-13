@@ -563,25 +563,34 @@ export const ProfileSelectionScreen = {
     const compactGridScreenClass = totalItems >= 5 ? " profile-screen-compact-grid" : "";
 
     this.container.innerHTML = `
-      <div class="profile-screen${pinScreenPhaseClass}${compactGridScreenClass}">
-        <div class="profile-screen-background" data-role="profile-screen-background" aria-hidden="true"></div>
-        <div class="profile-main-layer"${isPinActive || this.editorState ? ' inert aria-hidden="true"' : ""}>
-          ${renderMemberBrandWordmark({
-            access: this.memberAccess,
-            imageClass: "profile-logo",
-            wrapperClass: "profile-brand-lockup"
-          })}
-
-          <h1 class="profile-title">${escapeHtml(title)}</h1>
-          <p class="profile-subtitle">${escapeHtml(subtitle)}</p>
-
-          <div class="${gridClass}" id="profileGrid" data-profile-item-count="${totalItems}">
-            ${visibleProfiles.map((profile) => this.renderProfileCard(profile)).join("")}
-            ${canAddProfile ? this.renderAddProfileCard() : ""}
+      <div class="profile-screen nuvio-profile-page${pinScreenPhaseClass}${compactGridScreenClass}">
+        <div class="profile-screen-background nuvio-profile-background" data-role="profile-screen-background" aria-hidden="true"></div>
+        <header class="nuvio-profile-topbar">
+          <div class="nuvio-profile-brand"><strong>Nuvio</strong><span>WEB</span></div>
+          ${this.isManagementMode ? `<span class="nuvio-profile-mode"><span class="material-icons" aria-hidden="true">manage_accounts</span>${escapeHtml(t("profile_manage_title", {}, "Manage Profiles"))}</span>` : ""}
+        </header>
+        <main class="profile-main-layer nuvio-profile-main"${isPinActive || this.editorState ? ' inert aria-hidden="true"' : ""}>
+          <div class="nuvio-profile-brand-lockup">
+            ${renderMemberBrandWordmark({
+              access: this.memberAccess,
+              imageClass: "profile-logo",
+              wrapperClass: "profile-brand-lockup"
+            })}
           </div>
 
-          <p class="profile-hint">${escapeHtml(hint)}</p>
-        </div>
+          <header class="nuvio-profile-heading">
+            <span class="nuvio-eyebrow">PERFILES</span>
+            <h1 class="profile-title">${escapeHtml(title)}</h1>
+            <p class="profile-subtitle">${escapeHtml(subtitle)}</p>
+          </header>
+
+          <section class="${gridClass} nuvio-profile-grid" id="profileGrid" data-profile-item-count="${totalItems}" aria-label="${escapeHtml(title)}">
+            ${visibleProfiles.map((profile) => this.renderProfileCard(profile)).join("")}
+            ${canAddProfile ? this.renderAddProfileCard() : ""}
+          </section>
+
+          <p class="profile-hint nuvio-profile-hint"><span class="material-icons" aria-hidden="true">touch_app</span>${escapeHtml(hint)}</p>
+        </main>
         ${this.renderPinOverlay()}
       </div>
       ${this.renderEditorOverlay()}
@@ -604,38 +613,39 @@ export const ProfileSelectionScreen = {
       this.getAvatarImageUrl(avatarId)
     );
     return `
-      <div class="profile-card profile-focusable focusable"
+      <div class="profile-card nuvio-profile-card profile-focusable focusable"
            role="button" aria-label="${escapeHtml(profile.name)}"
            data-profile-id="${escapeHtml(profile.id)}"
            data-focus-key="profile:${escapeHtml(profile.id)}"
            tabindex="0">
-        <div class="profile-avatar-ring">
-          <div class="profile-avatar" style="background:${escapeHtml(profile.avatarColorHex || getDefaultProfileColor())}">
+        <div class="profile-avatar-ring nuvio-profile-avatar-ring">
+          <div class="profile-avatar nuvio-profile-avatar" style="background:${escapeHtml(profile.avatarColorHex || getDefaultProfileColor())}">
             ${
               avatarUrl
                 ? `<img class="profile-avatar-image" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(profile.name)}"/>`
                 : escapeHtml(getProfileInitial(profile.name))
             }
           </div>
-          ${profile.isPrimary ? `<span class="profile-primary-dot" aria-hidden="true">&#9733;</span>` : ""}
+          ${profile.isPrimary ? `<span class="profile-primary-dot nuvio-profile-primary" aria-label="${escapeHtml(t("profile_selection_primary_badge", {}, "PRIMARY"))}">&#9733;</span>` : ""}
+          <span class="nuvio-profile-enter material-icons" aria-hidden="true">arrow_forward</span>
         </div>
-        <div class="profile-name">${escapeHtml(profile.name)}</div>
-        ${profile.isPrimary ? `<div class="profile-badge">${escapeHtml(t("profile_selection_primary_badge", {}, "PRIMARY"))}</div>` : `<div class="profile-badge-slot" aria-hidden="true"></div>`}
+        <div class="profile-name nuvio-profile-name">${escapeHtml(profile.name)}</div>
+        ${profile.isPrimary ? `<div class="profile-badge nuvio-profile-badge">${escapeHtml(t("profile_selection_primary_badge", {}, "PRIMARY"))}</div>` : `<div class="profile-badge-slot" aria-hidden="true"></div>`}
       </div>
     `;
   },
 
   renderAddProfileCard() {
     return `
-      <div class="profile-card profile-card-add profile-focusable focusable"
+      <div class="profile-card profile-card-add nuvio-profile-card nuvio-profile-card-add profile-focusable focusable"
            role="button" aria-label="${escapeHtml(t("profile_add_new", {}, "Add Profile"))}"
            data-profile-id="add"
            data-focus-key="profile:add"
            tabindex="0">
-        <div class="profile-avatar-ring">
-          <div class="profile-avatar profile-avatar-add" aria-hidden="true"></div>
+        <div class="profile-avatar-ring nuvio-profile-avatar-ring">
+          <div class="profile-avatar profile-avatar-add nuvio-profile-avatar nuvio-profile-avatar-add" aria-hidden="true"><span class="material-icons">add</span></div>
         </div>
-        <div class="profile-name">${escapeHtml(t("profile_add_new", {}, "Add Profile"))}</div>
+        <div class="profile-name nuvio-profile-name">${escapeHtml(t("profile_add_new", {}, "Add Profile"))}</div>
         <div class="profile-badge-slot" aria-hidden="true"></div>
       </div>
     `;

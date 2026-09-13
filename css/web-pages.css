@@ -1,26 +1,610 @@
-/* Browser page geometry. Keep independently scrollable virtualized lists. */
+/* =====================================================================
+   NUVIO WEB DESIGN SYSTEM - STREAM SOURCE SELECTION & LIBRARY
+   ===================================================================== */
+.stream-route-shell {
+  width: 100%;
+  min-height: 100dvh;
+  height: auto;
+  position: relative;
+  background: var(--nuvio-canvas, #090b10);
+  color: var(--nuvio-text-primary, #f8fafc);
+  overflow-y: auto;
+}
+
+.stream-route-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 600px;
+  background-size: cover;
+  background-position: center 25%;
+  z-index: 1;
+  filter: brightness(0.45) blur(10px);
+}
+
+.stream-route-backdrop-dim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    #090b10 0%,
+    rgba(9, 11, 16, 0.95) 45%,
+    rgba(9, 11, 16, 0.7) 100%
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+
 .stream-route-content {
-  grid-template-columns: minmax(180px, 0.3fr) minmax(0, 0.7fr);
-  padding: 24px;
-  gap: 24px;
+  position: relative;
+  z-index: 5;
+  display: grid !important;
+  grid-template-columns: minmax(280px, 0.35fr) minmax(0, 0.65fr) !important;
+  gap: clamp(24px, 4vw, 56px) !important;
+  max-width: var(--nuvio-max-width, 1720px);
+  margin: 0 auto;
+  padding: 40px var(--web-page-gutter, clamp(16px, 3.5vw, 56px)) 80px !important;
+  min-height: 100dvh;
 }
+
+.stream-route-left {
+  position: relative;
+}
+
+.stream-route-left-inner {
+  position: sticky;
+  top: calc(var(--web-header-height, 64px) + 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stream-route-logo {
+  max-width: min(340px, 100%);
+  max-height: 110px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
 .stream-route-title {
-  font-size: clamp(28px, 3vw, 46px);
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(28px, 3.2vw, 42px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--nuvio-text-primary, #f8fafc);
+  margin: 0;
+  line-height: 1.15;
 }
+
 .stream-route-episode-code {
-  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--nuvio-radius-pill, 9999px);
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #60a5fa;
+  font-family: var(--nuvio-font-mono, monospace);
+  font-size: 12px;
+  font-weight: 700;
+  width: fit-content;
 }
-.stream-route-chip {
-  min-height: 44px;
-  padding: 0 18px;
+
+.stream-route-subtitle,
+.stream-route-detail-line {
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 14px;
+  color: var(--nuvio-text-secondary, #94a3b8);
+  line-height: 1.5;
 }
+
+.stream-route-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .stream-route-chip-wrap {
-  height: 56px;
-  margin-bottom: 12px;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 8px;
 }
+
+.stream-route-chip-track {
+  display: flex;
+  gap: 10px;
+}
+
+.stream-route-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 20px;
+  border-radius: var(--nuvio-radius-pill, 9999px);
+  background: var(--nuvio-surface, #11141d);
+  border: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08));
+  color: var(--nuvio-text-secondary, #94a3b8);
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.stream-route-chip:hover {
+  color: var(--nuvio-text-primary, #f8fafc);
+  border-color: var(--nuvio-border-medium, rgba(255, 255, 255, 0.16));
+}
+
+.stream-route-chip.selected {
+  background: var(--nuvio-accent, #3b82f6);
+  border-color: var(--nuvio-accent, #3b82f6);
+  color: #ffffff;
+  box-shadow: var(--nuvio-accent-glow, 0 8px 32px -4px rgba(59, 130, 246, 0.35));
+}
+
 .stream-route-panel-shell {
-  padding: 12px;
+  width: 100%;
 }
+
+.stream-route-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stream-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px;
+  border-radius: var(--nuvio-radius-md, 10px);
+  background: var(--nuvio-surface, #11141d);
+  border: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08));
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stream-card:hover,
+.stream-card.focused {
+  background: var(--nuvio-surface-raised, #191e2b);
+  border-color: rgba(59, 130, 246, 0.6);
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 28px -4px rgba(0, 0, 0, 0.6),
+    var(--nuvio-accent-glow, 0 8px 32px -4px rgba(59, 130, 246, 0.35));
+}
+
+.stream-route-empty {
+  padding: 48px;
+  text-align: center;
+  color: var(--nuvio-text-secondary, #94a3b8);
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 16px;
+  background: var(--nuvio-surface, #11141d);
+  border-radius: var(--nuvio-radius-md, 10px);
+  border: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+/* Library Page Styling */
+.library-shell {
+  width: 100%;
+  min-height: 100dvh;
+  background: var(--nuvio-canvas, #090b10);
+  color: var(--nuvio-text-primary, #f8fafc);
+}
+
+.library-main {
+  width: 100%;
+  max-width: var(--nuvio-max-width, 1720px);
+  margin: 0 auto;
+  padding: 32px var(--web-page-gutter, clamp(16px, 3.5vw, 56px)) 80px;
+  min-height: 100dvh;
+}
+
+.library-page-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.library-page-title {
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 700;
+  color: var(--nuvio-text-primary, #f8fafc);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.library-page-source {
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 14px;
+  color: var(--nuvio-text-tertiary, #64748b);
+}
+
+.library-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.library-grid-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: var(--nuvio-radius-md, 10px);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.library-grid-card:hover,
+.library-grid-card.focused {
+  transform: scale(1.04);
+}
+/* =====================================================================
+   NUVIO WEB DESIGN SYSTEM - SEARCH & DISCOVER
+   ===================================================================== */
+.search-content {
+  width: 100%;
+  max-width: var(--nuvio-max-width, 1720px);
+  margin: 0 auto;
+  padding: 32px var(--web-page-gutter, clamp(16px, 3.5vw, 56px)) 80px;
+  min-height: 100dvh;
+}
+
+.search-command-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 54px;
+  border-radius: var(--nuvio-radius-md, 10px);
+  background: var(--nuvio-surface, #11141d);
+  border: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08));
+  padding: 0 16px;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.search-input-wrap:focus-within {
+  border-color: var(--nuvio-accent, #3b82f6);
+  box-shadow: var(--nuvio-accent-glow, 0 8px 32px -4px rgba(59, 130, 246, 0.35));
+}
+
+.search-input-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--nuvio-text-secondary, #94a3b8);
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.search-input-field {
+  flex: 1;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none !important;
+  color: var(--nuvio-text-primary, #f8fafc);
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 16px;
+}
+
+.search-input-field::placeholder {
+  color: var(--nuvio-text-tertiary, #64748b);
+}
+
+.search-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--nuvio-radius-pill, 9999px);
+  background: transparent;
+  border: none;
+  color: var(--nuvio-text-secondary, #94a3b8);
+  cursor: pointer;
+  margin-right: 8px;
+  transition: all 0.15s ease;
+}
+
+.search-clear-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--nuvio-text-primary, #f8fafc);
+}
+
+.search-esc-shortcut {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: var(--nuvio-radius-xs, 4px);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--nuvio-text-tertiary, #64748b);
+  font-family: var(--nuvio-font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.search-filters-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.search-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.search-filter-pill {
+  padding: 6px 18px;
+  border-radius: var(--nuvio-radius-pill, 9999px);
+  background: var(--nuvio-surface, #11141d);
+  border: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08));
+  color: var(--nuvio-text-secondary, #94a3b8);
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.search-filter-pill:hover {
+  color: var(--nuvio-text-primary, #f8fafc);
+  border-color: var(--nuvio-border-medium, rgba(255, 255, 255, 0.16));
+}
+
+.search-filter-pill.is-active {
+  background: var(--nuvio-accent, #3b82f6);
+  border-color: var(--nuvio-accent, #3b82f6);
+  color: #ffffff;
+  box-shadow: var(--nuvio-accent-glow, 0 8px 32px -4px rgba(59, 130, 246, 0.35));
+}
+
+.search-discover-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--nuvio-radius-pill, 9999px);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08));
+  color: var(--nuvio-text-secondary, #94a3b8);
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.search-discover-chip:hover {
+  color: var(--nuvio-text-primary, #f8fafc);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--nuvio-border-medium, rgba(255, 255, 255, 0.16));
+}
+
+.search-results-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 6px;
+}
+
+.search-results-count {
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--nuvio-text-primary, #f8fafc);
+  letter-spacing: -0.01em;
+}
+
+.search-results-chip {
+  padding: 3px 9px;
+  border-radius: var(--nuvio-radius-xs, 4px);
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #60a5fa;
+  font-family: var(--nuvio-font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.search-results-row {
+  margin-bottom: 36px;
+}
+
+.search-results-title {
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(20px, 1.8vw, 24px);
+  font-weight: 600;
+  color: var(--nuvio-text-primary, #f8fafc);
+  letter-spacing: -0.015em;
+  margin: 0 0 16px;
+}
+
+.search-results-track {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 18px;
+  width: 100%;
+}
+
+.search-result-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: var(--nuvio-radius-md, 10px);
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.search-result-poster-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2/3;
+  border-radius: var(--nuvio-radius-md, 10px);
+  overflow: hidden;
+  background: var(--nuvio-surface, #11141d);
+  border: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08));
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.search-result-card:hover .search-result-poster-wrap,
+.search-result-card.focused .search-result-poster-wrap {
+  transform: scale(1.04);
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow:
+    0 14px 36px -4px rgba(0, 0, 0, 0.75),
+    var(--nuvio-accent-glow, 0 8px 32px -4px rgba(59, 130, 246, 0.35));
+}
+
+.search-result-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.search-result-rating-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+  padding: 2px 7px;
+  border-radius: var(--nuvio-radius-xs, 4px);
+  background: rgba(9, 11, 16, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #f59e0b;
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+}
+
+.search-result-play-hover {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--nuvio-radius-pill, 9999px);
+  background: var(--nuvio-accent, #3b82f6);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.75);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--nuvio-accent-glow, 0 8px 32px -4px rgba(59, 130, 246, 0.35));
+  z-index: 6;
+}
+
+.search-result-card:hover .search-result-play-hover,
+.search-result-card.focused .search-result-play-hover {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.search-result-name {
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nuvio-text-primary, #f8fafc);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-result-date {
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 12px;
+  color: var(--nuvio-text-secondary, #94a3b8);
+}
+
+/* Discover screen */
+.discover-seeall-shell {
+  width: 100%;
+  max-width: var(--nuvio-max-width, 1720px);
+  margin: 0 auto;
+  padding: 32px var(--web-page-gutter, clamp(16px, 3.5vw, 56px)) 80px;
+}
+
+.discover-header {
+  margin-bottom: 24px;
+}
+
+.discover-header .seeall-title {
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(26px, 2.5vw, 36px);
+  font-weight: 700;
+  color: var(--nuvio-text-primary, #f8fafc);
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+
+.discover-header .seeall-subtitle {
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 14px;
+  color: var(--nuvio-text-secondary, #94a3b8);
+}
+
+.discover-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.discover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
 .search-content {
   height: auto;
   min-height: 100dvh;
@@ -79,36 +663,160 @@
     padding: 16px;
   }
 }
+/* =====================================================================
+   NUVIO WEB DESIGN SYSTEM - PLAYER HUD & TOOLBAR
+   ===================================================================== */
 .web-player-toolbar {
   position: fixed;
-  top: 12px;
-  right: 12px;
-  left: 12px;
+  top: 16px;
+  right: var(--web-page-gutter, 24px);
+  left: var(--web-page-gutter, 24px);
   z-index: 100;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
   pointer-events: none;
 }
+
 .web-player-toolbar[hidden] {
-  display: none;
+  display: none !important;
 }
+
 .web-player-toolbar button {
   pointer-events: auto;
-  min-height: 44px;
-  padding: 10px 14px;
-  border: 1px solid #ffffff40;
-  border-radius: 8px;
-  background: #101014dc;
-  color: white;
-  font-size: 14px;
+  min-height: 40px;
+  padding: 8px 18px;
+  border: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.12));
+  border-radius: var(--nuvio-radius-pill, 9999px);
+  background: var(--nuvio-surface-glass, rgba(17, 20, 29, 0.75));
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  color: var(--nuvio-text-primary, #f8fafc);
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
 }
+
+.web-player-toolbar button:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: var(--nuvio-border-medium, rgba(255, 255, 255, 0.25));
+  transform: translateY(-1px);
+}
+
+.web-player-toolbar button[data-window-action="back"] {
+  background: var(--nuvio-accent, #3b82f6);
+  border-color: var(--nuvio-accent, #3b82f6);
+  color: #ffffff;
+  box-shadow: var(--nuvio-accent-glow, 0 8px 32px -4px rgba(59, 130, 246, 0.35));
+}
+
+.web-player-toolbar button[data-window-action="back"]:hover {
+  background: var(--nuvio-accent-hover, #60a5fa);
+  border-color: var(--nuvio-accent-hover, #60a5fa);
+}
+
 .web-player-toolbar [role="status"] {
   color: white;
-  background: #101014dc;
+  background: rgba(17, 20, 29, 0.85);
+  padding: 4px 12px;
+  border-radius: var(--nuvio-radius-sm, 8px);
+  font-size: 12px;
 }
+
 .web-player-toolbar [role="status"]:empty {
   display: none;
+}
+
+.player-controls-bottom {
+  display: grid !important;
+  grid-template-columns: minmax(220px, 0.34fr) minmax(0, 0.66fr) !important;
+  align-items: end !important;
+  gap: clamp(24px, 4vw, 64px) !important;
+  padding: 24px var(--web-page-gutter, 32px) 36px !important;
+  background: linear-gradient(
+    to top,
+    rgba(9, 11, 16, 0.95) 0%,
+    rgba(9, 11, 16, 0.6) 65%,
+    transparent 100%
+  ) !important;
+}
+
+.player-controls-context {
+  min-width: 0;
+  padding-bottom: 8px;
+}
+
+.player-transport-panel {
+  min-width: 0;
+  padding: 16px 18px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(17, 20, 29, 0.66);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+}
+
+.player-title {
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif) !important;
+  font-size: clamp(22px, 2.5vw, 32px) !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  letter-spacing: -0.02em !important;
+}
+
+.player-subtitle {
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif) !important;
+  font-size: 14px !important;
+  color: var(--nuvio-text-secondary, #94a3b8) !important;
+}
+
+.player-progress-track {
+  height: 5px !important;
+  border-radius: 9999px !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  transition: height 0.15s ease !important;
+}
+
+.player-progress-shell:hover .player-progress-track,
+.player-progress-shell.focused .player-progress-track {
+  height: 8px !important;
+}
+
+.player-progress-fill {
+  background: var(--nuvio-accent, #3b82f6) !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.8) !important;
+}
+
+.player-progress-buffered {
+  background: rgba(255, 255, 255, 0.35) !important;
+  border-radius: 9999px !important;
+}
+
+@media (max-width: 760px) {
+  .player-controls-bottom {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px !important;
+    padding: 20px 16px 24px !important;
+  }
+
+  .player-transport-panel {
+    padding: 12px 12px 8px;
+  }
+}
+
+.player-modal {
+  background: rgba(17, 20, 29, 0.92) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid var(--nuvio-border-medium, rgba(255, 255, 255, 0.16)) !important;
+  border-radius: var(--nuvio-radius-lg, 16px) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8) !important;
+  color: var(--nuvio-text-primary, #f8fafc) !important;
 }
 .experience-mode-screen {
   width: 100%;
@@ -361,41 +1069,405 @@
   display: none;
 }
 
+/* =====================================================================
+   NUVIO WEB DESIGN SYSTEM - DETAIL HERO & EPISODES
+   ===================================================================== */
+body.web-with-header #app .detail-hero-section {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: clamp(24px, 4vw, 48px) !important;
+  min-height: auto !important;
+  padding: 24px 0 0 !important;
+  position: relative !important;
+  z-index: 5 !important;
+}
+
+body.web-with-header #app .detail-hero-poster-wrap {
+  flex: 0 0 clamp(200px, 18vw, 280px) !important;
+  width: clamp(200px, 18vw, 280px) !important;
+  aspect-ratio: 2/3 !important;
+  border-radius: var(--nuvio-radius-md, 10px) !important;
+  overflow: hidden !important;
+  background: var(--nuvio-surface, #11141d) !important;
+  border: 1px solid var(--nuvio-border-medium, rgba(255, 255, 255, 0.16)) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7) !important;
+}
+
+body.web-with-header #app .detail-hero-poster {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+body.web-with-header #app .detail-hero-body {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  min-width: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
+}
+
+body.web-with-header #app .series-season-row {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 10px !important;
+  margin: 24px 0 16px !important;
+  padding: 0 !important;
+  overflow-x: auto !important;
+}
+
+body.web-with-header #app .series-episode-track {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 20px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 10px 0 24px !important;
+  scrollbar-width: none !important;
+}
+
+body.web-with-header #app .series-episode-card {
+  flex: 0 0 clamp(280px, 25vw, 360px) !important;
+  width: clamp(280px, 25vw, 360px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  background: var(--nuvio-surface, #11141d) !important;
+  border: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08)) !important;
+  border-radius: var(--nuvio-radius-md, 10px) !important;
+  padding: 14px !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  overflow: hidden !important;
+}
+
+body.web-with-header #app .series-episode-card:hover,
+body.web-with-header #app .series-episode-card.focused {
+  transform: scale(1.03) !important;
+  border-color: rgba(59, 130, 246, 0.6) !important;
+  box-shadow:
+    0 14px 36px -4px rgba(0, 0, 0, 0.75),
+    var(--nuvio-accent-glow, 0 8px 32px -4px rgba(59, 130, 246, 0.35)) !important;
+}
+
+body.web-with-header #app .series-episode-thumb {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 16/9 !important;
+  border-radius: var(--nuvio-radius-sm, 8px) !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+body.web-with-header #app .series-episode-image {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
 .series-detail-shell {
   width: 100%;
-  height: 100dvh;
+  min-height: 100dvh;
+  height: auto;
   overflow-y: auto;
+  background: var(--nuvio-canvas, #090b10);
+  color: var(--nuvio-text-primary, #f8fafc);
+  position: relative;
   --detail-safe-x: clamp(20px, 4vw, 64px);
   --detail-episode-safe-x: var(--detail-safe-x);
-  --detail-action-gap: 12px;
-  --detail-button-height: 46px;
-  --detail-control-size: 46px;
-  --detail-title-size: clamp(30px, 5vw, 64px);
+  --detail-action-gap: 14px;
+  --detail-button-height: 48px;
+  --detail-control-size: 48px;
+  --detail-title-size: clamp(32px, 5vw, 64px);
   --detail-section-title-size: 26px;
   --detail-label-size: 16px;
-  --detail-body-size: 17px;
+  --detail-body-size: 16px;
   --detail-caption-size: 14px;
 }
+
+.series-detail-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 650px;
+  background-size: cover;
+  background-position: center 25%;
+  z-index: 1;
+  filter: brightness(0.65);
+}
+
+.series-detail-vignette {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 700px;
+  z-index: 2;
+  background:
+    linear-gradient(
+      to top,
+      #090b10 0%,
+      rgba(9, 11, 16, 0.9) 45%,
+      rgba(9, 11, 16, 0.3) 80%,
+      transparent 100%
+    ),
+    linear-gradient(to right, #090b10 0%, rgba(9, 11, 16, 0.88) 35%, transparent 75%);
+  pointer-events: none;
+}
+
+.detail-bottom-shadow {
+  position: absolute;
+  top: 600px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #090b10;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.series-detail-content {
+  position: relative;
+  z-index: 5;
+  max-width: var(--nuvio-max-width, 1720px);
+  margin: 0 auto;
+  padding: 32px var(--detail-safe-x) 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
 .detail-hero-section {
-  min-height: min(680px, 85dvh);
-  height: auto;
-  padding: 80px var(--detail-safe-x) 32px;
+  display: flex;
+  gap: clamp(24px, 4vw, 48px);
+  align-items: flex-start;
+  min-height: auto;
+  padding: 24px 0 0;
 }
+
+.detail-hero-poster-wrap {
+  flex: 0 0 clamp(200px, 18vw, 280px);
+  aspect-ratio: 2/3;
+  border-radius: var(--nuvio-radius-md, 10px);
+  overflow: hidden;
+  background: var(--nuvio-surface, #11141d);
+  border: 1px solid var(--nuvio-border-medium, rgba(255, 255, 255, 0.16));
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+}
+
+.detail-hero-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.detail-hero-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.detail-hero-tag {
+  display: flex;
+  align-items: center;
+}
+
+.detail-hero-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--nuvio-radius-pill, 9999px);
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #60a5fa;
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .detail-hero-brand {
-  min-height: 100px;
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
-.series-detail-actions {
-  flex-wrap: wrap;
+
+.series-detail-title {
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(2.4rem, 4.5vw, 4rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  color: var(--nuvio-text-primary, #f8fafc);
+  margin: 0;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.8);
 }
+
 .series-detail-logo {
   max-width: min(420px, 70vw);
   max-height: 130px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.8));
 }
+
+.series-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.series-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 28px;
+  border-radius: var(--nuvio-radius-md, 10px);
+  background: var(--nuvio-accent, #3b82f6);
+  color: #ffffff;
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  box-shadow: var(--nuvio-accent-glow, 0 8px 32px -4px rgba(59, 130, 246, 0.35));
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.series-primary-btn:hover {
+  background: var(--nuvio-accent-hover, #60a5fa);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 36px -4px rgba(59, 130, 246, 0.5);
+}
+
+.series-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border-radius: var(--nuvio-radius-md, 10px);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s ease;
+}
+
+.series-secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.series-circle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--nuvio-radius-pill, 9999px);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s ease;
+}
+
+.series-circle-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
+}
+
 .series-detail-description {
-  max-width: 70ch;
-  font-size: 16px;
+  max-width: 820px;
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 15px;
   line-height: 1.65;
+  color: var(--nuvio-text-secondary, #94a3b8);
+  margin: 0;
 }
+
+/* Season and episode controls */
+.series-season-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 0 12px;
+}
+
+.series-season-btn {
+  padding: 8px 22px;
+  border-radius: var(--nuvio-radius-pill, 9999px);
+  background: var(--nuvio-surface, #11141d);
+  border: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08));
+  color: var(--nuvio-text-secondary, #94a3b8);
+  font-family: var(--nuvio-font-body, "Manrope", sans-serif);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.series-season-btn:hover {
+  color: var(--nuvio-text-primary, #f8fafc);
+  border-color: var(--nuvio-border-medium, rgba(255, 255, 255, 0.16));
+}
+
+.series-season-btn.is-active,
+.series-season-btn.selected {
+  background: var(--nuvio-accent, #3b82f6);
+  border-color: var(--nuvio-accent, #3b82f6);
+  color: #ffffff;
+  box-shadow: var(--nuvio-accent-glow, 0 8px 32px -4px rgba(59, 130, 246, 0.35));
+}
+
+.series-episode-track {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.series-episode-card {
+  display: flex;
+  gap: 20px;
+  padding: 16px;
+  border-radius: var(--nuvio-radius-md, 10px);
+  background: var(--nuvio-surface, #11141d);
+  border: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08));
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.series-episode-card:hover,
+.series-episode-card.focused {
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
 .series-episode-track,
 .search-results-track,
 .home-track {

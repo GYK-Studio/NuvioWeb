@@ -1,4 +1,19 @@
 const palettes = {
+  DEFAULT: {
+    "--bg-color": "#090b10",
+    "--bg-elevated": "#11141d",
+    "--card-bg": "#11141d",
+    "--secondary-color": "#3b82f6",
+    "--secondary-variant": "#1d4ed8",
+    "--on-secondary": "#ffffff",
+    "--text-color": "#f8fafc",
+    "--text-secondary": "#94a3b8",
+    "--text-tertiary": "#64748b",
+    "--border-color": "rgba(255, 255, 255, 0.08)",
+    "--focus-color": "#3b82f6",
+    "--focus-bg": "rgba(59, 130, 246, 0.2)",
+    "--accent-gradient": "linear-gradient(90deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%)"
+  },
   GOLD: {
     "--bg-color": "#0f0e0b",
     "--bg-elevated": "#1d1a14",
@@ -176,10 +191,10 @@ const palettes = {
 };
 
 export const ThemeColors = {
-  dark: palettes.WHITE,
+  dark: palettes.DEFAULT,
   palettes,
 
-  getPalette(themeName = "WHITE") {
-    return palettes[String(themeName || "WHITE").toUpperCase()] || palettes.WHITE;
+  getPalette(themeName = "DEFAULT") {
+    return palettes[String(themeName || "DEFAULT").toUpperCase()] || palettes.DEFAULT;
   }
 };

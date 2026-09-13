@@ -3259,25 +3259,35 @@ export const MetaDetailsScreen = {
     }
 
     this.container.innerHTML = `
-      <div class="series-detail-shell${detailDirectionClass}${this.getTrailerShellStateClasses()}">
-        <div class="series-detail-backdrop" data-backdrop-url="${escapeAttribute(backdrop || "")}"${backdrop ? ` style="background-image:url('${backdrop.replace(/'/g, "%27")}')"` : ""}></div>
+      <div class="series-detail-shell nuvio-detail-page${detailDirectionClass}${this.getTrailerShellStateClasses()}">
+        <div class="series-detail-backdrop nuvio-detail-backdrop" data-backdrop-url="${escapeAttribute(backdrop || "")}"${backdrop ? ` style="background-image:url('${backdrop.replace(/'/g, "%27")}')"` : ""}></div>
         <div class="detail-trailer-layer"></div>
         <div class="detail-trailer-loading-spinner" aria-hidden="true">${renderLoadingIndicator({ className: "player-loading-spinner-ring" })}</div>
-        <div class="series-detail-vignette"></div>
+        <div class="series-detail-vignette nuvio-detail-vignette"></div>
         <div class="detail-bottom-shadow"></div>
 
-        <div class="series-detail-content">
+        <main class="series-detail-content nuvio-detail-content">
           <div id="detailHeroSection">${heroMarkup}</div>
-          <div id="detailSeasonRowMount">
-            <div class="series-season-row" data-scroll-key="season-tabs">${this.renderSeasonButtons()}</div>
-          </div>
-          <div id="detailEpisodeTrackMount">
-            <div class="series-episode-track${this.getSelectedSeasonEpisodes().length > EPISODE_VIRTUALIZATION_THRESHOLD ? " is-virtualized" : ""}" data-scroll-key="episodes:${this.selectedSeason ?? 1}">${this.renderEpisodeCards()}</div>
-          </div>
-          <div id="detailInsightSectionMount">${this.renderSeriesInsightSection()}</div>
-          <div id="detailCommentsSectionMount">${this.renderStandaloneCommentsSection()}</div>
-          <div id="detailCompanySectionsMount">${this.renderCompanySections(meta)}</div>
-        </div>
+          <section class="nuvio-detail-episodes-block">
+            <header class="nuvio-section-heading nuvio-detail-section-heading">
+              <div>
+                <span class="nuvio-eyebrow">EPISODIOS</span>
+                <h2>${escapeHtml(t("detail.episodes", {}, "Episodes"))}</h2>
+              </div>
+            </header>
+            <div id="detailSeasonRowMount" class="nuvio-season-tabs-wrap">
+              <div class="series-season-row" data-scroll-key="season-tabs">${this.renderSeasonButtons()}</div>
+            </div>
+            <div id="detailEpisodeTrackMount" class="nuvio-episode-track-wrap">
+              <div class="series-episode-track${this.getSelectedSeasonEpisodes().length > EPISODE_VIRTUALIZATION_THRESHOLD ? " is-virtualized" : ""}" data-scroll-key="episodes:${this.selectedSeason ?? 1}">${this.renderEpisodeCards()}</div>
+            </div>
+          </section>
+          <section class="nuvio-detail-information">
+            <div id="detailInsightSectionMount">${this.renderSeriesInsightSection()}</div>
+            <div id="detailCommentsSectionMount">${this.renderStandaloneCommentsSection()}</div>
+            <div id="detailCompanySectionsMount">${this.renderCompanySections(meta)}</div>
+          </section>
+        </main>
 
         <div id="episodeStreamChooserMount"></div>
       </div>
@@ -3314,9 +3324,11 @@ export const MetaDetailsScreen = {
     creditPrefix = "",
     showWatchedButton = false
   }) {
+    const isSeries = isSeriesDetailMeta(meta, this.episodes);
+    const posterUrl = meta.poster || meta.posterUrl || this.params?.fallbackPoster || "";
     const logoOrTitle = meta.logo
-      ? `<img src="${meta.logo}" class="series-detail-logo" alt="${escapeHtml(meta.name || "logo")}" decoding="async" fetchpriority="high" />`
-      : `<h1 class="series-detail-title">${escapeHtml(meta.name || "Untitled")}</h1>`;
+      ? `<img src="${meta.logo}" class="series-detail-logo nuvio-detail-logo" alt="${escapeHtml(meta.name || "logo")}" decoding="async" fetchpriority="high" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='block';" /><h1 class="series-detail-title nuvio-detail-title" style="display:none;">${escapeHtml(meta.name || "Untitled")}</h1>`
+      : `<h1 class="series-detail-title nuvio-detail-title">${escapeHtml(meta.name || "Untitled")}</h1>`;
     const externalRatings = this.renderExternalRatingsRow(meta);
     const trailerSource = this.trailerSource || resolveTrailerSource(meta);
     const hasTrailerCandidate = Boolean(trailerSource);
@@ -3327,35 +3339,51 @@ export const MetaDetailsScreen = {
     const trailerButton =
       trailerButtonEnabled && hasTrailerCandidate
         ? `
-          <button class="series-circle-btn focusable" data-action="toggleTrailer" aria-label="${escapeAttribute(t("detail.playTrailer", {}, "Play trailer"))}">
+          <button class="series-circle-btn nuvio-icon-button focusable" data-action="toggleTrailer" aria-label="${escapeAttribute(t("detail.playTrailer", {}, "Play trailer"))}">
             ${renderTrailerGlyph()}
           </button>
         `
         : "";
     return `
-      <section class="detail-hero-section">
-        <div class="detail-hero-brand">
-          ${logoOrTitle}
-          <p class="detail-trailer-hint">${escapeHtml(t("detail.pressBackToReturn", {}, "Press back to return to details"))}</p>
+      <section class="detail-hero-section nuvio-detail-hero">
+        <div class="nuvio-detail-art-column">
+          ${
+            posterUrl
+              ? `
+            <div class="detail-hero-poster-wrap nuvio-detail-poster-wrap">
+              <img class="detail-hero-poster nuvio-detail-poster" src="${escapeAttribute(posterUrl)}" alt="${escapeAttribute(meta.name || "poster")}" decoding="async" fetchpriority="high" />
+            </div>
+          `
+              : `<div class="nuvio-detail-poster-wrap nuvio-detail-poster-placeholder"><span class="material-icons" aria-hidden="true">movie</span></div>`
+          }
         </div>
-        <div class="detail-hero-body">
-          <div class="series-detail-actions">
-            <button class="series-primary-btn focusable" data-action="playDefault">
+        <div class="detail-hero-body nuvio-detail-copy">
+          <div class="detail-hero-tag nuvio-detail-kicker">
+            <span class="detail-hero-tag-pill">${isSeries ? "SERIE · TEMPORADA COMPLETA" : "PELÍCULA"}</span>
+          </div>
+          <div class="detail-hero-brand nuvio-detail-brand">
+            ${logoOrTitle}
+            <p class="detail-trailer-hint">${escapeHtml(t("detail.pressBackToReturn", {}, "Press back to return to details"))}</p>
+          </div>
+          <div class="nuvio-detail-meta-block">${this.renderHeroMetaRows(meta)}</div>
+          <p class="series-detail-description nuvio-detail-description">${escapeHtml(meta.description || t("detail.noDescription", {}, "No description."))}</p>
+          <div class="series-detail-actions nuvio-detail-actions">
+            <button class="series-primary-btn nuvio-primary-action focusable" data-action="playDefault">
               <span class="series-btn-icon">${renderPlayGlyph()}</span>
               <span>${escapeHtml(playLabel)}</span>
             </button>
-            ${this.getActiveResumeProgress() ? `<button class="series-secondary-btn focusable" data-action="playFromBeginning">${escapeHtml(t("detail.playFromBeginning", {}, "Play from Beginning"))}</button>` : ""}
-            <button class="series-circle-btn focusable${this.isSavedInLibrary ? " is-library-selected" : ""}" data-action="toggleLibrary">
+            ${this.getActiveResumeProgress() ? `<button class="series-secondary-btn nuvio-secondary-action focusable" data-action="playFromBeginning">${escapeHtml(t("detail.playFromBeginning", {}, "Play from Beginning"))}</button>` : ""}
+            <button class="series-circle-btn nuvio-icon-button focusable${this.isSavedInLibrary ? " is-library-selected" : ""}" data-action="toggleLibrary" aria-label="${this.isSavedInLibrary ? "Guardado en biblioteca" : "Guardar en biblioteca"}">
               ${renderLibraryGlyph(this.isSavedInLibrary)}
             </button>
-            ${showWatchedButton ? `<button class="series-circle-btn focusable${this.isMarkedWatched ? " is-selected" : ""}" data-action="toggleWatched" aria-label="${escapeAttribute(this.isMarkedWatched ? t("common.markUnwatched", {}, "Mark Unwatched") : t("common.markWatched", {}, "Mark Watched"))}">${renderWatchedGlyph(this.isMarkedWatched)}</button>` : ""}
+            ${showWatchedButton ? `<button class="series-circle-btn nuvio-icon-button focusable${this.isMarkedWatched ? " is-selected" : ""}" data-action="toggleWatched" aria-label="${escapeAttribute(this.isMarkedWatched ? t("common.markUnwatched", {}, "Mark Unwatched") : t("common.markWatched", {}, "Mark Watched"))}">${renderWatchedGlyph(this.isMarkedWatched)}</button>` : ""}
             ${trailerButton}
           </div>
-          ${this.renderResumeIndicator()}
-          ${creditLine ? `<p class="series-detail-support">${escapeHtml(creditPrefix)}: ${escapeHtml(creditLine)}</p>` : ""}
-          ${externalRatings}
-          <p class="series-detail-description">${escapeHtml(meta.description || t("detail.noDescription", {}, "No description."))}</p>
-          ${this.renderHeroMetaRows(meta)}
+          <div class="nuvio-detail-supporting-info">
+            ${this.renderResumeIndicator()}
+            ${creditLine ? `<p class="series-detail-support"><span>${escapeHtml(creditPrefix)}</span> ${escapeHtml(creditLine)}</p>` : ""}
+            ${externalRatings}
+          </div>
         </div>
       </section>
     `;
@@ -3589,19 +3617,21 @@ export const MetaDetailsScreen = {
     const detailDirectionClass = isRtlDetailLocale() ? " detail-rtl" : "";
 
     this.container.innerHTML = `
-      <div class="series-detail-shell movie-detail-shell${detailDirectionClass}${this.getTrailerShellStateClasses()}">
-        <div class="series-detail-backdrop" data-backdrop-url="${escapeAttribute(backdrop || "")}"${backdrop ? ` style="background-image:url('${backdrop.replace(/'/g, "%27")}')"` : ""}></div>
+      <div class="series-detail-shell movie-detail-shell nuvio-detail-page${detailDirectionClass}${this.getTrailerShellStateClasses()}">
+        <div class="series-detail-backdrop nuvio-detail-backdrop" data-backdrop-url="${escapeAttribute(backdrop || "")}"${backdrop ? ` style="background-image:url('${backdrop.replace(/'/g, "%27")}')"` : ""}></div>
         <div class="detail-trailer-layer"></div>
         <div class="detail-trailer-loading-spinner" aria-hidden="true">${renderLoadingIndicator({ className: "player-loading-spinner-ring" })}</div>
-        <div class="series-detail-vignette"></div>
+        <div class="series-detail-vignette nuvio-detail-vignette"></div>
         <div class="detail-bottom-shadow"></div>
 
-        <div class="series-detail-content movie-detail-content">
+        <main class="series-detail-content movie-detail-content nuvio-detail-content">
           <div id="detailHeroSection">${heroMarkup}</div>
-          <div id="detailInsightSectionMount">${this.renderMovieInsightSection(meta)}</div>
-          <div id="detailCommentsSectionMount">${this.renderStandaloneCommentsSection()}</div>
-          <div id="detailCompanySectionsMount">${this.renderCompanySections(meta)}</div>
-        </div>
+          <section class="nuvio-detail-information nuvio-detail-information--movie">
+            <div id="detailInsightSectionMount">${this.renderMovieInsightSection(meta)}</div>
+            <div id="detailCommentsSectionMount">${this.renderStandaloneCommentsSection()}</div>
+            <div id="detailCompanySectionsMount">${this.renderCompanySections(meta)}</div>
+          </section>
+        </main>
         <div id="movieStreamChooserMount"></div>
       </div>
     `;

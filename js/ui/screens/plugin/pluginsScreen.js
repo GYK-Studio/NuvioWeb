@@ -629,20 +629,26 @@ export const PluginsScreen = {
     const enterClass = this.routeEnterPending ? " nuvio-route-slide-enter" : "";
     const repositories = Array.isArray(model.repositories) ? model.repositories : [];
     this.container.innerHTML = `
-      <div class="plugins-route-shell">
-        <div class="plugins-route-content${enterClass}">
-          <header class="plugins-content-header">
-            <div>
-              <h1 class="plugins-title">${escapeHtml(t("plugin_title", {}, "Plugins"))}</h1>
+      <div class="nuvio-page nuvio-sources-page plugins-route-shell">
+        <main class="plugins-route-content nuvio-sources-content${enterClass}">
+          <header class="plugins-content-header nuvio-page-heading nuvio-sources-heading">
+            <span class="nuvio-eyebrow">FUENTES Y REPOSITORIOS</span>
+            <div class="nuvio-page-heading-row">
+              <div>
+                <h1 class="plugins-title">${escapeHtml(t("plugin_title", {}, "Fuentes"))}</h1>
+                <p>Administra las fuentes que alimentan tu catálogo y la búsqueda de streams.</p>
+              </div>
+              <span class="nuvio-source-badge"><span class="material-icons" aria-hidden="true">hub</span>${repositories.length} repositorio${repositories.length === 1 ? "" : "s"}</span>
             </div>
           </header>
-          <main class="plugins-main">
-            <div class="plugins-panel">
+
+          <section class="plugins-main nuvio-sources-workspace">
+            <div class="plugins-panel nuvio-sources-panel">
               ${runtimeNotice(model)}
 
               ${
                 model.readOnly
-                  ? `<section class="plugins-readonly-card">
+                  ? `<section class="plugins-readonly-card nuvio-notice-card">
                 <span class="plugins-readonly-icon material-icons" aria-hidden="true">lock</span>
                 <span>${escapeHtml(t("plugin_readonly_notice", {}, "Using primary profile's plugins; changes are disabled"))}</span>
               </section>`
@@ -652,14 +658,16 @@ export const PluginsScreen = {
               ${
                 model.readOnly
                   ? ""
-                  : `<section class="plugins-settings-card">
-                <div class="plugins-section-heading">
+                  : `<section class="plugins-settings-card nuvio-surface-card nuvio-source-add-card">
+                <div class="plugins-section-heading nuvio-section-heading">
                   <div>
+                    <span class="nuvio-eyebrow">NUEVO ORIGEN</span>
                     <h2>${escapeHtml(t("plugin_add_repository", {}, "Add repository"))}</h2>
+                    <p>Conecta un repositorio mediante URL o código corto.</p>
                   </div>
                 </div>
-                <div class="plugins-add-row">
-                  <input class="plugins-repository-input plugins-focusable focusable"
+                <div class="plugins-add-row nuvio-source-add-row">
+                  <input class="plugins-repository-input plugins-focusable focusable nuvio-input"
                          data-focus-key="add:input"
                          data-action="repository-input"
                          type="text"
@@ -674,40 +682,46 @@ export const PluginsScreen = {
               </section>`
               }
 
-              <section class="plugins-settings-card plugins-setting-card plugins-focusable focusable"
-                       data-focus-key="global:enabled"
-                       data-action="toggle-global"
-                       tabindex="0"
-                       aria-pressed="${model.pluginsEnabled ? "true" : "false"}"
-                       aria-disabled="${this.busy || model.readOnly ? "true" : "false"}">
-                <div class="plugins-setting-row">
-                  <div><strong>${escapeHtml(t("plugin_enable_plugins_title", {}, "Enable plugin providers globally"))}</strong><span>${escapeHtml(t("plugin_enable_plugins_subtitle", {}, "Use plugin providers during stream discovery"))}</span></div>
-                  ${toggleIndicator({ checked: model.pluginsEnabled })}
-                </div>
+              <section class="nuvio-source-settings-grid">
+                <article class="plugins-settings-card plugins-setting-card nuvio-surface-card plugins-focusable focusable"
+                         data-focus-key="global:enabled"
+                         data-action="toggle-global"
+                         tabindex="0"
+                         aria-pressed="${model.pluginsEnabled ? "true" : "false"}"
+                         aria-disabled="${this.busy || model.readOnly ? "true" : "false"}">
+                  <div class="plugins-setting-row">
+                    <div><span class="nuvio-eyebrow">DESCUBRIMIENTO</span><strong>${escapeHtml(t("plugin_enable_plugins_title", {}, "Enable plugin providers globally"))}</strong><span>${escapeHtml(t("plugin_enable_plugins_subtitle", {}, "Use plugin providers during stream discovery"))}</span></div>
+                    ${toggleIndicator({ checked: model.pluginsEnabled })}
+                  </div>
+                </article>
+
+                <article class="plugins-settings-card plugins-setting-card nuvio-surface-card plugins-focusable focusable"
+                         data-focus-key="global:group"
+                         data-action="toggle-group"
+                         tabindex="0"
+                         aria-pressed="${model.groupStreamsByRepository ? "true" : "false"}"
+                         aria-disabled="${this.busy || model.readOnly ? "true" : "false"}">
+                  <div class="plugins-setting-row">
+                    <div><span class="nuvio-eyebrow">PRESENTACIÓN</span><strong>${escapeHtml(t("plugin_group_by_repository_title", {}, "Group plugin providers by repository"))}</strong><span>${escapeHtml(t("plugin_group_by_repository_subtitle", {}, "In Streams, show one provider per repository instead of one per source"))}</span></div>
+                    ${toggleIndicator({ checked: model.groupStreamsByRepository })}
+                  </div>
+                </article>
               </section>
 
-              <section class="plugins-settings-card plugins-setting-card plugins-focusable focusable"
-                       data-focus-key="global:group"
-                       data-action="toggle-group"
-                       tabindex="0"
-                       aria-pressed="${model.groupStreamsByRepository ? "true" : "false"}"
-                       aria-disabled="${this.busy || model.readOnly ? "true" : "false"}">
-                <div class="plugins-setting-row">
-                  <div><strong>${escapeHtml(t("plugin_group_by_repository_title", {}, "Group plugin providers by repository"))}</strong><span>${escapeHtml(t("plugin_group_by_repository_subtitle", {}, "In Streams, show one provider per repository instead of one per source"))}</span></div>
-                  ${toggleIndicator({ checked: model.groupStreamsByRepository })}
-                </div>
+              <section class="nuvio-source-repositories">
+                <header class="plugins-section-label nuvio-section-heading">
+                  <div>
+                    <span class="nuvio-eyebrow">REPOSITORIOS</span>
+                    <h2>${escapeHtml(t("plugin_repositories_section", { count: repositories.length }, `Repositories (${repositories.length})`))}</h2>
+                  </div>
+                </header>
+                ${repositories.length ? `<div class="plugins-repository-list nuvio-repository-grid">${repositories.map((repository) => this.repositoryCard(repository, model)).join("")}</div>` : `<div class="plugins-settings-card plugins-empty-card nuvio-state-panel"><span class="material-icons" aria-hidden="true">inventory_2</span><p>${escapeHtml(t("plugin_no_repos", {}, "No repositories added yet. Add a repository to get started."))}</p></div>`}
               </section>
 
-              <section class="plugins-section-label">
-                <h2>${escapeHtml(t("plugin_repositories_section", { count: repositories.length }, `Repositories (${repositories.length})`))}</h2>
-              </section>
-
-              ${repositories.length ? `<section class="plugins-repository-list">${repositories.map((repository) => this.repositoryCard(repository, model)).join("")}</section>` : `<section class="plugins-settings-card plugins-empty-card"><p>${escapeHtml(t("plugin_no_repos", {}, "No repositories added yet. Add a repository to get started."))}</p></section>`}
-
-              ${this.providerSection(model)}
+              <section class="nuvio-source-providers">${this.providerSection(model)}</section>
             </div>
-          </main>
-        </div>
+          </section>
+        </main>
         ${
           this.statusMessage && ["success", "error"].includes(this.statusKind)
             ? `<div class="plugins-message-overlay ${escapeHtml(this.statusKind)}" role="status" aria-live="polite">
@@ -718,8 +732,8 @@ export const PluginsScreen = {
         }
         ${
           this.pendingScraperEnable
-            ? `<div class="plugins-confirm-backdrop">
-          <section class="plugins-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="plugins-risky-title">
+            ? `<div class="plugins-confirm-backdrop nuvio-dialog-backdrop">
+          <section class="plugins-confirm-dialog nuvio-dialog" role="dialog" aria-modal="true" aria-labelledby="plugins-risky-title">
             <h2 id="plugins-risky-title">${escapeHtml(t("plugin_risky_enable_title", {}, "Enable provider?"))}</h2>
             <p>${escapeHtml(t("plugin_risky_enable_message", { name: this.pendingScraperEnable.scraperName }, `${this.pendingScraperEnable.scraperName} is known to cause crashes on some content. Enable anyway?`))}</p>
             <div class="plugins-confirm-actions">

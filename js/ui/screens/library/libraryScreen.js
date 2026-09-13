@@ -413,10 +413,14 @@ export const LibraryScreen = {
 
   renderLoading() {
     this.container.innerHTML = `
-      <div class="home-shell library-shell${this.libraryRouteEnterPending ? " library-route-enter" : ""}">
-        ${this.renderSidebar()}
-        <main class="home-main library-main">
-          <section class="library-loading-state">
+      <div class="library-shell nuvio-page nuvio-library-page${this.libraryRouteEnterPending ? " library-route-enter" : ""}">
+        <main class="home-main library-main nuvio-library-main">
+          <header class="nuvio-page-heading">
+            <span class="nuvio-eyebrow">TU COLECCIÓN</span>
+            <h1>${escapeHtml(t("library_title", {}, "Library"))}</h1>
+            <p>Todo lo que guardaste, organizado en un solo lugar.</p>
+          </header>
+          <section class="library-loading-state nuvio-state-panel">
             ${renderLoadingIndicator({ className: "library-loading-spinner" })}
             <div class="library-loading-label">${escapeHtml(t("library_syncing_library", {}, "Loading library"))}</div>
           </section>
@@ -424,11 +428,6 @@ export const LibraryScreen = {
       </div>
     `;
     this.libraryRouteEnterPending = false;
-    bindRootSidebarEvents(this.container, {
-      currentRoute: "library",
-      onSelectedAction: () => this.focusMainNode(),
-      onExpandSidebar: () => this.focusSidebarNode()
-    });
   },
 
   renderSidebar() {
@@ -884,14 +883,14 @@ export const LibraryScreen = {
   renderGrid(items) {
     const state = this.controller.getState();
     return `
-      <section class="library-grid-wrap">
-        <div class="library-grid">
+      <section class="library-grid-wrap nuvio-library-grid-wrap">
+        <div class="library-grid nuvio-poster-grid nuvio-library-grid">
           ${items
             .map((item) => {
               const focusKey = `${item.type}:${item.id}`;
               const isWatched = isTitleItemWatched(item, state.watchedTitleIds);
               return `
-              <article class="library-grid-card focusable"
+              <article class="library-grid-card nuvio-poster-card focusable"
                        data-action="openDetail"
                        data-item-id="${escapeHtml(item.id)}"
                        data-item-type="${escapeHtml(item.type || "movie")}"
@@ -900,10 +899,15 @@ export const LibraryScreen = {
                        data-backdrop-src="${escapeHtml(item.background || "")}"
                        data-addon-base-url="${escapeHtml(item.addonBaseUrl || "")}"
                        data-focus-key="${escapeHtml(focusKey)}">
-                <div class="library-grid-poster${item.poster ? "" : " placeholder"}"${item.poster ? ` style="background-image:url('${escapeHtml(item.poster)}')"` : ""}>
+                <div class="library-grid-poster nuvio-poster-media${item.poster ? "" : " placeholder"}"${item.poster ? ` style="background-image:url('${escapeHtml(item.poster)}')"` : ""}>
+                  <div class="nuvio-card-scrim" aria-hidden="true"></div>
                   ${isWatched ? renderTitleWatchedBadge({ className: "library-watched-badge", iconClassName: "library-watched-badge-svg" }) : ""}
+                  <span class="nuvio-card-play material-icons" aria-hidden="true">play_arrow</span>
                 </div>
-                <div class="library-grid-title">${escapeHtml(item.name || item.id || "Untitled")}</div>
+                <div class="nuvio-card-copy">
+                  <div class="library-grid-title nuvio-card-title">${escapeHtml(item.name || item.id || "Untitled")}</div>
+                  <div class="nuvio-card-meta">${escapeHtml(String(item.type || "movie").toUpperCase())}</div>
+                </div>
               </article>
             `;
             })
@@ -915,8 +919,9 @@ export const LibraryScreen = {
 
   renderEmptyState() {
     return `
-      <section class="library-empty-state">
-        ${bookmarkOutlineSvg()}
+      <section class="library-empty-state nuvio-state-panel nuvio-library-empty">
+        <div class="nuvio-state-icon">${bookmarkOutlineSvg()}</div>
+        <span class="nuvio-eyebrow">BIBLIOTECA VACÍA</span>
         <h3 class="library-empty-title">${escapeHtml(this.controller.getEmptyStateTitle())}</h3>
         <p class="library-empty-subtitle">${escapeHtml(this.controller.getEmptyStateSubtitle())}</p>
       </section>
@@ -1134,7 +1139,7 @@ export const LibraryScreen = {
   render() {
     this.cancelScheduledRender();
     this.layoutPrefs = LayoutPreferences.get();
-    this.sidebarExpanded = Boolean(this.layoutPrefs?.modernSidebar && this.sidebarExpanded);
+    this.sidebarExpanded = false;
     const state = this.controller.getState();
     const expandedPicker = state.expandedPicker || null;
     if (this.lastRenderedExpandedPicker && this.lastRenderedExpandedPicker !== expandedPicker) {
@@ -1144,32 +1149,33 @@ export const LibraryScreen = {
       this.clearClosingPicker();
     }
     this.lastRenderedExpandedPicker = expandedPicker;
-    const posterWidth = 252;
-    const posterRadius = 24;
-    const libraryStyle = `--library-poster-width:${posterWidth}px;--library-poster-height:${Math.round(posterWidth * 1.5)}px;--library-poster-radius:${posterRadius}px;`;
     const hasLibraryItems = Array.isArray(state.allItems) && state.allItems.length > 0;
     if (state.isLoading || (state.isSyncing && !hasLibraryItems)) {
       this.renderLoading();
       ScreenUtils.indexFocusables(this.container);
-      if (!this.layoutPrefs?.modernSidebar) {
-        setLegacySidebarExpanded(this.container, false);
-      }
       return;
     }
 
     this.container.innerHTML = `
-      <div class="home-shell library-shell${this.libraryRouteEnterPending ? " library-route-enter" : ""}" style="${escapeHtml(libraryStyle)}">
-        ${this.renderSidebar()}
-        <main class="home-main library-main">
-          <section class="library-page">
-            <header class="library-page-header">
-              <h1 class="library-page-title">${escapeHtml(t("library_title", {}, "Library"))}</h1>
-              <div class="library-page-source" id="libraryPageSource">${escapeHtml(this.controller.getSourceLabel())}</div>
-            </header>
+      <div class="library-shell nuvio-page nuvio-library-page${this.libraryRouteEnterPending ? " library-route-enter" : ""}">
+        <main class="home-main library-main nuvio-library-main">
+          <header class="library-page-header nuvio-page-heading nuvio-library-heading">
+            <span class="nuvio-eyebrow">TU COLECCIÓN</span>
+            <div class="nuvio-page-heading-row">
+              <div>
+                <h1 class="library-page-title">${escapeHtml(t("library_title", {}, "Library"))}</h1>
+                <p>Películas, series y archivos guardados para volver cuando quieras.</p>
+              </div>
+              <div class="library-page-source nuvio-source-badge" id="libraryPageSource">${escapeHtml(this.controller.getSourceLabel())}</div>
+            </div>
+          </header>
 
+          <section class="nuvio-library-controls">
             ${this.renderViewModeTabs(state)}
             ${this.renderPickerGroups(state)}
+          </section>
 
+          <section class="nuvio-library-content">
             ${this.renderLibraryContentArea(state)}
           </section>
         </main>
@@ -1183,11 +1189,6 @@ export const LibraryScreen = {
 
     this.buildGridRows();
     ScreenUtils.indexFocusables(this.container);
-    bindRootSidebarEvents(this.container, {
-      currentRoute: "library",
-      onSelectedAction: () => this.focusMainNode(),
-      onExpandSidebar: () => this.focusSidebarNode()
-    });
     if (this.isModalFocusLocked()) {
       return;
     }

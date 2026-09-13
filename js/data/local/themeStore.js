@@ -4,9 +4,9 @@ const KEY = "themeSettings";
 
 const DEFAULT_THEME = {
   mode: "dark",
-  themeName: "WHITE",
-  accentColor: "#ffffff",
-  fontFamily: "INTER",
+  themeName: "DEFAULT",
+  accentColor: "#3b82f6",
+  fontFamily: "MANROPE",
   language: null,
   amoledMode: false,
   amoledSurfacesMode: false,
@@ -14,6 +14,9 @@ const DEFAULT_THEME = {
 };
 
 const THEME_BY_ACCENT = new Map([
+  ["#3b82f6", "DEFAULT"],
+  ["#60a5fa", "DEFAULT"],
+  ["#1d4ed8", "DEFAULT"],
   ["#ffffff", "WHITE"],
   ["#f5f5f5", "WHITE"],
   ["#f5f8fc", "WHITE"],
@@ -39,6 +42,7 @@ const THEME_BY_ACCENT = new Map([
 ]);
 
 const ACCENT_BY_THEME = {
+  DEFAULT: "#3b82f6",
   WHITE: "#f5f5f5",
   CRIMSON: "#e53935",
   OCEAN: "#1e88e5",

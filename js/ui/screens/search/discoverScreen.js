@@ -20,14 +20,12 @@ import {
 } from "../../components/watchedTitleBadge.js";
 import {
   activateLegacySidebarAction,
-  bindRootSidebarEvents,
   focusWithoutAutoScroll,
   getRootSidebarNodes,
   getRootSidebarSelectedNode,
   getSidebarProfileState,
   isRootSidebarNode,
   isSelectedSidebarAction,
-  renderRootSidebar,
   setModernSidebarExpanded,
   setModernSidebarPillIconOnly,
   setLegacySidebarExpanded
@@ -504,7 +502,7 @@ export const DiscoverScreen = {
       ? this.items
           .map(
             (item, index) => `
-              <article class="discover-card seeall-card focusable"
+              <article class="discover-card seeall-card nuvio-poster-card focusable"
                         data-action="openDetail"
                         data-item-id="${item.id || ""}"
                         data-item-type="${item.type || selectedCatalog?.type || "movie"}"
@@ -517,19 +515,23 @@ export const DiscoverScreen = {
                         data-catalog-type="${escapeHtml(selectedCatalog?.type || item.catalogType || "")}"
                         data-focus-key="item:${item.id || index}"
                         data-item-index="${index}">
-                 <div class="seeall-card-poster-wrap">
+                 <div class="seeall-card-poster-wrap nuvio-poster-media">
                    ${
                      item.poster
                        ? `<img class="seeall-card-poster-image" src="${escapeHtml(item.poster)}" alt="${escapeHtml(item.name || "content")}" loading="lazy" decoding="async" />`
                        : `<div class="seeall-card-poster placeholder"></div>`
                    }
+                   <div class="nuvio-card-scrim" aria-hidden="true"></div>
                    ${isTitleItemWatched(item, this.watchedTitleIds) ? renderTitleWatchedBadge() : ""}
+                   <span class="nuvio-card-play material-icons" aria-hidden="true">play_arrow</span>
                  </div>
                  ${
                    this.layoutPrefs?.posterLabelsEnabled !== false
                      ? `
-                   <div class="seeall-card-title">${escapeHtml(item.name || "Untitled")}</div>
-                   <div class="seeall-card-year">${escapeHtml(extractReleaseYear(item))}</div>
+                   <div class="nuvio-card-copy">
+                     <div class="seeall-card-title nuvio-card-title">${escapeHtml(item.name || "Untitled")}</div>
+                     <div class="seeall-card-year nuvio-card-meta">${escapeHtml(extractReleaseYear(item))}</div>
+                   </div>
                  `
                      : ""
                  }
@@ -537,7 +539,7 @@ export const DiscoverScreen = {
              `
           )
           .join("")
-      : `<div class="seeall-empty">${escapeHtml(t("catalog_see_all_empty_title", {}, "No items available"))}</div>`;
+      : `<div class="seeall-empty nuvio-state-panel"><span class="material-icons" aria-hidden="true">explore_off</span><strong>${escapeHtml(t("catalog_see_all_empty_title", {}, "No items available"))}</strong><span>Prueba otro catálogo o filtro.</span></div>`;
   },
 
   renderDiscoverLoadingMarkup() {
@@ -1756,7 +1758,7 @@ export const DiscoverScreen = {
   render() {
     this.cancelScheduledRender();
     this.layoutPrefs = LayoutPreferences.get();
-    const showRootSidebar = this.isSidebarRootRoute();
+    this.focusZone = "content";
     const openPicker = this.openPicker || null;
     if (this.lastRenderedOpenPicker && this.lastRenderedOpenPicker !== openPicker) {
       this.startClosingPicker(this.lastRenderedOpenPicker);
@@ -1774,50 +1776,35 @@ export const DiscoverScreen = {
     const selectedCatalog = this.getSelectedCatalog();
     const contextLabel = this.getDiscoverContextLabel(selectedCatalog);
     const cards = this.renderDiscoverCards(selectedCatalog);
-
     const enterClass = this.discoverRouteEnterPending ? " nuvio-route-slide-enter" : "";
     this.discoverRouteEnterPending = false;
 
     this.container.innerHTML = `
-      <div class="home-shell search-screen-shell discover-shell${showRootSidebar ? " discover-root-route" : ""}">
-        ${
-          showRootSidebar
-            ? renderRootSidebar({
-                selectedRoute: "discover",
-                profile: this.sidebarProfile,
-                layout: this.layoutPrefs,
-                expanded: Boolean(this.sidebarExpanded),
-                pillIconOnly: Boolean(this.pillIconOnly)
-              })
-            : ""
-        }
-        <main class="home-main discover-main${enterClass}">
-          <div class="seeall-shell discover-seeall-shell">
-            <header class="seeall-header discover-header">
-              <h2 class="seeall-title">Discover</h2>
-              <div class="seeall-subtitle" id="discoverContextLabel">${escapeHtml(contextLabel)}</div>
-            </header>
-            <section class="library-picker-row discover-picker-row" id="discoverPickerRow">
-              ${this.renderPickerRowMarkup()}
-            </section>
-            <section class="seeall-grid discover-grid" id="discoverGridMount">
-              ${cards}
-            </section>
-            <div id="discoverLoadingMount">${this.renderDiscoverLoadingMarkup()}</div>
-          </div>
+      <div class="discover-shell nuvio-page nuvio-discover-page">
+        <main class="discover-main nuvio-discover-main${enterClass}">
+          <header class="discover-header nuvio-page-heading nuvio-discover-heading">
+            <span class="nuvio-eyebrow">DESCUBRIMIENTO</span>
+            <div class="nuvio-page-heading-row">
+              <div>
+                <h1>Explorar</h1>
+                <p id="discoverContextLabel">${escapeHtml(contextLabel)}</p>
+              </div>
+              <span class="nuvio-page-kicker"><span class="material-icons" aria-hidden="true">auto_awesome</span> Tu catálogo, sin ruido</span>
+            </div>
+          </header>
+          <section class="library-picker-row discover-picker-row nuvio-filter-bar" id="discoverPickerRow" aria-label="Filtros de exploración">
+            ${this.renderPickerRowMarkup()}
+          </section>
+          <section class="seeall-grid discover-grid nuvio-poster-grid nuvio-discover-grid" id="discoverGridMount">
+            ${cards}
+          </section>
+          <div id="discoverLoadingMount">${this.renderDiscoverLoadingMarkup()}</div>
         </main>
       </div>
     `;
 
     ScreenUtils.indexFocusables(this.container);
     this.buildNavigationModel();
-    if (showRootSidebar) {
-      bindRootSidebarEvents(this.container, {
-        currentRoute: "discover",
-        onSelectedAction: () => this.closeSidebarToContent(),
-        onExpandSidebar: () => this.openSidebar()
-      });
-    }
     this.bindCardEvents();
     this.bindShellEvents();
     this.bindPointerEvents();
@@ -1825,22 +1812,14 @@ export const DiscoverScreen = {
       const scrollMode = this.preserveViewportOnNextRender ? "none" : "center";
       this.pendingRestoreFocus = false;
       this.preserveViewportOnNextRender = false;
-      if (showRootSidebar && this.focusZone === "sidebar") {
-        this.focusSidebarNode();
-      } else {
-        this.restoreFocusedCard({ scrollMode });
-      }
+      this.restoreFocusedCard({ scrollMode });
       this.syncOpenPickerScroll();
       return;
     }
     this.restoreScrollState();
     const scrollMode = this.preserveViewportOnNextRender ? "none" : "center";
     this.preserveViewportOnNextRender = false;
-    if (showRootSidebar && this.focusZone === "sidebar") {
-      this.focusSidebarNode();
-    } else {
-      this.restoreContentFocus({ scrollMode });
-    }
+    this.restoreContentFocus({ scrollMode });
     this.syncOpenPickerScroll();
   },
 

@@ -45,7 +45,30 @@
   gap: 16px;
 }
 
-#app :is(.home-shell, .discover-shell, .search-screen-shell, .settings-shell) {
+body.web-with-header
+  #app
+  :is(
+    .home-shell,
+    .discover-shell,
+    .search-screen-shell,
+    .settings-shell,
+    .addons-shell,
+    .library-shell
+  ) {
+  display: block;
+  grid-template-columns: 1fr;
+  width: 100%;
+}
+body.web-with-header #app :is(.home-main, .discover-main, .search-content, .library-main) {
+  grid-column: auto;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body:not(.web-with-header)
+  #app
+  :is(.home-shell, .discover-shell, .search-screen-shell, .settings-shell) {
   display: grid;
   grid-template-columns: var(--web-nav-width) minmax(0, 1fr);
   width: 100%;
@@ -53,7 +76,7 @@
   min-height: 100dvh;
   overflow: visible;
 }
-#app :is(.home-main, .discover-main, .search-content, .library-main) {
+body:not(.web-with-header) #app :is(.home-main, .discover-main, .search-content, .library-main) {
   grid-column: 2;
   min-width: 0;
   width: auto;
@@ -75,7 +98,96 @@
   height: auto;
   overflow: visible;
 }
-#app :is(.home-hero-card, .home-modern-hero-card) {
+body.web-with-header #app .home-hero-card,
+body.web-with-header #app .home-modern-hero-card {
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 0 !important;
+}
+
+body.web-with-header #app .home-modern-hero-card::before {
+  display: none !important;
+}
+
+body.web-with-header #app .home-hero,
+body.web-with-header #app .home-hero-modern {
+  position: relative !important;
+  width: 100% !important;
+  min-height: clamp(520px, 58vw, 740px) !important;
+  max-height: 820px !important;
+  padding: clamp(32px, 6vw, 88px) var(--web-page-gutter) 100px !important;
+  margin: 0 !important;
+  background: var(--nuvio-canvas) !important;
+  overflow: hidden !important;
+}
+
+body.web-with-header #app .home-modern-hero-media {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 1 !important;
+  overflow: hidden !important;
+}
+
+body.web-with-header #app .home-hero-backdrop-wrap,
+body.web-with-header #app .home-hero-backdrop {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center 25% !important;
+}
+
+body.web-with-header #app .home-modern-hero-media::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2 !important;
+  background:
+    linear-gradient(
+      to top,
+      #090b10 0%,
+      rgba(9, 11, 16, 0.88) 35%,
+      rgba(9, 11, 16, 0.25) 70%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      #090b10 0%,
+      rgba(9, 11, 16, 0.92) 32%,
+      rgba(9, 11, 16, 0.4) 65%,
+      transparent 100%
+    ) !important;
+  pointer-events: none !important;
+}
+
+body.web-with-header #app .home-hero-copy,
+body.web-with-header #app .home-modern-hero-copy {
+  position: relative !important;
+  z-index: 5 !important;
+  max-width: 760px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+
+body.web-with-header #app .home-modern-rows-viewport {
+  position: relative !important;
+  z-index: 10 !important;
+  width: 100% !important;
+  margin-top: -80px !important;
+  padding: 0 var(--web-page-gutter) 80px !important;
+}
+
+body:not(.web-with-header) #app :is(.home-hero-card, .home-modern-hero-card) {
   min-height: 340px;
   padding: clamp(20px, 4vw, 48px);
   border-radius: 16px;
@@ -134,6 +246,57 @@
   min-width: 0;
   max-width: none;
   width: clamp(132px, 16vw, 220px);
+}
+#app .home-row-continue .home-continue-card {
+  flex: 0 0 clamp(260px, 22vw, 360px);
+  width: clamp(260px, 22vw, 360px);
+  min-width: clamp(260px, 22vw, 360px);
+  max-width: clamp(260px, 22vw, 360px);
+}
+#app .home-row-continue .home-continue-media {
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+#app .home-row-continue .home-continue-top-row {
+  top: 10px;
+  left: 10px;
+  right: 10px;
+}
+#app .home-row-continue .home-continue-badge {
+  position: static;
+  min-height: 0;
+  padding: 3px 8px;
+  font-size: 10px;
+  line-height: 14px;
+}
+#app .home-row-continue .home-continue-copy {
+  left: 14px;
+  right: 14px;
+  bottom: 12px;
+}
+#app .home-row-continue .home-continue-kicker {
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.04em;
+}
+#app .home-row-continue .home-continue-title {
+  margin-top: 0;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0;
+}
+#app .home-row-continue .home-continue-subtitle {
+  margin-top: 0;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0;
+}
+#app .home-row-continue .home-continue-progress {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  border-radius: 0;
 }
 #app .home-poster-frame {
   width: 100%;
@@ -994,6 +1157,554 @@
 }
 #player.web-player-idle {
   cursor: none;
+}
+
+/* Web UI desktop page composition. Keep this final so legacy TV geometry
+   cannot flatten the Explore screen into an edge-to-edge form and nine-column
+   poster wall. */
+body.web-with-header #app .discover-main {
+  padding: 88px var(--web-page-gutter) 72px !important;
+}
+
+body.web-with-header #app .search-content {
+  width: min(100%, 1440px) !important;
+  margin: 0 auto !important;
+  padding: 124px var(--web-page-gutter) 72px !important;
+}
+
+body.web-with-header #app .search-page-heading {
+  max-width: 760px;
+  margin: 0 0 30px;
+}
+
+body.web-with-header #app .search-page-eyebrow {
+  color: var(--nuvio-accent, #3b82f6);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+body.web-with-header #app .search-page-heading h1 {
+  margin: 8px 0 10px;
+  color: var(--nuvio-text-primary, #f8fafc);
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+body.web-with-header #app .search-page-heading p {
+  margin: 0;
+  color: var(--nuvio-text-secondary, #94a3b8);
+  font-size: 15px;
+}
+
+body.web-with-header #app .search-command-zone {
+  max-width: 1040px;
+}
+
+body.web-with-header #app .search-input-wrap {
+  flex: 0 0 62px;
+  height: 62px;
+  border-radius: 12px;
+  padding-inline: 18px;
+}
+
+body.web-with-header #app .search-input-field {
+  height: 60px;
+  padding: 0 !important;
+  border-radius: 0;
+  font-size: 17px;
+}
+
+body.web-with-header #app .search-filters-bar {
+  justify-content: flex-start;
+}
+
+body.web-with-header #app .series-detail-content {
+  width: min(100%, 1440px) !important;
+  height: auto !important;
+  min-height: 100dvh !important;
+  margin: 0 auto !important;
+  padding: 120px var(--detail-safe-x) 88px !important;
+  overflow: visible !important;
+}
+
+body.web-with-header #app :is(#detailHeroSection, #detailSeasonRowMount, #detailEpisodeTrackMount) {
+  flex: 0 0 auto !important;
+  min-height: 0 !important;
+}
+
+body.web-with-header #app .detail-hero-section {
+  height: auto !important;
+  min-height: 440px !important;
+}
+
+body.web-with-header #app .series-detail-logo {
+  max-width: min(420px, 55vw) !important;
+  max-height: 124px !important;
+  margin: 0 0 4px !important;
+}
+
+body.web-with-header #app .detail-meta-stack {
+  gap: 8px !important;
+}
+
+body.web-with-header #app .detail-meta-row,
+body.web-with-header #app .detail-meta-row.secondary,
+body.web-with-header #app .detail-rating-item {
+  gap: 12px !important;
+  font-size: 14px !important;
+}
+
+body.web-with-header #app .detail-rating-item img,
+body.web-with-header #app .detail-meta-row .series-imdb-badge img {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+body.web-with-header #app .detail-resume-indicator {
+  min-height: 0 !important;
+  margin: 0 !important;
+  font-size: 13px !important;
+}
+
+body.web-with-header #app .series-primary-btn,
+body.web-with-header #app .series-secondary-btn {
+  min-height: 46px !important;
+  height: 46px !important;
+  padding: 0 22px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+}
+
+body.web-with-header #app .series-circle-btn {
+  width: 46px !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  font-size: 18px !important;
+}
+
+body.web-with-header #app .series-btn-svg,
+body.web-with-header #app .series-primary-btn .series-btn-svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+body.web-with-header #app .series-season-btn {
+  min-height: 40px !important;
+  padding: 8px 18px !important;
+  border-radius: 999px !important;
+  font-size: 13px !important;
+}
+
+body.web-with-header #app .series-episode-copy {
+  padding: 18px !important;
+  gap: 7px !important;
+}
+
+body.web-with-header #app .series-episode-title {
+  min-height: 0 !important;
+  font-size: 16px !important;
+  line-height: 1.3 !important;
+}
+
+body.web-with-header #app .series-episode-overview {
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+}
+
+body.web-with-header #app .series-episode-meta {
+  min-height: 0 !important;
+  gap: 10px !important;
+  font-size: 12px !important;
+}
+
+body.web-with-header #app .library-main {
+  width: min(100%, 1440px) !important;
+  margin: 0 auto !important;
+  padding: 122px var(--web-page-gutter) 72px !important;
+}
+
+body.web-with-header #app .library-page {
+  min-height: 0 !important;
+}
+
+body.web-with-header #app .library-page-header {
+  align-items: flex-start;
+  margin: 0 0 24px !important;
+}
+
+body.web-with-header #app .library-page-title {
+  font-size: clamp(34px, 4vw, 48px) !important;
+  line-height: 1 !important;
+  letter-spacing: -0.03em !important;
+}
+
+body.web-with-header #app .library-page-source {
+  padding: 0 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase;
+}
+
+body.web-with-header #app .library-view-mode-row {
+  gap: 8px !important;
+  margin: 0 0 20px !important;
+}
+
+body.web-with-header #app .library-view-mode-button {
+  min-width: 0 !important;
+  min-height: 38px !important;
+  padding: 8px 18px !important;
+  border: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08)) !important;
+  border-radius: 999px !important;
+  background: var(--nuvio-surface, #11141d) !important;
+  color: var(--nuvio-text-secondary, #94a3b8) !important;
+  font-size: 13px !important;
+}
+
+body.web-with-header #app .library-view-mode-button.selected {
+  border-color: var(--nuvio-accent, #3b82f6) !important;
+  background: var(--nuvio-accent, #3b82f6) !important;
+  color: #fff !important;
+}
+
+body.web-with-header #app .library-picker-groups {
+  gap: 10px !important;
+  margin: 0 0 30px !important;
+}
+
+body.web-with-header #app .library-picker-row {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px !important;
+  margin: 0 !important;
+}
+
+body.web-with-header #app .library-picker {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+body.web-with-header #app .library-empty-state {
+  min-height: 340px !important;
+  padding: 44px 20px !important;
+  border: 1px dashed var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(17, 20, 29, 0.72), rgba(17, 20, 29, 0.18));
+}
+
+body.web-with-header #app .library-empty-icon {
+  width: 56px !important;
+  height: 56px !important;
+}
+
+body.web-with-header #app .library-empty-title {
+  margin: 12px 0 0 !important;
+  font-size: 24px !important;
+}
+
+body.web-with-header #app .stream-route-content {
+  width: min(100%, 1440px) !important;
+  margin: 0 auto !important;
+  padding: 138px var(--web-page-gutter) 72px !important;
+  gap: clamp(32px, 5vw, 72px) !important;
+}
+
+body.web-with-header #app .stream-route-left {
+  display: block !important;
+  padding: 42px 0 !important;
+}
+
+body.web-with-header #app .stream-route-left-inner {
+  top: 138px !important;
+  align-items: flex-start !important;
+  text-align: left !important;
+}
+
+body.web-with-header #app .stream-route-right {
+  min-width: 0;
+}
+
+body.web-with-header #app .stream-route-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 0 18px;
+  border-bottom: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+body.web-with-header #app .stream-route-eyebrow {
+  color: var(--nuvio-accent, #3b82f6);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+body.web-with-header #app .stream-route-heading h2 {
+  margin: 5px 0 0;
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+
+body.web-with-header #app .stream-route-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.16);
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+body.web-with-header #app .stream-route-empty {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  border-style: dashed;
+}
+
+body.web-with-header #app .settings-workspace {
+  width: min(calc(100% - (2 * var(--web-page-gutter))), 1080px) !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: 118px 0 72px !important;
+  grid-template-columns: 210px minmax(0, 1fr) !important;
+  gap: 18px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body.web-with-header #app .settings-page-heading {
+  grid-column: 1 / -1;
+  margin: 0 0 18px;
+}
+
+body.web-with-header #app .settings-page-heading > span {
+  color: var(--nuvio-accent, #3b82f6);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+body.web-with-header #app .settings-page-heading h1 {
+  margin: 7px 0 8px;
+  font-family: var(--nuvio-font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+body.web-with-header #app .settings-page-heading p {
+  max-width: 660px;
+  margin: 0;
+  color: var(--nuvio-text-secondary, #94a3b8);
+  font-size: 14px;
+}
+
+body.web-with-header #app :is(.settings-sidebar-frame, .settings-content-frame) {
+  border: 1px solid var(--nuvio-border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  background: rgba(17, 20, 29, 0.78);
+}
+
+body.web-with-header #app .settings-sidebar {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 4px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+body.web-with-header #app .settings-nav-item {
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 46px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+}
+
+body.web-with-header #app .settings-nav-label-wrap {
+  min-width: 0;
+}
+
+body.web-with-header #app .settings-nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.web-with-header #app .discover-seeall-shell {
+  width: min(100%, 1360px) !important;
+  margin: 0 auto !important;
+  padding: 28px 0 0 !important;
+}
+
+body.web-with-header #app .discover-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 0 24px !important;
+}
+
+body.web-with-header #app .discover-header .seeall-title {
+  margin: 0 !important;
+  font-size: clamp(30px, 3vw, 42px) !important;
+  line-height: 1.05 !important;
+}
+
+body.web-with-header #app .discover-picker-row {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px !important;
+  margin: 0 0 32px !important;
+}
+
+body.web-with-header #app .discover-picker-row .library-picker {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+body.web-with-header #app .discover-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 24px 18px !important;
+}
+
+@media (max-width: 1180px) {
+  body.web-with-header #app .discover-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 761px) and (max-height: 760px) {
+  body.web-with-header #app .home-hero,
+  body.web-with-header #app .home-hero-modern {
+    min-height: 660px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  body.web-with-header #app .discover-main {
+    padding: 72px 16px 48px !important;
+  }
+
+  body.web-with-header #app .search-content {
+    padding: 96px 16px 48px !important;
+  }
+
+  body.web-with-header #app .search-input-wrap {
+    flex-basis: 58px !important;
+    height: 58px !important;
+    padding-inline: 14px !important;
+  }
+
+  body.web-with-header #app .search-input-field {
+    height: 56px !important;
+    min-width: 0 !important;
+  }
+
+  body.web-with-header #app .series-detail-content {
+    padding: 88px 16px 56px !important;
+  }
+
+  body.web-with-header #app .library-main {
+    padding: 94px 16px 48px !important;
+  }
+
+  body.web-with-header #app .stream-route-content {
+    padding: 88px 16px 48px !important;
+  }
+
+  body.web-with-header #app .stream-route-left {
+    padding: 16px 0 4px !important;
+  }
+
+  body.web-with-header #app .settings-workspace {
+    width: calc(100% - 32px) !important;
+    padding: 92px 0 48px !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  body.web-with-header #app .detail-hero-section {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 24px !important;
+    min-height: 0 !important;
+    padding-top: 12px !important;
+  }
+
+  body.web-with-header #app .detail-hero-poster-wrap {
+    flex: 0 0 auto !important;
+    width: min(46vw, 176px) !important;
+    margin: 0 auto !important;
+  }
+
+  body.web-with-header #app .detail-hero-body {
+    width: 100% !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+  }
+
+  body.web-with-header #app .detail-hero-brand,
+  body.web-with-header #app .detail-meta-stack,
+  body.web-with-header #app .series-detail-description,
+  body.web-with-header #app .detail-resume-indicator,
+  body.web-with-header #app .series-detail-support {
+    width: 100% !important;
+    max-width: none !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+  }
+
+  body.web-with-header #app .series-detail-logo {
+    max-width: min(82vw, 330px) !important;
+    max-height: 104px !important;
+    object-position: left center !important;
+  }
+
+  body.web-with-header #app .series-detail-actions {
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+
+  body.web-with-header #app .series-primary-btn,
+  body.web-with-header #app .series-secondary-btn {
+    flex: 1 1 145px !important;
+    justify-content: center !important;
+  }
+
+  body.web-with-header #app .discover-header {
+    display: block;
+  }
+
+  body.web-with-header #app .discover-header .seeall-subtitle {
+    margin-top: 8px;
+  }
+
+  body.web-with-header #app .discover-picker-row {
+    grid-template-columns: 1fr;
+    margin-bottom: 24px !important;
+  }
+
+  body.web-with-header #app .discover-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 18px 12px !important;
+  }
 }
 
 html,

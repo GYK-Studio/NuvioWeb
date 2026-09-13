@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap");
 @font-face {
   font-family: "Material Icons";
   font-style: normal;
@@ -23,27 +23,76 @@
 }
 
 :root {
-  --bg-color: #0d0d0d;
-  --bg-color-rgb: 13 13 13;
-  --bg-color-rgb-legacy: 13, 13, 13;
-  --bg-elevated: #1a1a1a;
-  --bg-elevated-rgb: 26 26 26;
-  --card-bg: #222222;
-  --card-bg-rgb: 34 34 34;
-  --secondary-color: #f5f5f5;
-  --secondary-color-rgb: 245 245 245;
-  --secondary-variant: #e0e0e0;
-  --on-secondary: #111111;
-  --error-color: #cf6679;
-  --error-bg: rgba(207, 102, 121, 0.18);
-  --text-color: #ffffff;
-  --text-secondary: #b3b3b3;
-  --text-tertiary: #808080;
+  /* Nuvio Web design system foundational design tokens */
+  --nuvio-canvas: #090b10;
+  --nuvio-bg-rgb: 9, 11, 16;
+  --nuvio-surface: #11141d;
+  --nuvio-surface-rgb: 17, 20, 29;
+  --nuvio-surface-raised: #191e2b;
+  --nuvio-surface-hover: #202637;
+  --nuvio-surface-glass: rgba(17, 20, 29, 0.72);
+  --nuvio-glass-blur: blur(20px) saturate(180%);
+  --nuvio-border-subtle: rgba(255, 255, 255, 0.08);
+  --nuvio-border-medium: rgba(255, 255, 255, 0.14);
+  --nuvio-border-focus: #3b82f6;
+
+  /* Accents */
+  --nuvio-accent: #3b82f6;
+  --nuvio-accent-rgb: 59, 130, 246;
+  --nuvio-accent-hover: #60a5fa;
+  --nuvio-accent-deep: #1d4ed8;
+  --nuvio-accent-glow: 0 8px 32px -4px rgba(59, 130, 246, 0.28);
+
+  /* Status */
+  --nuvio-online: #10b981;
+  --nuvio-warning: #f59e0b;
+  --nuvio-danger: #ef4444;
+
+  /* Text hierarchy */
+  --nuvio-text-primary: #f8fafc;
+  --nuvio-text-secondary: #94a3b8;
+  --nuvio-text-tertiary: #64748b;
+
+  /* Typography */
+  --nuvio-font-display: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --nuvio-font-body: "Manrope", system-ui, -apple-system, sans-serif;
+  --nuvio-font-mono: "JetBrains Mono", monospace;
+
+  /* Corner radius */
+  --nuvio-radius-xs: 4px;
+  --nuvio-radius-sm: 8px;
+  --nuvio-radius-md: 10px;
+  --nuvio-radius-lg: 16px;
+  --nuvio-radius-xl: 24px;
+  --nuvio-radius-pill: 9999px;
+
+  /* Layout geometry */
+  --nuvio-header-height: 64px;
+  --nuvio-gutter: clamp(16px, 3.5vw, 56px);
+  --nuvio-max-width: 1720px;
+
+  /* Backward-compatible variables mapped to Nuvio Web UI */
+  --bg-color: var(--nuvio-canvas);
+  --bg-color-rgb: 9 11 16;
+  --bg-color-rgb-legacy: 9, 11, 16;
+  --bg-elevated: var(--nuvio-surface);
+  --bg-elevated-rgb: 17 20 29;
+  --card-bg: var(--nuvio-surface);
+  --card-bg-rgb: 17 20 29;
+  --secondary-color: var(--nuvio-accent);
+  --secondary-color-rgb: 59 130 246;
+  --secondary-variant: var(--nuvio-accent-hover);
+  --on-secondary: #ffffff;
+  --error-color: #ef4444;
+  --error-bg: rgba(239, 68, 68, 0.16);
+  --text-color: var(--nuvio-text-primary);
+  --text-secondary: var(--nuvio-text-secondary);
+  --text-tertiary: var(--nuvio-text-tertiary);
   --focus-color: #ffffff;
   --focus-color-rgb: 255 255 255;
-  --focus-bg: #303030;
-  --border-color: #333333;
-  --app-font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  --focus-bg: rgba(59, 130, 246, 0.2);
+  --border-color: var(--nuvio-border-subtle);
+  --app-font-family: var(--nuvio-font-body);
   --tv-safe-gutter: 32px;
   --tv-safe-gutter: clamp(28px, 3vw, 56px);
   --tv-safe-gutter-wide: 40px;

@@ -10,6 +10,6 @@ export const browserMediaEngine = {
   }
 };
 
-export function resolvePlatformAvplayEngine(platformName) {
+export function resolvePlatformAvplayEngine(_platformName) {
   return browserMediaEngine;
 }
