@@ -5,7 +5,9 @@
 node_modules
 **/node_modules
 **/.expo
-apps
+apps/*
+!apps/web
+!apps/web/**
 services/remote
 self-host
 dist
