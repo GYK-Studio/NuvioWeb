@@ -3810,11 +3810,11 @@ export const PlayerController = {
       this.currentPlaybackMediaSourceType ||
       this.resolveRuntimeSourceType(this.guessMediaMimeType(url)) ||
       null;
-    const preferredEngine = forceEngine || this.choosePlaybackEngine(url, sourceType, itemType);
     await this.ensureAdaptiveLibrariesForSource(sourceType);
     if (!this.isPlaybackRequestActive(playToken, requestedUrl)) {
       return;
     }
+    const preferredEngine = forceEngine || this.choosePlaybackEngine(url, sourceType, itemType);
 
     const playbackUrl = requestedUrl;
 

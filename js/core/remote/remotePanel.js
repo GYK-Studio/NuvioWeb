@@ -1,6 +1,18 @@
 import { RemoteClient } from "./remoteClient.js";
 import { QrCodeGenerator } from "../qr/qrCodeGenerator.js";
-const client = new RemoteClient();
+import { Router } from "../../ui/navigation/router.js";
+import { ScreenUtils } from "../../ui/navigation/screen.js";
+
+const client = new RemoteClient({
+  navigation: {
+    getCurrent: () => Router.getCurrent(),
+    getCurrentScreen: () => Router.getCurrentScreen(),
+    navigate: (...args) => Router.navigate(...args),
+    back: () => Router.back(),
+    moveFocusDirectional: (container, direction) =>
+      ScreenUtils.moveFocusDirectional(container, direction)
+  }
+});
 let dialog;
 let gestureNotice;
 function showGestureNotice(action) {

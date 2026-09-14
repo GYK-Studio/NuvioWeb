@@ -1,4 +1,3 @@
-import { Router } from "../../ui/navigation/router.js";
 import { PlayerController } from "../player/playerController.js";
 
 const text = (value) =>
@@ -12,12 +11,22 @@ const artwork = (value) =>
     ? value
     : undefined;
 export class RemoteContent {
-  constructor() {
+  constructor(navigation = null) {
+    this.navigation = navigation;
     this.scope = "";
     this.actions = new Map();
     this.keys = new Map();
     this.page = 0;
     this.season = null;
+  }
+  getNavigation() {
+    return (
+      this.navigation ||
+      globalThis.Router ||
+      globalThis.NuvioWeb?.router ||
+      globalThis.__remoteRouter ||
+      null
+    );
   }
   bind(id, action) {
     let key = this.keys.get(id);
@@ -36,8 +45,9 @@ export class RemoteContent {
     this.season = null;
   }
   snapshot() {
-    const route = Router.getCurrent(),
-      screen = Router.getCurrentScreen();
+    const navigation = this.getNavigation();
+    const route = navigation?.getCurrent?.() || "home",
+      screen = navigation?.getCurrentScreen?.() || {};
     const scope = `${route}|${screen?.params?.itemId || ""}|${screen?.query || ""}|${route === "player" ? PlayerController.video?.currentSrc || "" : ""}`;
     if (scope !== this.scope) {
       this.reset();
@@ -70,7 +80,7 @@ export class RemoteContent {
           mediaType: item.type,
           year: item.releaseInfo || item.year,
           action: () =>
-            Router.navigate("detail", {
+            navigation?.navigate?.("detail", {
               itemId: item.id,
               itemType: item.type || "movie",
               fallbackTitle: item.name || item.title,
@@ -128,7 +138,11 @@ export class RemoteContent {
             while (Date.now() < until) {
               const video = PlayerController.video;
               if (video?.error) throw Error("PLAYBACK_FAILED");
-              if (Router.getCurrent() === "player" && video?.readyState >= 3 && !video.paused)
+              if (
+                this.getNavigation()?.getCurrent?.() === "player" &&
+                video?.readyState >= 3 &&
+                !video.paused
+              )
                 return;
               await new Promise((resolve) => setTimeout(resolve, 100));
             }
@@ -163,7 +177,7 @@ export class RemoteContent {
         apply();
         const until = Date.now() + 5000;
         while (Date.now() < until) {
-          if (Router.getCurrent() !== "player") throw Error("STALE_STATE");
+          if (this.getNavigation()?.getCurrent?.() !== "player") throw Error("STALE_STATE");
           if (selected()) return;
           await new Promise((resolve) => setTimeout(resolve, 100));
         }

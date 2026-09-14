@@ -1,3 +1,8 @@
+packages:
+  - "apps/remote"
+  - "apps/web"
+  - "services/remote"
+
 allowBuilds:
   core-js: true
   esbuild: true

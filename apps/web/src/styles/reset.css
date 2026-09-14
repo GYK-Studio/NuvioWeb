@@ -1,0 +1,27 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: var(--canvas);
+}
+body,
+button,
+input {
+  font-family: var(--font-body);
+}
+button {
+  color: inherit;
+}
+img {
+  display: block;
+  max-width: 100%;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}

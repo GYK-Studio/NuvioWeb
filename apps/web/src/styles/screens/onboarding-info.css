@@ -1,0 +1,133 @@
+.onboarding-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 6rem var(--page-gutter) 2rem;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.16), transparent 38%), var(--canvas);
+}
+.onboarding-card {
+  width: min(64rem, 100%);
+  text-align: center;
+}
+.onboarding-card h1 {
+  margin: 0.5rem 0;
+  font: 650 clamp(2.5rem, 6vw, 5rem) / 1 var(--font-heading);
+}
+.onboarding-card > p:not(.auth-brand) {
+  color: var(--text-muted);
+}
+.onboarding-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+.onboarding-options button {
+  display: grid;
+  gap: 0.6rem;
+  min-height: 11rem;
+  padding: 1.5rem;
+  color: var(--text);
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: var(--transition);
+}
+.onboarding-options button:hover,
+.onboarding-options button:focus-visible {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+  transform: translateY(-2px);
+}
+.onboarding-options b {
+  font: 650 1.35rem var(--font-heading);
+}
+.onboarding-options span {
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.integration-card {
+  display: grid;
+  gap: 1rem;
+  max-width: 48rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.integration-card h2,
+.integration-card p {
+  margin: 0;
+}
+.integration-card p {
+  color: var(--text-muted);
+}
+.device-code {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  text-align: center;
+  background: var(--canvas);
+  border-radius: var(--radius);
+}
+.device-code strong {
+  color: var(--accent-soft);
+  font: 700 2rem var(--font-heading);
+  letter-spacing: 0.15em;
+}
+.integration-options {
+  max-width: 48rem;
+  margin-top: 1rem;
+}
+.people-group {
+  margin: 2.5rem 0;
+}
+.people-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.8rem;
+}
+.people-grid article {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.people-grid img,
+.people-grid article > span {
+  width: 4rem;
+  height: 4rem;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.people-grid article > span {
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  font-weight: 800;
+}
+.people-grid small {
+  color: var(--text-muted);
+}
+.legal-copy,
+.diagnostic-copy {
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.legal-copy pre {
+  overflow: auto;
+  max-height: 55vh;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+}
+.diagnostic-copy {
+  color: var(--accent-soft);
+}

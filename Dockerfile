@@ -2,11 +2,14 @@ FROM node:22-alpine AS build
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/package.json
+RUN pnpm install --frozen-lockfile --filter . --filter @nuvio/web
 
 COPY . ./
-RUN npm run build
+RUN pnpm build
 
 FROM node:22-alpine AS runtime
 

@@ -1,0 +1,39 @@
+.catalog-order-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.catalog-order-row > span {
+  display: grid;
+  gap: 0.2rem;
+}
+.catalog-order-row small {
+  color: var(--text-muted);
+}
+.catalog-order-row > div {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.catalog-order-row button {
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--text);
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+}
+.catalog-order-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-muted);
+}
+.catalog-order-row input {
+  accent-color: var(--accent);
+}

@@ -23,15 +23,15 @@ Funciona en navegadores de escritorio, portátil, tableta y móvil. Usa navegaci
 ### Requisitos
 
 - Node.js 20.19 o superior
-- npm 10 o superior
+- pnpm 11 o superior
 - Un navegador moderno con WebAssembly y Web Workers activados
 
 ### Ejecutar en local
 
 ```bash
-npm install
-npm run build
-npm run serve
+pnpm install
+pnpm build
+pnpm serve
 ```
 
 Abre [http://127.0.0.1:4173](http://127.0.0.1:4173).
@@ -76,14 +76,17 @@ No las marques como variables de build: el contenedor sirve `nuvio.env.js` por p
 
 ### Scripts
 
-- `npm run build` — genera el bundle estático en `dist/`.
-- `npm run serve` — sirve el bundle en local.
-- `npm run lint` — revisa el JavaScript.
-- `npm test` — compila y corre las pruebas de plugins.
+- `pnpm build` — genera el bundle estático en `dist/`.
+- `pnpm serve` — sirve el bundle en local.
+- `pnpm lint` — revisa el JavaScript.
+- `pnpm test` — compila y corre las pruebas de plugins.
+- `pnpm --filter @nuvio/web dev` — inicia la presentación Web activa en desarrollo.
 
 ### Estructura
 
-- `js/` — cliente web (pantallas, reproductor, plugins, control remoto).
+- `apps/web/` — única presentación Web activa; el build raíz la publica en `dist/`.
+- `js/core/`, `js/data/`, `js/domain/`, `js/platform/` — motor compartido, repositorios e infraestructura reutilizada.
+- `js/ui/`, `js/bootstrap/` y `css/` — presentación retirada, conservada temporalmente solo por compatibilidad y pruebas; no se publica.
 - `apps/remote/` — Nuvio Remote (Expo/React Native, APK `v0.1.1`).
 - `services/remote/` — servicio del canal remoto (`remote.gykstudio.tech`).
 - `services/plugin-http.cjs` — servicio de red para plugins.
@@ -106,15 +109,15 @@ The experience is designed for desktop, laptop, tablet, and mobile browsers. It 
 ### Requirements
 
 - Node.js 20.19 or newer
-- npm 10 or newer
+- pnpm 11 or newer
 - A modern browser with WebAssembly and Web Workers enabled
 
 ### Run locally
 
 ```bash
-npm install
-npm run build
-npm run serve
+pnpm install
+pnpm build
+pnpm serve
 ```
 
 Open [http://127.0.0.1:4173](http://127.0.0.1:4173).
@@ -159,14 +162,17 @@ Do not mark the Nuvio values as build variables: the container supplies `nuvio.e
 
 ### Scripts
 
-- `npm run build` — produces the static web bundle in `dist/`.
-- `npm run serve` — serves the built bundle locally.
-- `npm run lint` — checks the JavaScript source.
-- `npm test` — builds and runs the plugin regression checks.
+- `pnpm build` — produces the static web bundle in `dist/`.
+- `pnpm serve` — serves the built bundle locally.
+- `pnpm lint` — checks the JavaScript source.
+- `pnpm test` — builds and runs the plugin regression checks.
+- `pnpm --filter @nuvio/web dev` — starts the active Web presentation in development.
 
 ### Layout
 
-- `js/` — web client (screens, player, plugins, remote control).
+- `apps/web/` — the only active Web presentation; the root build publishes it to `dist/`.
+- `js/core/`, `js/data/`, `js/domain/`, `js/platform/` — reused engine, repositories, and platform infrastructure.
+- `js/ui/`, `js/bootstrap/`, and `css/` — retired presentation retained temporarily for compatibility imports and regression tests; it is not published.
 - `apps/remote/` — Nuvio Remote (Expo/React Native, APK `v0.1.1`).
 - `services/remote/` — remote channel service (`remote.gykstudio.tech`).
 - `services/plugin-http.cjs` — network service for plugins.

@@ -1,0 +1,5 @@
+const searchIcon = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>`;
+
+export function renderTopNavigation() {
+  return `<div class="top-nav__inner"><button class="brand" data-route="home" aria-label="Nuvio home"><span>Nuvio</span><small>WEB</small></button><nav class="primary-nav" aria-label="Primary"><button data-route="home">Home</button><button data-route="discover">Explore</button><button class="mobile-nav-only" data-route="search">Search</button><button data-route="library">Library</button><button data-route="plugins">Sources</button><button class="mobile-nav-only" data-route="settings">Settings</button></nav><div class="nav-tools"><button class="search-button" data-route="search">${searchIcon}<span>Search titles, people, sources…</span><kbd>⌘K</kbd></button><button class="nav-icon-button" data-route="settings" aria-label="Settings">⚙</button><button class="avatar-button" data-route="profileSelection" aria-label="Choose profile"><span>J</span><i></i></button></div></div>`;
+}

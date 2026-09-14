@@ -1,15 +1,17 @@
 {
   "name": "nuvio-web",
   "private": true,
+  "packageManager": "pnpm@11.24.0",
   "type": "module",
   "version": "1.0.7",
   "scripts": {
     "build": "node ./scripts/build.mjs",
-    "test": "npm run build && npm run test:web && npm run test:providers",
+    "test": "node ./scripts/build.mjs && node tests/test-web-controls.mjs && node --test tests/*.test.mjs",
     "test:web": "node tests/test-web-controls.mjs",
     "test:providers": "node --test tests/provider-proxy.test.mjs",
+    "test:runtime": "node --test tests/env-properties.test.mjs",
     "prepare": "husky || true",
-    "lint": "eslint \"js/**/*.js\" \"eslint.config.mjs\"",
+    "lint": "eslint \"js/**/*.js\" \"apps/web/src/**/*.js\" \"apps/web/scripts/**/*.mjs\" \"eslint.config.mjs\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "serve": "node ./scripts/serve.mjs"

@@ -1,0 +1,162 @@
+.top-nav {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 20;
+  height: var(--nav-height);
+  background: rgba(9, 11, 16, 0.62);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+.top-nav__inner {
+  height: 100%;
+  margin: 0 var(--page-margin);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0;
+  background: none;
+  font: 700 1.35rem/1 var(--font-display);
+  letter-spacing: -0.04em;
+}
+.brand small {
+  padding: 0.2rem 0.35rem;
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  border-radius: 4px;
+  color: var(--primary-hover);
+  font: 700 0.55rem/1 var(--font-body);
+  letter-spacing: 0.12em;
+}
+.primary-nav {
+  display: flex;
+  gap: 0.2rem;
+  margin-right: auto;
+}
+.mobile-nav-only {
+  display: none;
+}
+.primary-nav button {
+  position: relative;
+  height: 42px;
+  padding: 0 0.9rem;
+  background: none;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-radius: var(--radius);
+  transition:
+    color var(--ease),
+    background var(--ease);
+}
+.primary-nav button:hover,
+.primary-nav button[aria-current] {
+  color: var(--text);
+}
+.primary-nav button[aria-current]::after {
+  content: "";
+  position: absolute;
+  right: 0.9rem;
+  bottom: 2px;
+  left: 0.9rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--primary-hover);
+}
+.nav-tools {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.search-button {
+  width: 260px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(17, 20, 29, 0.72);
+  color: var(--text-muted);
+  text-align: left;
+}
+.search-button svg {
+  width: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+.search-button span {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.search-button kbd {
+  padding: 0.15rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text-subtle);
+}
+.avatar-button {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #234988, #111b31);
+  font-weight: 700;
+}
+.nav-icon-button {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  background: rgba(17, 20, 29, 0.72);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+.nav-icon-button:hover,
+.nav-icon-button[aria-current] {
+  color: var(--text);
+  border-color: rgba(96, 165, 250, 0.45);
+}
+.avatar-button i {
+  position: absolute;
+  right: 0;
+  bottom: 1px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--canvas);
+  border-radius: 50%;
+  background: #34d399;
+}
+.page-host {
+  min-height: 100vh;
+}
+.app-shell:is(
+    [data-route="authSignIn"],
+    [data-route="authQrSignIn"],
+    [data-route="profileSelection"],
+    [data-route="experienceModeSelection"],
+    [data-route="essentialAddonSetup"],
+    [data-route="player"]
+  )
+  .top-nav {
+  display: none;
+}
+.player-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #000;
+}
+.player-layer video {
+  width: 100%;
+  height: 100%;
+}

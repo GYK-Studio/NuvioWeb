@@ -7,6 +7,7 @@ import { writeRuntimeEnvScriptFile } from "./envProperties.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
+const webAppDir = path.join(rootDir, "apps", "web");
 const distDir = path.join(rootDir, "dist");
 const debugBundle = /^(1|true|yes|on)$/i.test(String(process.env.NUVIO_DEBUG_BUNDLE || ""));
 const requireConfiguredRuntimeEnv = /^(1|true|yes|on)$/i.test(
@@ -65,16 +66,16 @@ async function runBuild() {
   const { version } = await readAppMetadata();
   await Promise.all([
     cp(path.join(rootDir, "assets"), path.join(distDir, "assets"), { recursive: true }),
-    cp(path.join(rootDir, "css"), path.join(distDir, "css"), { recursive: true }),
     cp(path.join(rootDir, "res"), path.join(distDir, "res"), { recursive: true }),
     cp(path.join(rootDir, "docs", "youtube-proxy.html"), path.join(distDir, "youtube-proxy.html")),
-    cp(path.join(rootDir, "index.html"), path.join(distDir, "index.html"))
+    cp(path.join(rootDir, "LICENSE"), path.join(distDir, "LICENSE")),
+    cp(path.join(webAppDir, "index.html"), path.join(distDir, "index.html"))
   ]);
 
   await Promise.all([
     build({
-      entryPoints: [path.join(rootDir, "js", "app.js")],
-      outfile: path.join(distDir, "app.bundle.js"),
+      entryPoints: [path.join(webAppDir, "src", "app.js")],
+      outfile: path.join(distDir, "app.js"),
       bundle: true,
       format: "iife",
       target: "es2022",
@@ -85,6 +86,13 @@ async function runBuild() {
         "process.env.NODE_ENV": '"production"',
         __NUVIO_APP_VERSION__: JSON.stringify(version)
       }
+    }),
+    build({
+      entryPoints: [path.join(webAppDir, "src", "styles", "index.css")],
+      outfile: path.join(distDir, "app.css"),
+      bundle: true,
+      minify: !debugBundle,
+      legalComments: "none"
     }),
     buildPluginWorker(),
     copyLibraryAssets()

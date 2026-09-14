@@ -1,0 +1,128 @@
+.hero {
+  position: relative;
+  min-height: min(112vh, 1080px);
+  display: flex;
+  align-items: flex-end;
+  isolation: isolate;
+  padding: calc(var(--nav-height) + 4rem) var(--page-margin) 8rem;
+  background: var(--canvas);
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  background-image: var(--hero-image);
+  background-size: cover;
+  background-position: center 20%;
+}
+.hero__scrim {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(9, 11, 16, 0.98) 0%,
+      rgba(9, 11, 16, 0.72) 37%,
+      rgba(9, 11, 16, 0.12) 72%
+    ),
+    linear-gradient(0deg, var(--canvas) 0%, transparent 34%),
+    radial-gradient(circle at 75% 40%, transparent 0, rgba(9, 11, 16, 0.22) 58%, var(--canvas) 105%);
+}
+.hero__content {
+  width: min(580px, 48vw);
+}
+.hero__eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--primary-hover);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+.hero h1 {
+  max-width: 12ch;
+  margin: 0;
+  font: 700 clamp(3.2rem, 5.1vw, 5.6rem)/0.95 var(--font-display);
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+.hero__logo {
+  width: min(420px, 85%);
+  max-height: 170px;
+  object-fit: contain;
+  object-position: left center;
+}
+.hero__meta {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  color: #d9e0ec;
+  font-weight: 600;
+}
+.hero__meta span + span::before {
+  content: "•";
+  margin-right: 0.75rem;
+  color: var(--text-subtle);
+}
+.hero__description {
+  display: -webkit-box;
+  max-width: 56ch;
+  overflow: hidden;
+  margin: 1rem 0 0;
+  color: #c5ccd8;
+  font-size: 1rem;
+  line-height: 1.65;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.hero__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.6rem;
+}
+.button {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0 1.25rem;
+  border-radius: var(--radius);
+  font-weight: 700;
+  transition:
+    transform var(--ease),
+    background var(--ease),
+    box-shadow var(--ease);
+}
+.button:hover {
+  transform: translateY(-2px);
+}
+.button--primary {
+  background: var(--primary);
+  color: var(--primary-contrast);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.28);
+}
+.button--primary:hover {
+  background: var(--primary-hover);
+}
+.button--glass {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+}
+.button--glass:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.button--quiet {
+  padding-inline: 0.75rem;
+  background: transparent;
+  color: var(--text-muted);
+}
+.button--quiet:hover {
+  color: var(--text);
+}
+.home-content {
+  position: relative;
+  margin-top: -2.5rem;
+  padding: 0 var(--page-margin) 5rem;
+}

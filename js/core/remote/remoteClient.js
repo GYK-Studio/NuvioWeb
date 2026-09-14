@@ -1,7 +1,5 @@
 import { SessionStore } from "../storage/sessionStore.js";
 import { ProfileManager } from "../profile/profileManager.js";
-import { Router } from "../../ui/navigation/router.js";
-import { ScreenUtils } from "../../ui/navigation/screen.js";
 import { RemoteContent } from "./remoteContent.js";
 
 const fail = (code) => {
@@ -29,7 +27,7 @@ function findVerticalScroller(node) {
   return document.scrollingElement || document.documentElement;
 }
 
-function remoteKeyboardField() {
+function remoteKeyboardField(navigation) {
   const active = document.activeElement;
   if (
     active instanceof HTMLInputElement ||
@@ -38,7 +36,7 @@ function remoteKeyboardField() {
   ) {
     return active;
   }
-  const screen = Router.getCurrentScreen();
+  const screen = navigation?.getCurrentScreen?.();
   return (
     screen?.container?.querySelector(
       "input:not([type=hidden]):not([disabled]), textarea:not([disabled])"
@@ -46,8 +44,8 @@ function remoteKeyboardField() {
   );
 }
 
-function writeRemoteKeyboardInput(text, key) {
-  const field = remoteKeyboardField();
+function writeRemoteKeyboardInput(text, key, navigation) {
+  const field = remoteKeyboardField(navigation);
   if (!field) fail("UNSUPPORTED_CAPABILITY");
   if (typeof text === "string") {
     if (!/^(?:input|textarea)$/i.test(field.tagName) && field.isContentEditable !== true)
@@ -78,13 +76,23 @@ function writeRemoteKeyboardInput(text, key) {
   field.dispatchEvent(new KeyboardEvent("keyup", init));
 }
 export class RemoteClient extends EventTarget {
-  constructor() {
+  constructor({ navigation = null, content = null } = {}) {
     super();
+    this.navigation = navigation;
     this.socket = null;
     this.closed = true;
     this.seen = new Map();
     this.queue = Promise.resolve();
-    this.content = new RemoteContent();
+    this.content = content || new RemoteContent(navigation);
+  }
+  getNavigation() {
+    return (
+      this.navigation ||
+      globalThis.Router ||
+      globalThis.NuvioWeb?.router ||
+      globalThis.__remoteRouter ||
+      null
+    );
   }
   emit(data) {
     this.dispatchEvent(new CustomEvent("update", { detail: data }));
@@ -286,7 +294,8 @@ export class RemoteClient extends EventTarget {
   }
   snapshot() {
     const v = document.getElementById("videoPlayer");
-    const available = Router.getCurrent() === "player" && Boolean(v?.currentSrc);
+    const navigation = this.getNavigation();
+    const available = navigation?.getCurrent?.() === "player" && Boolean(v?.currentSrc);
     let content;
     try {
       content = this.content.snapshot();
@@ -294,7 +303,7 @@ export class RemoteClient extends EventTarget {
       // A catalog/track error must not prevent the entire remote from synchronizing.
       content = {
         title: "No se pudo cargar este apartado. Puedes volver a Inicio.",
-        route: Router.getCurrent(),
+        route: navigation?.getCurrent?.() || "home",
         items: [],
         tracks: [],
         page: 0,
@@ -340,16 +349,17 @@ export class RemoteClient extends EventTarget {
     )
       fail("UNAUTHORIZED");
     const p = c.payload || {};
+    const navigation = this.getNavigation();
     if (c.type === "catalog.activate" || c.type === "player.selectTrack") {
       if (typeof p.key !== "string" || p.key.length > 64) fail("INVALID_PAYLOAD");
       return this.content.activate(p.key);
     }
     if (c.type === "catalog.page") return this.content.setPage(p.page);
     if (c.type === "catalog.season") return this.content.setSeason(p.season);
-    if (c.type === "navigation.home") return Router.navigate("home");
-    if (c.type === "navigation.library") return Router.navigate("library");
-    if (c.type === "navigation.discover") return Router.navigate("discover");
-    if (c.type === "navigation.back") return Router.back();
+    if (c.type === "navigation.home") return navigation?.navigate?.("home");
+    if (c.type === "navigation.library") return navigation?.navigate?.("library");
+    if (c.type === "navigation.discover") return navigation?.navigate?.("discover");
+    if (c.type === "navigation.back") return navigation?.back?.();
     const direction = {
       "navigation.up": "up",
       "navigation.down": "down",
@@ -357,22 +367,24 @@ export class RemoteClient extends EventTarget {
       "navigation.right": "right"
     }[c.type];
     if (direction) {
-      const screen = Router.getCurrentScreen();
+      const screen = navigation?.getCurrentScreen?.();
       if (!screen?.container) fail("UNSUPPORTED_CAPABILITY");
-      ScreenUtils.moveFocusDirectional(screen.container, direction);
+      if (typeof navigation?.moveFocusDirectional !== "function") fail("UNSUPPORTED_CAPABILITY");
+      navigation.moveFocusDirectional(screen.container, direction);
       // The web focus call uses preventScroll, so bring the newly focused
       // control into view or remote D-pad navigation walks off-screen.
       try {
-        screen.container
-          ?.querySelector(".focusable.focused")
-          ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+        (
+          navigation?.getFocusedElement?.() || screen.container?.querySelector(".focusable.focused")
+        )?.scrollIntoView({ block: "nearest", inline: "nearest" });
       } catch {}
       return;
     }
     if (c.type === "navigation.scrollUp" || c.type === "navigation.scrollDown") {
-      const screen = Router.getCurrentScreen();
+      const screen = navigation?.getCurrentScreen?.();
       const container = screen?.container;
-      const focused = container?.querySelector(".focusable.focused");
+      const focused =
+        navigation?.getFocusedElement?.() || container?.querySelector(".focusable.focused");
       const scroller = findVerticalScroller(focused) || findVerticalScroller(container);
       const distance = Math.round(
         (scroller === document.scrollingElement || !scroller
@@ -389,13 +401,15 @@ export class RemoteClient extends EventTarget {
         fail("INVALID_PAYLOAD");
       writeRemoteKeyboardInput(
         c.type === "keyboard.text" ? p.text : null,
-        c.type === "keyboard.key" ? p.key : null
+        c.type === "keyboard.key" ? p.key : null,
+        navigation
       );
       return;
     }
     if (c.type === "navigation.select") {
-      const screen = Router.getCurrentScreen();
-      const target = screen?.container?.querySelector(".focusable.focused");
+      const screen = navigation?.getCurrentScreen?.();
+      const target =
+        navigation?.getFocusedElement?.() || screen?.container?.querySelector(".focusable.focused");
       if (!screen || !target) fail("UNSUPPORTED_CAPABILITY");
       if (screen.activateControl) return screen.activateControl(target);
       if (typeof target.click === "function") return target.click();
@@ -413,14 +427,14 @@ export class RemoteClient extends EventTarget {
     if (c.type === "catalog.search") {
       if (typeof p.query !== "string" || p.query.length < 2 || p.query.length > 120)
         fail("INVALID_PAYLOAD");
-      return Router.navigate("search", { query: p.query });
+      return navigation?.navigate?.("search", { query: p.query });
     }
     if (c.type === "player.fullscreen") {
       this.emit({ type: "local.gesture", action: "fullscreen" });
       fail("LOCAL_INTERACTION_REQUIRED");
     }
     const v = document.getElementById("videoPlayer");
-    if (Router.getCurrent() !== "player" || !v?.currentSrc) fail("NO_SOURCE");
+    if (navigation?.getCurrent?.() !== "player" || !v?.currentSrc) fail("NO_SOURCE");
     if (c.type === "player.setRate") {
       if (![0.5, 0.75, 1, 1.25, 1.5, 2].includes(p.rate)) fail("INVALID_PAYLOAD");
       v.playbackRate = p.rate;

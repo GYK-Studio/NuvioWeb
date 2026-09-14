@@ -1,0 +1,38 @@
+body {
+  color: var(--text);
+  overflow-x: hidden;
+}
+button {
+  border: 0;
+  cursor: pointer;
+}
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  left: 1rem;
+  top: -5rem;
+  padding: 0.75rem 1rem;
+  background: var(--primary);
+  border-radius: var(--radius);
+  color: var(--primary-contrast);
+}
+.skip-link:focus {
+  top: 1rem;
+}
+.fatal-state,
+.empty-state {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  max-width: 640px;
+  margin: auto;
+  padding: 2rem;
+}
+.fatal-state pre {
+  white-space: pre-wrap;
+  color: var(--text-muted);
+}

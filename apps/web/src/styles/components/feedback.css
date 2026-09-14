@@ -1,0 +1,73 @@
+.empty-state {
+  min-height: 70vh;
+  text-align: center;
+}
+.empty-state > span {
+  color: var(--primary-hover);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+.empty-state h1 {
+  margin: 0.65rem 0;
+  font: 700 2.4rem var(--font-display);
+}
+.empty-state p {
+  color: var(--text-muted);
+}
+.empty-state button {
+  justify-self: center;
+  margin-top: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-contrast);
+  font-weight: 700;
+}
+.inline-notice {
+  padding: 0.7rem 1rem;
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: var(--radius);
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--text-muted);
+}
+.home-skeleton {
+  padding-top: var(--nav-height);
+}
+.home-skeleton__hero {
+  height: 70vh;
+  background: linear-gradient(110deg, #0b0e15 20%, #151b29 42%, #0b0e15 64%);
+  background-size: 220% 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+.home-skeleton__row {
+  margin: 2rem var(--page-margin);
+}
+.home-skeleton__row > i {
+  display: block;
+  width: 12rem;
+  height: 1.2rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  background: #171b25;
+}
+.home-skeleton__row > div {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+}
+.home-skeleton__row b {
+  aspect-ratio: 2/3;
+  border-radius: var(--radius);
+  background: #121620;
+}
+@keyframes shimmer {
+  to {
+    background-position: -220% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-skeleton__hero {
+    animation: none;
+  }
+}

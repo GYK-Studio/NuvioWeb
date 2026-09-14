@@ -1,0 +1,16 @@
+{
+  "name": "@nuvio/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ./scripts/build.mjs",
+    "dev": "node ./scripts/dev.mjs",
+    "lint": "eslint \"src/**/*.js\" \"scripts/**/*.mjs\"",
+    "start": "node ./scripts/serve.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.3"
+  }
+}

@@ -44,25 +44,25 @@ jobs:
             echo "Tag $GITHUB_REF_NAME does not match app version v$version" >&2
             exit 1
           fi
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+          run_install: false
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: pnpm
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
-      - name: Install pinned package manager
-        run: npm install --global pnpm@11.19.0
-      - name: Install app and service dependencies
-        run: |
-          pnpm --dir apps/remote install --ignore-workspace --frozen-lockfile --ignore-scripts --prod=false
-          pnpm --dir services/remote install --ignore-workspace --frozen-lockfile --ignore-scripts --prod=false
-          pnpm install --ignore-workspace --frozen-lockfile --ignore-scripts --prod=false
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts --prod=false
       - name: Check TypeScript and remote protocol
         run: |
-          pnpm --dir apps/remote typecheck
-          pnpm --dir apps/remote test
-          pnpm --dir services/remote test
+          pnpm --filter nuvio-remote typecheck
+          pnpm --filter nuvio-remote test
+          pnpm --filter nuvio-remote-service test
           node --test services/remote/content.test.mjs services/remote/mobile.test.mjs
       - name: Generate Android project
         working-directory: apps/remote

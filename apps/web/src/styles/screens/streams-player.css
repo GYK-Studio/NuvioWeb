@@ -1,0 +1,220 @@
+.streams-page {
+  padding-bottom: 5rem;
+}
+.stream-results {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+}
+.stream-card {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr) auto 1rem;
+  align-items: center;
+  gap: 1.25rem;
+  width: 100%;
+  padding: 1rem 1.15rem;
+  color: var(--text);
+  text-align: left;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: var(--transition);
+}
+.stream-card:hover,
+.stream-card:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+  background: var(--surface-hover);
+  transform: translateY(-1px);
+}
+.stream-card__source,
+.stream-card__badges {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.stream-card__source img {
+  width: 1.75rem;
+  height: 1.75rem;
+  object-fit: contain;
+  border-radius: 0.35rem;
+}
+.stream-card__copy {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+.stream-card__copy strong,
+.stream-card__copy small {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.stream-card__copy small {
+  color: var(--text-muted);
+}
+.stream-card__badges i {
+  padding: 0.28rem 0.5rem;
+  color: var(--accent-soft);
+  font-size: 0.72rem;
+  font-style: normal;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 0.35rem;
+}
+.player-page {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  min-height: 100vh;
+  pointer-events: none;
+}
+.player-hud {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 2rem 3.5rem;
+  color: #fff;
+  pointer-events: auto;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.8),
+    transparent 28%,
+    transparent 62%,
+    rgba(0, 0, 0, 0.86)
+  );
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.player-hud:hover,
+.player-hud:focus-within,
+.player-hud[data-loading] {
+  opacity: 1;
+}
+.player-hud__top,
+.player-hud__bottom > div {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.player-source-button {
+  margin-left: auto;
+  padding: 0.6rem 0.85rem;
+  color: #fff;
+  background: rgba(16, 18, 24, 0.64);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 0.5rem !important;
+  width: auto !important;
+}
+.player-hud__top button,
+.player-hud__bottom button,
+.player-toggle {
+  color: #fff;
+  background: rgba(16, 18, 24, 0.64);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+}
+.player-loading {
+  display: grid;
+  justify-items: center;
+  gap: 0.85rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.88rem;
+  letter-spacing: 0.02em;
+}
+.player-loading i {
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: player-loading-spin 0.8s linear infinite;
+}
+@keyframes player-loading-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+.player-hud__top button {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+.player-hud__top p {
+  margin: 0;
+  font: 600 1.05rem var(--font-heading);
+}
+.player-hud__top small {
+  color: rgba(255, 255, 255, 0.7);
+}
+.player-hud__center {
+  display: grid;
+  place-items: center;
+}
+.player-toggle {
+  width: 4.5rem;
+  height: 4.5rem;
+  font-size: 1.5rem;
+}
+.player-hud__bottom {
+  display: grid;
+  gap: 0.75rem;
+}
+.player-hud__bottom input {
+  width: 100%;
+  accent-color: var(--accent);
+}
+.player-hud__bottom > div span:nth-child(2) {
+  margin-left: auto;
+}
+.player-hud__bottom button {
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.5rem;
+}
+.player-error {
+  max-width: 32rem;
+  padding: 2rem;
+  text-align: center;
+  background: rgba(9, 11, 16, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-lg);
+}
+.track-panel {
+  min-width: min(26rem, 88vw);
+  max-height: 55vh;
+  overflow: auto;
+  padding: 1rem;
+  color: #fff;
+  background: rgba(9, 11, 16, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-lg);
+}
+.track-panel h2 {
+  margin: 0 0 0.75rem;
+}
+.track-panel button {
+  display: block;
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  color: #fff;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 0.4rem;
+}
+.track-panel button:hover,
+.track-panel button:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+}
+@media (max-width: 720px) {
+  .stream-card {
+    grid-template-columns: 1fr auto;
+  }
+  .stream-card__source {
+    grid-column: 1 / -1;
+  }
+  .stream-card__badges {
+    display: none;
+  }
+  .player-hud {
+    padding: 1rem;
+  }
+}

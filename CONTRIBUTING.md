@@ -5,7 +5,7 @@ Nuvio is a browser-first media application. Contributions should work with a cur
 ## Before opening a pull request
 
 - Keep changes focused and explain the user-facing outcome.
-- Run `npm run build` and `npm run lint`.
+- Run `pnpm build` and `pnpm lint`.
 - For a visible interface change, include desktop and mobile screenshots.
 - For playback or provider work, describe the source type, browser, expected result, and any CORS constraints.
 

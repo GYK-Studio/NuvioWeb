@@ -14,7 +14,7 @@ import {
   normalizeContributors,
   normalizeSupporterMembers,
   parseSponsorNames
-} from "./supportersData.js";
+} from "../../../core/supporters/supportersData.js";
 import {
   bindSettingsScrollIndicators,
   scrollSettingsContentItem,

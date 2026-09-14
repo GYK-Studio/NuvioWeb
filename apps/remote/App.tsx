@@ -1329,7 +1329,7 @@ const styles = StyleSheet.create({
   pairVisualCenter: { flex: 1, alignItems: "center", justifyContent: "center", gap: 7 },
   pairVisualIcon: { color: "#ADC6FF", fontSize: 40, fontWeight: "300" },
   pairVisualText: { color: "#8C909F", fontSize: 9.5, fontWeight: "700" },
-  qrCamera: { ...StyleSheet.absoluteFillObject },
+  qrCamera: { ...StyleSheet.absoluteFill },
   qrCornerTopLeft: {
     position: "absolute",
     left: 15,
